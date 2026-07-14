@@ -4,10 +4,9 @@ import { verifyToken } from './lib/auth';
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
   
-  // Public paths that do not require auth
-  if (pathname.startsWith('/api/auth') || pathname.startsWith('/login') || pathname === '/') {
-    return NextResponse.next();
-  }
+  // Allow all paths for the MVP demo
+  return NextResponse.next();
+
 
   // Check for token
   const token = request.cookies.get('auth_token')?.value;
