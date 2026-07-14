@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-let prismaClientInstance;
-function getPrisma() {
-  if (!prismaClientInstance) prismaClientInstance = new PrismaClient();
-  return prismaClientInstance;
-}
+import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
-    const prisma = getPrisma();
     const action = await request.json();
     const userId = request.headers.get('x-user-id');
     const tenantId = request.headers.get('x-tenant-id');

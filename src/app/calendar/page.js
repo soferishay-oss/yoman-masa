@@ -29,6 +29,8 @@ export default function CalendarPage() {
 
   const today = new Date();
 
+  const dominantMode = theme.defaultDateMode || 'hebrew';
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -42,9 +44,11 @@ export default function CalendarPage() {
           <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
             {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
           </div>
-          <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary, #666)' }}>
-            {new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(currentDate)}
-          </div>
+          {grid[15] && (
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary, #666)' }}>
+              {grid[15].hebrewMonthStr} {grid[15].hebrewYearStr}
+            </div>
+          )}
         </div>
         <button onClick={handleNextMonth}><ChevronLeft size={24} /></button>
       </div>
@@ -67,9 +71,22 @@ export default function CalendarPage() {
               className={`${styles.dayCell} ${!dayObj.isCurrentMonth ? styles.notCurrentMonth : ''} ${isToday ? styles.today : ''}`}
             >
               <div className={styles.dateLabels}>
-                <span className={styles.hebDate}>{dayObj.hebrewDay}</span>
-                <span className={styles.gregDate}>{dayObj.gregorianDay}</span>
+                {dominantMode === 'hebrew' ? (
+                  <>
+                    <span className={styles.dominantDate}>{dayObj.hebrewDay}</span>
+                    <span className={styles.subDate}>{dayObj.gregorianDay}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.dominantDate}>{dayObj.gregorianDay}</span>
+                    <span className={styles.subDate}>{dayObj.hebrewDay}</span>
+                  </>
+                )}
               </div>
+              
+              {dayObj.parasha && dayObj.isCurrentMonth && (
+                <div className={styles.parasha}>{dayObj.parasha}</div>
+              )}
               
               {event && (
                 <div className={styles.events}>

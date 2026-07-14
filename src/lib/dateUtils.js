@@ -1,9 +1,8 @@
+import { HDate, Sedra } from '@hebcal/core';
+
 export function getHebrewDate(date = new Date()) {
-  return new Intl.DateTimeFormat('he-IL-u-ca-hebrew-nu-hebr', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(date);
+  const hdate = new HDate(date);
+  return hdate.renderGematriya(); // e.g. "ה' אלול תשפ"ד"
 }
 
 export function getGregorianDate(date = new Date()) {
@@ -25,15 +24,29 @@ export function getCalendarGrid(year, month) {
   const days = [];
   
   const createDayObj = (d, isCurrentMonth) => {
+    const hdate = new HDate(d);
+    
+    // Get parasha for Saturday
+    let parasha = null;
+    if (d.getDay() === 6) { // Saturday
+      const sedra = new Sedra(hdate.getFullYear(), true); // true for Israel
+      const parashat = sedra.getString(hdate, 'he');
+      if (parashat) {
+        parasha = `פרשת ${parashat}`;
+      }
+    }
+
     return {
       date: d,
       isCurrentMonth,
-      hebrew: getHebrewDate(d),
+      hebrew: hdate.renderGematriya(), // full string
       gregorian: getGregorianDate(d),
       gregorianDay: d.getDate(),
-      // 'nu-hebr' ensures Hebrew letters like א, ב, י"א
-      hebrewDay: new Intl.DateTimeFormat('he-IL-u-ca-hebrew-nu-hebr', { day: 'numeric' }).format(d),
-      hebrewMonthStr: new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(d)
+      // Just the day in Gematriya: א', ט"ו, etc.
+      hebrewDay: hdate.getDate() === 15 ? 'ט״ו' : hdate.getDate() === 16 ? 'ט״ז' : HDate.hebrewFractionalNumber(hdate.getDate()),
+      hebrewMonthStr: hdate.getMonthName('he'), // e.g. אדר א', אדר ב'
+      hebrewYearStr: HDate.hebrewFractionalNumber(hdate.getFullYear()),
+      parasha
     };
   };
 

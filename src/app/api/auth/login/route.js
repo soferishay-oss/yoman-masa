@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { signToken } from '@/lib/auth';
 
-let prismaClientInstance;
-function getPrisma() {
-  if (!prismaClientInstance) prismaClientInstance = new PrismaClient();
-  return prismaClientInstance;
-}
-
 export async function POST(request) {
   try {
-    const prisma = getPrisma();
     const body = await request.json();
     const { email, phoneNumber, password } = body;
 
