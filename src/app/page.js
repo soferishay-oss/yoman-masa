@@ -1,66 +1,106 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import styles from './page.module.css';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.container}>
+      {/* Header Section */}
+      <header className={styles.header}>
+        <div className={styles.logoContainer}>
+          <p className={styles.schoolName}>מכינה קד"צ טכנולוגית<br/>אמית גור אריה</p>
+          {/* Mock Logo using text for MVP */}
+          <div className={styles.logoBadge}>🛡️<br/>באמונה הם עושים</div>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <h1 className={styles.greeting}>מה מחכה לך היום?</h1>
+        <p className={styles.subtitle}>המסע שלך. הסיפור שלך.</p>
+      </header>
+
+      {/* Open Activities Section */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>פעילויות פתוחות</h2>
+        <div className={styles.activitiesList}>
+          
+          <div className={styles.activityCard}>
+            <div className={`${styles.iconWrapper} ${styles.bgMountain}`}>⛰️</div>
+            <div className={styles.activityContent}>
+              <h3>עיבוד מסע אלוני הבשן</h3>
+              <p>שתף מה שלקחת מהמסע</p>
+            </div>
+            <span className={`${styles.statusTag} ${styles.tagOpen}`}>פתוח</span>
+            <span className={styles.chevron}>›</span>
+          </div>
+
+          <div className={styles.activityCard}>
+            <div className={`${styles.iconWrapper} ${styles.bgPurple}`}>👥</div>
+            <div className={styles.activityContent}>
+              <h3>הכנה לשיחת אמצע שנה</h3>
+              <p>שאלות למחשבה לפני הפגישה</p>
+            </div>
+            <span className={`${styles.statusTag} ${styles.tagOpen}`}>פתוח</span>
+            <span className={styles.chevron}>›</span>
+          </div>
+
+          <div className={styles.activityCard}>
+            <div className={`${styles.iconWrapper} ${styles.bgOrange}`}>⭐</div>
+            <div className={styles.activityContent}>
+              <h3>דירוג שבועי</h3>
+              <p>איך עבר עליך השבוע?</p>
+            </div>
+            <span className={`${styles.statusTag} ${styles.tagPending}`}>ממתין</span>
+            <span className={styles.chevron}>›</span>
+          </div>
+
+          <div className={styles.activityCard}>
+            <div className={`${styles.iconWrapper} ${styles.bgBlue}`}>✉️</div>
+            <div className={styles.activityContent}>
+              <h3>מכתבי הוקרה לחברים</h3>
+              <p>כתוב לחברים מכתב הוקרה</p>
+            </div>
+            <span className={`${styles.statusTag} ${styles.tagPending}`}>ממתין</span>
+            <span className={styles.chevron}>›</span>
+          </div>
+
         </div>
-      </main>
+        <button className={styles.textBtn}>לכל הפעילויות ›</button>
+      </section>
+
+      {/* Upcoming Stations Section */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>התחנות הבאות</h2>
+        <div className={styles.stationsScroll}>
+          <div className={styles.stationCard}>
+            <div className={styles.stationIcon}>🚩</div>
+            <h4>מסע סיכום</h4>
+            <p>15.07.25</p>
+          </div>
+          <div className={styles.stationCard}>
+            <div className={styles.stationIcon}>👤</div>
+            <h4>שיחת סיום</h4>
+            <p>22.07.25</p>
+          </div>
+          <div className={styles.stationCard}>
+            <div className={styles.stationIcon}>📖</div>
+            <h4>טקס סיום שנה</h4>
+            <p>05.08.25</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Your Journal Section */}
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>היומן שלך</h2>
+        <div className={styles.journalCard}>
+          <div className={styles.journalImagePlaceholder}>
+            🏔️
+          </div>
+          <div className={styles.journalContent}>
+            <h3>זיכרונות מהדרך</h3>
+            <p className={styles.journalMeta}>מסע יהודה • 22.05.25</p>
+            <p className={styles.journalSnippet}>"רגעים פשוטים שהפכו למשמעותיים..."</p>
+          </div>
+          <span className={styles.chevron}>›</span>
+        </div>
+      </section>
+      
     </div>
   );
 }

@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tenant {
+  id               String   @id @default(uuid())
+  name             String
+  logoUrl          String?
+  slogan           String?
+  themeConfig      Json?
+  dominantDateMode String   @default("gregorian")
+  enabledModules   Json?
+  retentionPolicy  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  users            User[]
+  groups           Group[]
+  tasks            Task[]
+  stations         Station[]
+  contentEntries   ContentEntry[]
+  moodChecks       MoodCheck[]
+}
+
+model User {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  fullName         String
+  phoneNumber      String?  @unique
+  email            String?  @unique
+  passwordHash     String
+  role             String   // e.g. "student", "staff", "admin"
+  subRole          String?
+  classId          String?
+  status           String   @default("active")
+  avatarUrl        String?
+  createdAt        DateTime @default(now())
+  lastLoginAt      DateTime?
+
+  contentEntries   ContentEntry[]
+  moodChecks       MoodCheck[]
+  createdTasks     Task[]
+}
+
+model Group {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  name             String
+  type             String
+  description      String?
+  createdAt        DateTime @default(now())
+}
+
+model ContentEntry {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  ownerUserId      String
+  ownerUser        User     @relation(fields: [ownerUserId], references: [id])
+  title            String?
+  bodyText         String?
+  type             String   // e.g. "journal", "note"
+  category         String?
+  tags             Json?
+  visibility       String   @default("private")
+  sharedWith       Json?
+  status           String   @default("draft")
+  versionNumber    Int      @default(1)
+  parentEntryId    String?
+  createdAt        DateTime @default(now())
+  submittedAt      DateTime?
+  lockedAt         DateTime?
+}
+
+model Task {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  creatorUserId    String
+  creatorUser      User     @relation(fields: [creatorUserId], references: [id])
+  title            String
+  description      String?
+  scheduleType     String
+  dueDate          DateTime?
+  dueTime          String?
+  reminderRules    Json?
+  multiPartEnabled Boolean  @default(false)
+  status           String   @default("open")
+  targetAudience   Json?
+  createdAt        DateTime @default(now())
+}
+
+model Station {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  name             String
+  stationType      String
+  isPrivate        Boolean  @default(false)
+  dateMode         String
+  scheduledDate    DateTime?
+  linkedEventId    String?
+  orderIndex       Int      @default(0)
+  status           String   @default("active")
+}
+
+model MoodCheck {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  frequency        String
+  ratingType       String
+  ratingValue      Int
+  explanation      String?
+  trendStatus      String?
+  createdAt        DateTime @default(now())
+}
