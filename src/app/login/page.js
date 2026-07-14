@@ -25,10 +25,10 @@ export default function LoginPage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Redirect based on role
-        if (data.user.role === 'admin') router.push('/admin');
-        else if (data.user.role === 'staff') router.push('/staff');
-        else router.push('/'); // Student dashboard
+        // Redirect based on role with full reload to ensure middleware gets the cookie
+        if (data.user.role === 'admin') window.location.href = '/admin';
+        else if (data.user.role === 'staff') window.location.href = '/staff';
+        else window.location.href = '/'; // Student dashboard
       } else {
         const errorData = await res.json();
         setError(errorData.error || 'שגיאה בהתחברות. ודא שהמספר תקין או פנה למדריך.');
