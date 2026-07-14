@@ -7,6 +7,7 @@ import styles from './login.module.css';
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber })
+        body: JSON.stringify({ phoneNumber, password })
       });
 
       if (res.ok) {
@@ -31,7 +32,7 @@ export default function LoginPage() {
         else window.location.href = '/'; // Student dashboard
       } else {
         const errorData = await res.json();
-        setError(errorData.error || 'שגיאה בהתחברות. ודא שהמספר תקין או פנה למדריך.');
+        setError(errorData.error || 'שגיאה בהתחברות. ודא שהפרטים תקינים.');
       }
     } catch (err) {
       console.error(err);
@@ -50,7 +51,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleLogin} className={styles.form}>
-          <div style={{position: 'relative', marginBottom: '20px'}}>
+          <div style={{position: 'relative', marginBottom: '15px'}}>
             <Phone size={20} style={{position: 'absolute', right: '15px', top: '15px', color: '#94a3b8'}} />
             <input 
               type="tel" 
@@ -69,12 +70,30 @@ export default function LoginPage() {
             />
           </div>
 
+          <div style={{position: 'relative', marginBottom: '20px'}}>
+            <input 
+              type="password" 
+              placeholder="סיסמא" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)}
+              required
+              style={{
+                width: '100%', 
+                padding: '15px 15px 15px 15px', 
+                borderRadius: '8px', 
+                border: '1px solid #e2e8f0',
+                fontSize: '16px',
+                fontFamily: 'inherit'
+              }}
+            />
+          </div>
+
           {error && <div style={{color: '#e53e3e', marginBottom: '15px', fontSize: '14px'}}>{error}</div>}
 
           <button 
             type="submit" 
             className={styles.loginBtn}
-            disabled={isLoading || !phoneNumber}
+            disabled={isLoading || !phoneNumber || !password}
           >
             <LogIn size={20} />
             {isLoading ? 'מתחבר...' : 'כניסה'}

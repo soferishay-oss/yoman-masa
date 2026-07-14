@@ -8,6 +8,7 @@ import styles from './page.module.css';
 export default function Home() {
   const theme = useContext(ThemeContext);
   const [tasks, setTasks] = useState([]);
+  const [selectedMood, setSelectedMood] = useState(null);
 
   useEffect(() => {
     async function fetchTasks() {
@@ -39,24 +40,41 @@ export default function Home() {
           <h3 style={{marginBottom: '15px'}}>איך המרגש היום?</h3>
           <form onSubmit={async (e) => {
             e.preventDefault();
-            const val = e.target.rating.value;
-            if(!val) return;
+            if(!selectedMood) return;
             const res = await fetch('/api/student/mood', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ ratingValue: parseInt(val), explanation: 'דיווח מדאשבורד' })
+              body: JSON.stringify({ ratingValue: selectedMood, explanation: 'דיווח מדאשבורד' })
             });
-            if (res.ok) alert('תודה על השיתוף!');
+            if (res.ok) alert('נשמר בהצלחה, תודה על השיתוף!');
             else alert('שגיאה בעדכון מצב רוח');
           }}>
             <div style={{display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px'}}>
-              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="1" style={{display:'none'}}/><span style={{fontSize:'30px'}}>😞</span></label>
-              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="2" style={{display:'none'}}/><span style={{fontSize:'30px'}}>😕</span></label>
-              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="3" style={{display:'none'}}/><span style={{fontSize:'30px'}}>😐</span></label>
-              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="4" style={{display:'none'}}/><span style={{fontSize:'30px'}}>🙂</span></label>
-              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="5" style={{display:'none'}}/><span style={{fontSize:'30px'}}>🤩</span></label>
+              {[
+                { val: 1, emoji: '😞' },
+                { val: 2, emoji: '😕' },
+                { val: 3, emoji: '😐' },
+                { val: 4, emoji: '🙂' },
+                { val: 5, emoji: '🤩' },
+              ].map(item => (
+                <div 
+                  key={item.val}
+                  onClick={() => setSelectedMood(item.val)}
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '30px',
+                    padding: '5px',
+                    borderRadius: '50%',
+                    background: selectedMood === item.val ? '#e2e8f0' : 'transparent',
+                    transform: selectedMood === item.val ? 'scale(1.2)' : 'scale(1)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {item.emoji}
+                </div>
+              ))}
             </div>
-            <button type="submit" className={styles.btnPrimary} style={{background: 'var(--primary-color)', color: 'white', padding: '8px 20px', borderRadius: '20px', border: 'none'}}>שתף</button>
+            <button type="submit" className={styles.btnPrimary} style={{background: 'var(--primary-color)', color: 'white', padding: '8px 20px', borderRadius: '20px', border: 'none', cursor: 'pointer'}} disabled={!selectedMood}>שמור</button>
           </form>
         </div>
       </section>

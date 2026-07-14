@@ -2,14 +2,16 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { SignJWT } from 'jose';
 
+import bcrypt from 'bcryptjs';
+
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-for-dev');
 
 export async function POST(request) {
   try {
-    const { phoneNumber } = await request.json();
+    const { phoneNumber, password } = await request.json();
 
-    if (!phoneNumber) {
-      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    if (!phoneNumber || !password) {
+      return NextResponse.json({ error: 'Phone number and password are required' }, { status: 400 });
     }
 
     // Clean phone number (strip spaces/dashes if any)
@@ -23,11 +25,8 @@ export async function POST(request) {
 
     if (!user) {
       // For development fallback if no user exists, maybe they meant to use standard admin
-      // In production, we'd just return 401. Let's keep it strict.
-      // But if it's the very first time and NO users exist in the DB, 
-      // let's allow a backdoor for the global admin so they aren't locked out.
       const allUsersCount = await prisma.user.count();
-      if (allUsersCount === 0 && cleanPhone === '0500000000') {
+      if (allUsersCount === 0 && cleanPhone === '0500000000' && password === 'admin') {
         const token = await new SignJWT({
           userId: 'dev-admin',
           tenantId: 'dev-tenant',
@@ -52,7 +51,13 @@ export async function POST(request) {
         return response;
       }
 
-      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+      return NextResponse.json({ error: 'User not found or incorrect credentials' }, { status: 401 });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return NextResponse.json({ error: 'Incorrect credentials' }, { status: 401 });
     }
 
     if (user.status !== 'active') {
