@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import styles from './calendar.module.css';
 import { getCalendarGrid, getHebrewDate, getGregorianDate } from '@/lib/dateUtils';

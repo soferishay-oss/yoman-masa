@@ -24,6 +24,7 @@ model Tenant {
 
   users            User[]
   groups           Group[]
+  events           Event[]
   tasks            Task[]
   stations         Station[]
   contentEntries   ContentEntry[]
@@ -51,6 +52,8 @@ model User {
   contentEntries   ContentEntry[]
   moodChecks       MoodCheck[]
   createdTasks     Task[]
+  createdEvents    Event[]
+  eventRsvps       EventRSVP[]
 }
 
 model Group {
@@ -80,7 +83,9 @@ model ContentEntry {
   status           String   @default("draft")
   versionNumber    Int      @default(1)
   parentEntryId    String?
+  isVault          Boolean  @default(false)
   createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   submittedAt      DateTime?
   lockedAt         DateTime?
 }
@@ -130,3 +135,29 @@ model MoodCheck {
   trendStatus      String?
   createdAt        DateTime @default(now())
 }
+
+model Event {
+  id               String      @id @default(uuid())
+  tenantId         String
+  tenant           Tenant      @relation(fields: [tenantId], references: [id])
+  creatorId        String
+  creator          User        @relation(fields: [creatorId], references: [id])
+  title            String
+  description      String?
+  scheduledDate    DateTime?
+  location         String?
+  status           String      @default("upcoming")
+  createdAt        DateTime    @default(now())
+  rsvps            EventRSVP[]
+}
+
+model EventRSVP {
+  id               String   @id @default(uuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+}
+

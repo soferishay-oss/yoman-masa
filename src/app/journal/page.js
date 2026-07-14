@@ -48,7 +48,8 @@ export default function JournalPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          content: finalContent,
+          title: newEntryTitle || null,
+          content: newEntryContent,
           isDraft: false
         })
       });
@@ -59,7 +60,8 @@ export default function JournalPage() {
         
         // Also queue sync action just in case we need offline support later
         queueSyncAction('CREATE_JOURNAL_ENTRY', {
-          bodyText: finalContent,
+          title: newEntryTitle,
+          bodyText: newEntryContent,
           visibility: 'private'
         });
 
@@ -69,6 +71,21 @@ export default function JournalPage() {
       }
     } catch (error) {
       console.error('Error saving post:', error);
+    }
+  };
+
+  const handleSaveToVault = async (id) => {
+    try {
+      const res = await fetch('/api/vault', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: id, isVault: true })
+      });
+      if (res.ok) {
+        alert('נשמר לכספת הזיכרונות!');
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -123,26 +140,28 @@ export default function JournalPage() {
           <p>אין עדיין רשומות ביומן. זה הזמן לכתוב את הראשונה!</p>
         ) : (
           entries.map(entry => {
-            // Check if title is prepended with ** **
-            let title = 'רשומה ביומן';
-            let content = entry.content;
-            if (content.startsWith('**') && content.includes('**\n')) {
-              const parts = content.split('**\n');
-              title = parts[0].replace('**', '');
-              content = parts[1];
-            }
             const dateStr = new Date(entry.createdAt).toLocaleDateString('he-IL');
 
             return (
-              <div key={entry.id} className={styles.entryCard}>
+              <div key={entry.id} className={styles.entryCard} style={{position:'relative'}}>
+                <button 
+                  onClick={() => handleSaveToVault(entry.id)}
+                  style={{
+                    position:'absolute', left:'15px', top:'15px', background:'none', border:'none', 
+                    color:'#94a3b8', cursor:'pointer', padding:'5px'
+                  }}
+                  title="שמור לכספת הזיכרונות"
+                >
+                  <Star size={20} />
+                </button>
                 <div className={styles.entryHeader}>
                   <div className={styles.entryImage}>{renderIcon('default')}</div>
                   <div className={styles.entryMeta}>
-                    <h3>{title}</h3>
+                    <h3>{entry.title || 'רשומה ביומן'}</h3>
                     <span className={styles.entryDate}>{dateStr}</span>
                   </div>
                 </div>
-                <p className={styles.entryBody}>{content}</p>
+                <p className={styles.entryBody}>{entry.bodyText}</p>
               </div>
             );
           })

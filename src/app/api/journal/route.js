@@ -10,17 +10,14 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const posts = await prisma.journalPost.findMany({
+    const posts = await prisma.contentEntry.findMany({
       where: {
-        authorId: userId,
+        ownerUserId: userId,
         tenantId: tenantId,
+        type: 'journal'
       },
       orderBy: {
         createdAt: 'desc',
-      },
-      include: {
-        mood: true,
-        tags: true,
       }
     });
 
@@ -41,23 +38,20 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-    const { content, moodId, isDraft } = data;
+    const { content, title, isDraft } = data;
 
     if (!content) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
 
-    const newPost = await prisma.journalPost.create({
+    const newPost = await prisma.contentEntry.create({
       data: {
-        content,
-        isDraft: isDraft || false,
-        authorId: userId,
+        bodyText: content,
+        title: title || null,
+        type: 'journal',
+        status: isDraft ? 'draft' : 'published',
+        ownerUserId: userId,
         tenantId: tenantId,
-        moodId: moodId || null,
-        // tags could be handled here if added in UI
-      },
-      include: {
-        mood: true,
       }
     });
 

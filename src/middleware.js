@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from './lib/auth';
+import { jwtVerify } from 'jose';
 
-const publicRoutes = ['/login', '/api/auth/login'];
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-for-dev');
 
 export async function middleware(request) {
+  // Exclude public paths and static files
   const { pathname } = request.nextUrl;
   
   if (
-    publicRoutes.includes(pathname) ||
+    pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/login') ||
     pathname.startsWith('/_next') ||
-    pathname.includes('.')
+    pathname.startsWith('/favicon.ico')
   ) {
     return NextResponse.next();
   }
@@ -17,27 +19,33 @@ export async function middleware(request) {
   const token = request.cookies.get('auth_token')?.value;
 
   if (!token) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   try {
-    const payload = await verifyToken(token);
-    const response = NextResponse.next();
+    const { payload } = await jwtVerify(token, JWT_SECRET);
     
-    // Pass user info to headers for API routes
-    response.headers.set('x-user-id', payload.sub);
-    response.headers.set('x-tenant-id', payload.tenantId);
-    response.headers.set('x-user-role', payload.role);
-    
-    return response;
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', payload.userId);
+    requestHeaders.set('x-tenant-id', payload.tenantId);
+    requestHeaders.set('x-user-role', payload.role);
+    if (payload.groupId) requestHeaders.set('x-group-id', payload.groupId);
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   } catch (error) {
-    // Invalid token
+    console.error('JWT Verification failed:', error.message);
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
     const response = NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete('auth_token');
     return response;
   }
 }
-
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)', '/api/:path*'],
-};

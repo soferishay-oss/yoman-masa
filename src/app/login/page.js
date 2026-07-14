@@ -2,92 +2,88 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LogIn, Phone } from 'lucide-react';
 import styles from './login.module.css';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
-    setLoading(true);
 
     try {
-      const isEmail = identifier.includes('@');
-      
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: isEmail ? identifier : undefined,
-          phoneNumber: !isEmail ? identifier : undefined,
-          password
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber })
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'התחברות נכשלה');
+      if (res.ok) {
+        const data = await res.json();
+        // Redirect based on role
+        if (data.user.role === 'admin') router.push('/admin');
+        else if (data.user.role === 'staff') router.push('/staff');
+        else router.push('/'); // Student dashboard
+      } else {
+        const errorData = await res.json();
+        setError(errorData.error || 'שגיאה בהתחברות. ודא שהמספר תקין או פנה למדריך.');
       }
-
-      // Redirect to home dashboard
-      router.push('/');
-      router.refresh();
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError('שגיאת רשת. אנא נסה שוב.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.loginCard}>
+      <div className={styles.card}>
         <div className={styles.header}>
-          <h1>ברוכים הבאים למסע</h1>
-          <p>התחברו כדי להמשיך את המסע שלכם</p>
+          <h2>יומן מסע אישי</h2>
+          <p>התחברות למערכת</p>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {error && <div className={styles.error}>{error}</div>}
-          
-          <div className={styles.inputGroup}>
-            <label htmlFor="identifier">אימייל או מספר טלפון</label>
-            <input
-              id="identifier"
-              type="text"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="name@example.com או 0501234567"
+        <form onSubmit={handleLogin} className={styles.form}>
+          <div style={{position: 'relative', marginBottom: '20px'}}>
+            <Phone size={20} style={{position: 'absolute', right: '15px', top: '15px', color: '#94a3b8'}} />
+            <input 
+              type="tel" 
+              placeholder="הזן מספר פלאפון" 
+              value={phoneNumber} 
+              onChange={e => setPhoneNumber(e.target.value)}
               required
-              dir="ltr"
+              style={{
+                width: '100%', 
+                padding: '15px 45px 15px 15px', 
+                borderRadius: '8px', 
+                border: '1px solid #e2e8f0',
+                fontSize: '16px',
+                fontFamily: 'inherit'
+              }}
             />
           </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="password">סיסמה</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              dir="ltr"
-            />
-          </div>
+          {error && <div style={{color: '#e53e3e', marginBottom: '15px', fontSize: '14px'}}>{error}</div>}
 
-          <button type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? 'מתחבר...' : 'התחברות'}
+          <button 
+            type="submit" 
+            className={styles.loginBtn}
+            disabled={isLoading || !phoneNumber}
+          >
+            <LogIn size={20} />
+            {isLoading ? 'מתחבר...' : 'כניסה'}
           </button>
         </form>
+        
+        <p style={{textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#64748b'}}>
+          * ההתחברות באמצעות מספר הפלאפון כפי שהוזן על ידי צוות המוסד.
+        </p>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { HDate, Sedra } from '@hebcal/core';
+import { HDate, Sedra, gematriya } from '@hebcal/core';
 
 export function getHebrewDate(date = new Date()) {
   const hdate = new HDate(date);
@@ -35,7 +35,6 @@ export function getCalendarGrid(year, month) {
         if (parashat && parashat.chag) {
            parasha = parashat.chag;
         } else if (parashat && parashat.parsha && parashat.parsha.length > 0) {
-           // Hebcal usually returns arrays for parshiot
            parasha = `פרשת ${parashat.parsha.join(' ו')}`;
         }
       } catch (e) {
@@ -49,10 +48,9 @@ export function getCalendarGrid(year, month) {
       hebrew: hdate.renderGematriya(), // full string
       gregorian: getGregorianDate(d),
       gregorianDay: d.getDate(),
-      // Just the day in Gematriya: א', ט"ו, etc.
-      hebrewDay: hdate.renderGematriya(true),
-      hebrewMonthStr: hdate.getMonthName('he'), // e.g. אדר א', אדר ב'
-      hebrewYearStr: hdate.getFullYear().toString(), // fallback if no specific method
+      hebrewDay: gematriya(hdate.getDate()),
+      hebrewMonthStr: hdate.getMonthName('he'),
+      hebrewYearStr: gematriya(hdate.getFullYear()),
       parasha
     };
   };

@@ -1,12 +1,21 @@
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { ThemeContext } from '@/components/ThemeProvider';
 import { Map, Users, Star, Mail, Flag, User, BookOpen, ImageIcon, ChevronLeft, Shield } from 'lucide-react';
 import styles from './page.module.css';
 
 export default function Home() {
   const theme = useContext(ThemeContext);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    async function fetchTasks() {
+      const res = await fetch('/api/student/tasks');
+      if(res.ok) setTasks(await res.json());
+    }
+    fetchTasks();
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -24,63 +33,72 @@ export default function Home() {
         <p className={styles.subtitle}>המסע שלך. הסיפור שלך.</p>
       </header>
 
+      {/* Mood Tracker */}
+      <section className={styles.section} style={{marginTop: '20px'}}>
+        <div className={styles.card} style={{padding: '20px', textAlign: 'center'}}>
+          <h3 style={{marginBottom: '15px'}}>איך המרגש היום?</h3>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const val = e.target.rating.value;
+            if(!val) return;
+            const res = await fetch('/api/student/mood', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ ratingValue: parseInt(val), explanation: 'דיווח מדאשבורד' })
+            });
+            if (res.ok) alert('תודה על השיתוף!');
+            else alert('שגיאה בעדכון מצב רוח');
+          }}>
+            <div style={{display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px'}}>
+              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="1" style={{display:'none'}}/><span style={{fontSize:'30px'}}>😞</span></label>
+              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="2" style={{display:'none'}}/><span style={{fontSize:'30px'}}>😕</span></label>
+              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="3" style={{display:'none'}}/><span style={{fontSize:'30px'}}>😐</span></label>
+              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="4" style={{display:'none'}}/><span style={{fontSize:'30px'}}>🙂</span></label>
+              <label style={{cursor:'pointer'}}><input type="radio" name="rating" value="5" style={{display:'none'}}/><span style={{fontSize:'30px'}}>🤩</span></label>
+            </div>
+            <button type="submit" className={styles.btnPrimary} style={{background: 'var(--primary-color)', color: 'white', padding: '8px 20px', borderRadius: '20px', border: 'none'}}>שתף</button>
+          </form>
+        </div>
+      </section>
+
       {/* Open Activities Section */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>פעילויות פתוחות</h2>
+        <h2 className={styles.sectionTitle}>משימות פתוחות מהצוות</h2>
         <div className={styles.activitiesList}>
           
-          <div className={styles.activityCard}>
-            <div className={`${styles.iconWrapper} ${styles.bgMountain}`}>
-               <Map size={24} color="var(--primary-color)" />
+          {tasks.map(task => (
+            <div key={task.id} className={styles.activityCard} onClick={async () => {
+              if (window.confirm('האם סיימת את המשימה?')) {
+                const res = await fetch('/api/student/tasks', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ taskId: task.id })
+                });
+                if(res.ok) {
+                  alert('כל הכבוד!');
+                  setTasks(tasks.filter(t => t.id !== task.id));
+                }
+              }
+            }}>
+              <div className={`${styles.iconWrapper} ${styles.bgOrange}`}>
+                 <Star size={24} color="var(--primary-color)" />
+              </div>
+              <div className={styles.activityContent}>
+                <h3>{task.title}</h3>
+                <p>{task.description}</p>
+              </div>
+              <span className={`${styles.statusTag} ${styles.tagOpen}`}>לביצוע</span>
+              <ChevronLeft className={styles.chevron} size={20} />
             </div>
-            <div className={styles.activityContent}>
-              <h3>עיבוד מסע אלוני הבשן</h3>
-              <p>שתף מה שלקחת מהמסע</p>
-            </div>
-            <span className={`${styles.statusTag} ${styles.tagOpen}`}>פתוח</span>
-            <ChevronLeft className={styles.chevron} size={20} />
-          </div>
+          ))}
 
-          <div className={styles.activityCard}>
-            <div className={`${styles.iconWrapper} ${styles.bgPurple}`}>
-              <Users size={24} color="var(--primary-color)" />
+          {tasks.length === 0 && (
+            <div style={{padding: '20px', color: '#64748b', textAlign: 'center'}}>
+              אין משימות פתוחות כרגע.
             </div>
-            <div className={styles.activityContent}>
-              <h3>הכנה לשיחת אמצע שנה</h3>
-              <p>שאלות למחשבה לפני הפגישה</p>
-            </div>
-            <span className={`${styles.statusTag} ${styles.tagOpen}`}>פתוח</span>
-            <ChevronLeft className={styles.chevron} size={20} />
-          </div>
-
-          <div className={styles.activityCard}>
-            <div className={`${styles.iconWrapper} ${styles.bgOrange}`}>
-              <Star size={24} color="var(--primary-color)" />
-            </div>
-            <div className={styles.activityContent}>
-              <h3>דירוג שבועי</h3>
-              <p>איך עבר עליך השבוע?</p>
-            </div>
-            <span className={`${styles.statusTag} ${styles.tagPending}`}>ממתין</span>
-            <ChevronLeft className={styles.chevron} size={20} />
-          </div>
-
-          <div className={styles.activityCard}>
-            <div className={`${styles.iconWrapper} ${styles.bgBlue}`}>
-              <Mail size={24} color="var(--primary-color)" />
-            </div>
-            <div className={styles.activityContent}>
-              <h3>מכתבי הוקרה לחברים</h3>
-              <p>כתוב לחברים מכתב הוקרה</p>
-            </div>
-            <span className={`${styles.statusTag} ${styles.tagPending}`}>ממתין</span>
-            <ChevronLeft className={styles.chevron} size={20} />
-          </div>
+          )}
 
         </div>
-        <button className={styles.textBtn}>
-          לכל הפעילויות <ChevronLeft size={16} style={{display: 'inline', verticalAlign: 'middle', marginRight: '4px'}}/>
-        </button>
       </section>
 
       {/* Upcoming Stations Section */}

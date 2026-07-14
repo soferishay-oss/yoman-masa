@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Settings, Users, Save, Edit } from 'lucide-react';
 import styles from './admin.module.css';
 import { ThemeContext } from '@/components/ThemeProvider';

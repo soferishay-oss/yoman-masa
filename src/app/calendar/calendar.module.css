@@ -3,6 +3,8 @@
   flex-direction: column;
   gap: 20px;
   padding-bottom: 40px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .header {
