@@ -38,20 +38,23 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-    const { content, title, isDraft } = data;
+    const { content, title, isDraft, mediaUrls, aiTranscription, aiThought } = data;
 
-    if (!content) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+    if (!content && !(mediaUrls && mediaUrls.length > 0)) {
+      return NextResponse.json({ error: 'Content or media is required' }, { status: 400 });
     }
 
     const newPost = await prisma.contentEntry.create({
       data: {
-        bodyText: content,
+        bodyText: content || '',
         title: title || null,
         type: 'journal',
         status: isDraft ? 'draft' : 'published',
         ownerUserId: userId,
         tenantId: tenantId,
+        mediaUrls: mediaUrls || [],
+        aiTranscription: aiTranscription || null,
+        aiThought: aiThought || null,
       }
     });
 

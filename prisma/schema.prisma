@@ -78,6 +78,9 @@ model ContentEntry {
   type             String   // e.g. "journal", "note"
   category         String?
   tags             Json?
+  mediaUrls        Json?
+  aiTranscription  String?
+  aiThought        String?
   visibility       String   @default("private")
   sharedWith       Json?
   status           String   @default("draft")

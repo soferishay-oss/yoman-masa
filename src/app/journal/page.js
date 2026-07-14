@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PenLine, Map, Sunrise, Image as ImageIcon } from 'lucide-react';
+import { PenLine, Map, Sunrise, Image as ImageIcon, Video, Mic, Sparkles } from 'lucide-react';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
 
@@ -9,8 +9,12 @@ export default function JournalPage() {
   const [entries, setEntries] = useState([]);
   const [newEntryTitle, setNewEntryTitle] = useState('');
   const [newEntryContent, setNewEntryContent] = useState('');
+  const [mediaUrls, setMediaUrls] = useState([]);
   const [isComposing, setIsComposing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [aiThought, setAiThought] = useState('');
+  const [aiTranscription, setAiTranscription] = useState('');
 
   useEffect(() => {
     fetchEntries();
@@ -32,14 +36,7 @@ export default function JournalPage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!newEntryContent) return;
-
-    // Build the string: if title exists, we might want to store it in DB (we don't have title column in schema, but we can prepend it to content for now, or just use content)
-    // Actually schema for JournalPost only has `content`. We'll just prepend title as bold text if provided.
-    let finalContent = newEntryContent;
-    if (newEntryTitle) {
-      finalContent = `**${newEntryTitle}**\n${newEntryContent}`;
-    }
+    if (!newEntryContent && mediaUrls.length === 0) return;
 
     try {
       const res = await fetch('/api/journal', {
@@ -50,7 +47,10 @@ export default function JournalPage() {
         body: JSON.stringify({
           title: newEntryTitle || null,
           content: newEntryContent,
-          isDraft: false
+          isDraft: false,
+          mediaUrls,
+          aiTranscription,
+          aiThought
         })
       });
 
@@ -58,7 +58,6 @@ export default function JournalPage() {
         const newPost = await res.json();
         setEntries([newPost, ...entries]);
         
-        // Also queue sync action just in case we need offline support later
         queueSyncAction('CREATE_JOURNAL_ENTRY', {
           title: newEntryTitle,
           bodyText: newEntryContent,
@@ -67,11 +66,56 @@ export default function JournalPage() {
 
         setNewEntryTitle('');
         setNewEntryContent('');
+        setMediaUrls([]);
+        setAiTranscription('');
+        setAiThought('');
         setIsComposing(false);
       }
     } catch (error) {
       console.error('Error saving post:', error);
     }
+  };
+
+  const handleSimulateMediaUpload = (type) => {
+    // In production this would upload to S3/Cloudinary. Here we use placeholders.
+    if (type === 'image') {
+      setMediaUrls([...mediaUrls, { type: 'image', url: 'https://via.placeholder.com/400x300.png?text=Simulated+Image' }]);
+    } else {
+      setMediaUrls([...mediaUrls, { type: 'video', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }]);
+    }
+  };
+
+  const handleSimulateAudioRecording = async () => {
+    setIsRecording(true);
+    // Simulate recording for 2 seconds
+    await new Promise(r => setTimeout(r, 2000));
+    
+    try {
+      const res = await fetch('/api/ai/transcribe', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setNewEntryContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
+        setAiTranscription(data.basicText);
+        setAiThought(data.aiThought);
+      }
+    } catch (err) {
+      console.error('Failed to transcribe', err);
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
+  const renderMediaPreview = () => {
+    if (mediaUrls.length === 0) return null;
+    return (
+      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+        {mediaUrls.map((media, idx) => (
+          media.type === 'image' ? 
+            <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} /> :
+            <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />
+        ))}
+      </div>
+    );
   };
 
   const handleSaveToVault = async (id) => {
@@ -81,9 +125,7 @@ export default function JournalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entryId: id, isVault: true })
       });
-      if (res.ok) {
-        alert('נשמר לכספת הזיכרונות!');
-      }
+      if (res.ok) alert('נשמר לכספת הזיכרונות!');
     } catch (error) {
       console.error(error);
     }
@@ -123,12 +165,35 @@ export default function JournalPage() {
             value={newEntryContent}
             onChange={(e) => setNewEntryContent(e.target.value)}
             className={styles.contentInput}
-            required
             rows={5}
           />
+          
+          {aiThought && (
+            <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid var(--primary-color)' }}>
+              <span style={{color: 'var(--primary-color)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                <Sparkles size={16} /> שאלה למחשבה:
+              </span>
+              <p style={{fontSize: '14px', margin: '5px 0 0'}}>{aiThought}</p>
+            </div>
+          )}
+
+          {renderMediaPreview()}
+
+          <div style={{display: 'flex', gap: '10px', marginTop: '10px', marginBottom: '15px'}}>
+            <button type="button" onClick={() => handleSimulateMediaUpload('image')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <ImageIcon size={18} /> תמונה
+            </button>
+            <button type="button" onClick={() => handleSimulateMediaUpload('video')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <Video size={18} /> וידאו
+            </button>
+            <button type="button" onClick={handleSimulateAudioRecording} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: isRecording ? '#fee2e2' : 'white', color: isRecording ? '#ef4444' : 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <Mic size={18} /> {isRecording ? 'מקליט ומעבד...' : 'הקלטה חכמה'}
+            </button>
+          </div>
+
           <div className={styles.formActions}>
             <button type="button" onClick={() => setIsComposing(false)} className={styles.cancelBtn}>ביטול</button>
-            <button type="submit" className={styles.saveBtn}>שמור ביומן</button>
+            <button type="submit" className={styles.saveBtn} disabled={!newEntryContent && mediaUrls.length === 0}>שמור ביומן</button>
           </div>
         </form>
       )}
@@ -161,7 +226,27 @@ export default function JournalPage() {
                     <span className={styles.entryDate}>{dateStr}</span>
                   </div>
                 </div>
+                
                 <p className={styles.entryBody}>{entry.bodyText}</p>
+                
+                {entry.mediaUrls && entry.mediaUrls.length > 0 && (
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
+                    {entry.mediaUrls.map((media, idx) => (
+                      media.type === 'image' ? 
+                        <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} /> :
+                        <video key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
+                    ))}
+                  </div>
+                )}
+
+                {entry.aiThought && (
+                  <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', marginTop: '15px', borderRight: '4px solid var(--primary-color)' }}>
+                    <span style={{color: 'var(--primary-color)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px'}}>
+                      <Sparkles size={16} /> שאלה למחשבה:
+                    </span>
+                    <p style={{fontSize: '14px', margin: '0'}}>{entry.aiThought}</p>
+                  </div>
+                )}
               </div>
             );
           })
