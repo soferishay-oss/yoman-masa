@@ -16,6 +16,7 @@ model Tenant {
   slogan           String?
   themeConfig      Json?
   dominantDateMode String   @default("gregorian")
+  studyYears       Int      @default(1)
   enabledModules   Json?
   retentionPolicy  String?
   createdAt        DateTime @default(now())
@@ -40,6 +41,8 @@ model User {
   role             String   // e.g. "student", "staff", "admin"
   subRole          String?
   classId          String?
+  groupId          String?
+  group            Group?   @relation(fields: [groupId], references: [id])
   status           String   @default("active")
   avatarUrl        String?
   createdAt        DateTime @default(now())
@@ -58,6 +61,7 @@ model Group {
   type             String
   description      String?
   createdAt        DateTime @default(now())
+  users            User[]
 }
 
 model ContentEntry {

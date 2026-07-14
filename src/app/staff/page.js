@@ -75,6 +75,39 @@ export default function StaffDashboard() {
           </div>
         </div>
       </section>
+      <section className={styles.section} style={{marginTop: '30px'}}>
+        <h2 className={styles.sectionTitle}><Activity size={20} style={{display:'inline', verticalAlign:'middle'}}/> ניהול משימות אישיות (Task Builder)</h2>
+        <div className={styles.card} style={{padding: '20px'}}>
+          <p style={{marginBottom: '15px'}}>שלח משימה אישית לחניך או לקבוצה.</p>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const res = await fetch('/api/staff/tasks', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                title: formData.get('title'),
+                description: formData.get('description'),
+                scheduleType: 'once',
+                dueDate: formData.get('dueDate') || null
+              })
+            });
+            if (res.ok) {
+              alert('משימה נוצרה בהצלחה!');
+              e.target.reset();
+            } else {
+              alert('שגיאה ביצירת משימה');
+            }
+          }}>
+            <div style={{display:'flex', gap:'10px', marginBottom: '10px'}}>
+              <input name="title" type="text" placeholder="כותרת המשימה" required style={{flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ccc'}} />
+              <input name="dueDate" type="date" style={{padding: '10px', borderRadius: '8px', border: '1px solid #ccc'}} />
+            </div>
+            <textarea name="description" placeholder="תיאור מפורט..." style={{width:'100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px'}}></textarea>
+            <button type="submit" style={{padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer'}}>שלח משימה לחניכים</button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
