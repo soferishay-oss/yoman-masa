@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { PenLine, Map, Sunrise, Image as ImageIcon } from 'lucide-react';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
 
 export default function JournalPage() {
   const [entries, setEntries] = useState([
-    { id: 1, title: 'מסע יהודה', content: 'רגעים פשוטים שהפכו למשמעותיים. למדתי הרבה על החברים ועל עצמי.', date: '22.05.25', image: '🏔️' },
-    { id: 2, title: 'התחלה חדשה', content: 'היום הראשון במכינה. יש המון חששות אבל גם ציפייה גדולה.', date: '01.09.24', image: '🌅' }
+    { id: 1, title: 'מסע יהודה', content: 'רגעים פשוטים שהפכו למשמעותיים. למדתי הרבה על החברים ועל עצמי.', date: '22.05.25', iconType: 'map' },
+    { id: 2, title: 'התחלה חדשה', content: 'היום הראשון במכינה. יש המון חששות אבל גם ציפייה גדולה.', date: '01.09.24', iconType: 'sunrise' }
   ]);
   
   const [newEntryTitle, setNewEntryTitle] = useState('');
@@ -28,7 +29,7 @@ export default function JournalPage() {
       title: newEntryTitle || 'רשומה ללא כותרת',
       content: newEntryContent,
       date: new Date().toLocaleDateString('he-IL'),
-      image: '📝'
+      iconType: 'default'
     };
 
     // Add to local UI state
@@ -46,6 +47,14 @@ export default function JournalPage() {
     setIsComposing(false);
   };
 
+  const renderIcon = (type) => {
+    switch (type) {
+      case 'map': return <Map size={24} color="var(--primary-color)" />;
+      case 'sunrise': return <Sunrise size={24} color="var(--primary-color)" />;
+      default: return <ImageIcon size={24} color="var(--primary-color)" />;
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -55,7 +64,7 @@ export default function JournalPage() {
 
       {!isComposing ? (
         <button className={styles.composeBtn} onClick={() => setIsComposing(true)}>
-          <span className={styles.composeIcon}>✏️</span>
+          <span className={styles.composeIcon}><PenLine size={20} /></span>
           כתוב רשומה חדשה
         </button>
       ) : (
@@ -86,7 +95,7 @@ export default function JournalPage() {
         {entries.map(entry => (
           <div key={entry.id} className={styles.entryCard}>
             <div className={styles.entryHeader}>
-              <div className={styles.entryImage}>{entry.image}</div>
+              <div className={styles.entryImage}>{renderIcon(entry.iconType)}</div>
               <div className={styles.entryMeta}>
                 <h3>{entry.title}</h3>
                 <span className={styles.entryDate}>{entry.date}</span>
