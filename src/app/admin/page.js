@@ -59,6 +59,14 @@ export default function AdminDashboard() {
               <span>{primaryColor}</span>
             </div>
           </div>
+          
+          <div className={styles.formGroup}>
+            <label>תצוגת תאריכים (ברירת מחדל)</label>
+            <select className={styles.input} defaultValue="hebrew">
+              <option value="hebrew">לוח שנה עברי</option>
+              <option value="gregorian">לוח שנה לועזי</option>
+            </select>
+          </div>
 
           <button className={styles.saveBtn}>
             <Save size={18} style={{display:'inline', verticalAlign:'middle', marginRight:'5px'}} />
