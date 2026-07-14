@@ -29,10 +29,17 @@ export function getCalendarGrid(year, month) {
     // Get parasha for Saturday
     let parasha = null;
     if (d.getDay() === 6) { // Saturday
-      const sedra = new Sedra(hdate.getFullYear(), true); // true for Israel
-      const parashat = sedra.getString(hdate, 'he');
-      if (parashat) {
-        parasha = `פרשת ${parashat}`;
+      try {
+        const sedra = new Sedra(hdate.getFullYear(), true); // true for Israel
+        const parashat = sedra.lookup(hdate);
+        if (parashat && parashat.chag) {
+           parasha = parashat.chag;
+        } else if (parashat && parashat.parsha && parashat.parsha.length > 0) {
+           // Hebcal usually returns arrays for parshiot
+           parasha = `פרשת ${parashat.parsha.join(' ו')}`;
+        }
+      } catch (e) {
+        console.error("Hebcal Sedra error:", e);
       }
     }
 
@@ -43,9 +50,9 @@ export function getCalendarGrid(year, month) {
       gregorian: getGregorianDate(d),
       gregorianDay: d.getDate(),
       // Just the day in Gematriya: א', ט"ו, etc.
-      hebrewDay: hdate.getDate() === 15 ? 'ט״ו' : hdate.getDate() === 16 ? 'ט״ז' : HDate.hebrewFractionalNumber(hdate.getDate()),
+      hebrewDay: hdate.renderGematriya(true),
       hebrewMonthStr: hdate.getMonthName('he'), // e.g. אדר א', אדר ב'
-      hebrewYearStr: HDate.hebrewFractionalNumber(hdate.getFullYear()),
+      hebrewYearStr: hdate.getFullYear().toString(), // fallback if no specific method
       parasha
     };
   };
