@@ -88,17 +88,17 @@ export default function Home() {
         <h2 className={styles.sectionTitle}>התחנות הבאות</h2>
         <div className={styles.stationsScroll}>
           <div className={styles.stationCard}>
-            <div className={styles.stationIcon}><Flag size={24} color="var(--primary-color)" /></div>
+            <div className={styles.stationIcon}><Flag size={24} color="white" /></div>
             <h4>מסע סיכום</h4>
             <p>15.07.25</p>
           </div>
           <div className={styles.stationCard}>
-            <div className={styles.stationIcon}><User size={24} color="var(--primary-color)" /></div>
+            <div className={styles.stationIcon}><User size={24} color="white" /></div>
             <h4>שיחת סיום</h4>
             <p>22.07.25</p>
           </div>
           <div className={styles.stationCard}>
-            <div className={styles.stationIcon}><BookOpen size={24} color="var(--primary-color)" /></div>
+            <div className={styles.stationIcon}><BookOpen size={24} color="white" /></div>
             <h4>טקס סיום שנה</h4>
             <p>05.08.25</p>
           </div>
