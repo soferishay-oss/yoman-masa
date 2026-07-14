@@ -39,7 +39,12 @@ export default function CalendarPage() {
       <div className={styles.controls}>
         <button onClick={handlePrevMonth}><ChevronRight size={24} /></button>
         <div className={styles.monthLabel}>
-          {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
+          <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+            {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
+          </div>
+          <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary, #666)' }}>
+            {new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(currentDate)}
+          </div>
         </div>
         <button onClick={handleNextMonth}><ChevronLeft size={24} /></button>
       </div>

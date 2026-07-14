@@ -1,5 +1,5 @@
 export function getHebrewDate(date = new Date()) {
-  return new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
+  return new Intl.DateTimeFormat('he-IL-u-ca-hebrew-nu-hebr', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -24,44 +24,36 @@ export function getCalendarGrid(year, month) {
   
   const days = [];
   
-  // Padding for previous month
-  for (let i = 0; i < startingDay; i++) {
-    const d = new Date(year, month, 0 - (startingDay - i - 1));
-    days.push({
+  const createDayObj = (d, isCurrentMonth) => {
+    return {
       date: d,
-      isCurrentMonth: false,
+      isCurrentMonth,
       hebrew: getHebrewDate(d),
       gregorian: getGregorianDate(d),
       gregorianDay: d.getDate(),
-      hebrewDay: new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric' }).format(d)
-    });
+      // 'nu-hebr' ensures Hebrew letters like א, ב, י"א
+      hebrewDay: new Intl.DateTimeFormat('he-IL-u-ca-hebrew-nu-hebr', { day: 'numeric' }).format(d),
+      hebrewMonthStr: new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(d)
+    };
+  };
+
+  // Padding for previous month
+  for (let i = 0; i < startingDay; i++) {
+    const d = new Date(year, month, 0 - (startingDay - i - 1));
+    days.push(createDayObj(d, false));
   }
   
   // Current month
   for (let i = 1; i <= totalDays; i++) {
     const d = new Date(year, month, i);
-    days.push({
-      date: d,
-      isCurrentMonth: true,
-      hebrew: getHebrewDate(d),
-      gregorian: getGregorianDate(d),
-      gregorianDay: d.getDate(),
-      hebrewDay: new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric' }).format(d)
-    });
+    days.push(createDayObj(d, true));
   }
   
-  // Padding for next month (to complete the 42 items grid)
+  // Padding for next month
   const remaining = 42 - days.length;
   for (let i = 1; i <= remaining; i++) {
     const d = new Date(year, month + 1, i);
-    days.push({
-      date: d,
-      isCurrentMonth: false,
-      hebrew: getHebrewDate(d),
-      gregorian: getGregorianDate(d),
-      gregorianDay: d.getDate(),
-      hebrewDay: new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric' }).format(d)
-    });
+    days.push(createDayObj(d, false));
   }
   
   return days;
