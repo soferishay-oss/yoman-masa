@@ -8,14 +8,57 @@ import { ThemeContext } from '@/components/ThemeProvider';
 export default function AdminDashboard() {
   const theme = useContext(ThemeContext);
   
-  const [schoolName, setSchoolName] = useState(theme.schoolName);
-  const [slogan, setSlogan] = useState(theme.slogan);
+  const [schoolName, setSchoolName] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTenant();
+  }, []);
+
+  const fetchTenant = async () => {
+    try {
+      const res = await fetch('/api/admin/tenant');
+      if (res.ok) {
+        const data = await res.json();
+        setSchoolName(data.name || '');
+        setLogoUrl(data.logoUrl || '');
+        // We'll map slogan and color later if we add them to DB schema, for now just use theme/local
+      }
+    } catch (error) {
+      console.error('Failed to fetch tenant:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/admin/tenant', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: schoolName, logoUrl })
+      });
+      if (res.ok) {
+        alert('הגדרות נשמרו בהצלחה!');
+      } else {
+        alert('שגיאה בשמירת הגדרות');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const mockUsers = [
     { id: 1, name: 'ישראל ישראלי', role: 'חניך' },
     { id: 2, name: 'דוד המדריך', role: 'צוות' },
   ];
+
+  if (isLoading) {
+    return <div className={styles.container}><p style={{padding:'20px'}}>טוען הגדרות מוסד...</p></div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -37,6 +80,17 @@ export default function AdminDashboard() {
             />
           </div>
           
+          <div className={styles.formGroup}>
+            <label>לוגו מוסד (כתובת URL)</label>
+            <input 
+              type="text" 
+              className={styles.input} 
+              placeholder="https://..."
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+            />
+          </div>
+
           <div className={styles.formGroup}>
             <label>סלוגן המוסד</label>
             <input 
@@ -68,9 +122,9 @@ export default function AdminDashboard() {
             </select>
           </div>
 
-          <button className={styles.saveBtn}>
+          <button className={styles.saveBtn} onClick={handleSave}>
             <Save size={18} style={{display:'inline', verticalAlign:'middle', marginRight:'5px'}} />
-            שמור שינויים (Mock)
+            שמור שינויים
           </button>
         </div>
       </section>
