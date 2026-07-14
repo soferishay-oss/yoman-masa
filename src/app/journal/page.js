@@ -6,45 +6,70 @@ import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
 
 export default function JournalPage() {
-  const [entries, setEntries] = useState([
-    { id: 1, title: 'מסע יהודה', content: 'רגעים פשוטים שהפכו למשמעותיים. למדתי הרבה על החברים ועל עצמי.', date: '22.05.25', iconType: 'map' },
-    { id: 2, title: 'התחלה חדשה', content: 'היום הראשון במכינה. יש המון חששות אבל גם ציפייה גדולה.', date: '01.09.24', iconType: 'sunrise' }
-  ]);
-  
+  const [entries, setEntries] = useState([]);
   const [newEntryTitle, setNewEntryTitle] = useState('');
   const [newEntryContent, setNewEntryContent] = useState('');
   const [isComposing, setIsComposing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // In a real app, we would load local and remote entries here
   useEffect(() => {
-    // loadEntries();
+    fetchEntries();
   }, []);
+
+  const fetchEntries = async () => {
+    try {
+      const res = await fetch('/api/journal');
+      if (res.ok) {
+        const data = await res.json();
+        setEntries(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch journal entries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (!newEntryContent) return;
 
-    const newLocalEntry = {
-      id: Date.now(),
-      title: newEntryTitle || 'רשומה ללא כותרת',
-      content: newEntryContent,
-      date: new Date().toLocaleDateString('he-IL'),
-      iconType: 'default'
-    };
+    // Build the string: if title exists, we might want to store it in DB (we don't have title column in schema, but we can prepend it to content for now, or just use content)
+    // Actually schema for JournalPost only has `content`. We'll just prepend title as bold text if provided.
+    let finalContent = newEntryContent;
+    if (newEntryTitle) {
+      finalContent = `**${newEntryTitle}**\n${newEntryContent}`;
+    }
 
-    // Add to local UI state
-    setEntries([newLocalEntry, ...entries]);
-    
-    // Queue offline sync action
-    await queueSyncAction('CREATE_JOURNAL_ENTRY', {
-      title: newLocalEntry.title,
-      bodyText: newLocalEntry.content,
-      visibility: 'private'
-    });
+    try {
+      const res = await fetch('/api/journal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: finalContent,
+          isDraft: false
+        })
+      });
 
-    setNewEntryTitle('');
-    setNewEntryContent('');
-    setIsComposing(false);
+      if (res.ok) {
+        const newPost = await res.json();
+        setEntries([newPost, ...entries]);
+        
+        // Also queue sync action just in case we need offline support later
+        queueSyncAction('CREATE_JOURNAL_ENTRY', {
+          bodyText: finalContent,
+          visibility: 'private'
+        });
+
+        setNewEntryTitle('');
+        setNewEntryContent('');
+        setIsComposing(false);
+      }
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
   };
 
   const renderIcon = (type) => {
@@ -92,18 +117,36 @@ export default function JournalPage() {
       )}
 
       <div className={styles.timeline}>
-        {entries.map(entry => (
-          <div key={entry.id} className={styles.entryCard}>
-            <div className={styles.entryHeader}>
-              <div className={styles.entryImage}>{renderIcon(entry.iconType)}</div>
-              <div className={styles.entryMeta}>
-                <h3>{entry.title}</h3>
-                <span className={styles.entryDate}>{entry.date}</span>
+        {isLoading ? (
+          <p>טוען יומן...</p>
+        ) : entries.length === 0 ? (
+          <p>אין עדיין רשומות ביומן. זה הזמן לכתוב את הראשונה!</p>
+        ) : (
+          entries.map(entry => {
+            // Check if title is prepended with ** **
+            let title = 'רשומה ביומן';
+            let content = entry.content;
+            if (content.startsWith('**') && content.includes('**\n')) {
+              const parts = content.split('**\n');
+              title = parts[0].replace('**', '');
+              content = parts[1];
+            }
+            const dateStr = new Date(entry.createdAt).toLocaleDateString('he-IL');
+
+            return (
+              <div key={entry.id} className={styles.entryCard}>
+                <div className={styles.entryHeader}>
+                  <div className={styles.entryImage}>{renderIcon('default')}</div>
+                  <div className={styles.entryMeta}>
+                    <h3>{title}</h3>
+                    <span className={styles.entryDate}>{dateStr}</span>
+                  </div>
+                </div>
+                <p className={styles.entryBody}>{content}</p>
               </div>
-            </div>
-            <p className={styles.entryBody}>{entry.content}</p>
-          </div>
-        ))}
+            );
+          })
+        )}
       </div>
     </div>
   );

@@ -9,7 +9,36 @@ import { ThemeContext } from '@/components/ThemeProvider';
 export default function CalendarPage() {
   const theme = useContext(ThemeContext);
   const [currentDate, setCurrentDate] = useState(new Date());
-  
+  const [events, setEvents] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch actual stations from DB
+  useEffect(() => {
+    fetchStations();
+  }, []);
+
+  const fetchStations = async () => {
+    try {
+      const res = await fetch('/api/stations');
+      if (res.ok) {
+        const data = await res.json();
+        // Map array of stations into an object keyed by date string (e.g., YYYY-MM-DD or just day of month if same month)
+        // To be safe, let's key by YYYY-MM-DD
+        const eventMap = {};
+        data.forEach(station => {
+          const d = new Date(station.date);
+          const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+          eventMap[key] = { title: station.name, type: 'station' };
+        });
+        setEvents(eventMap);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
@@ -20,12 +49,6 @@ export default function CalendarPage() {
 
   const grid = getCalendarGrid(currentDate.getFullYear(), currentDate.getMonth());
   const weekdays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-  
-  // Mock events
-  const mockEvents = {
-    '15': { title: 'מסע סיכום', type: 'station' },
-    '22': { title: 'שיחת סיום', type: 'event' },
-  };
 
   const today = new Date();
 
@@ -63,7 +86,8 @@ export default function CalendarPage() {
                           dayObj.date.getMonth() === today.getMonth() && 
                           dayObj.date.getFullYear() === today.getFullYear();
           
-          const event = dayObj.isCurrentMonth ? mockEvents[dayObj.gregorianDay] : null;
+          const eventKey = `${dayObj.date.getFullYear()}-${dayObj.date.getMonth()}-${dayObj.date.getDate()}`;
+          const event = events[eventKey];
 
           return (
             <div 
