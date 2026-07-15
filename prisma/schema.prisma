@@ -54,6 +54,8 @@ model User {
   createdTasks     Task[]
   createdEvents    Event[]
   eventRsvps       EventRSVP[]
+  authoredLetters  Letter[] @relation("AuthoredLetters")
+  receivedLetters  Letter[] @relation("ReceivedLetters")
 }
 
 model Group {
@@ -161,6 +163,20 @@ model EventRSVP {
   userId           String
   user             User     @relation(fields: [userId], references: [id])
   status           String   @default("pending")
+  createdAt        DateTime @default(now())
+}
+
+model Letter {
+  id               String   @id @default(uuid())
+  tenantId         String
+  authorId         String
+  author           User     @relation("AuthoredLetters", fields: [authorId], references: [id])
+  recipientId      String
+  recipient        User     @relation("ReceivedLetters", fields: [recipientId], references: [id])
+  content          String
+  mediaUrls        Json?
+  aiTranscription  String?
+  aiThought        String?
   createdAt        DateTime @default(now())
 }
 

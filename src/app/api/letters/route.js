@@ -46,18 +46,21 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { content, recipientId } = await request.json();
+    const { content, recipientId, mediaUrls, aiTranscription, aiThought } = await request.json();
 
-    if (!content || !recipientId) {
-      return NextResponse.json({ error: 'Missing content or recipient' }, { status: 400 });
+    if (!content && !(mediaUrls && mediaUrls.length > 0)) {
+      return NextResponse.json({ error: 'Missing content or media' }, { status: 400 });
     }
 
     const newLetter = await prisma.letter.create({
       data: {
-        content,
+        content: content || '',
         authorId: userId,
         recipientId,
-        tenantId
+        tenantId,
+        mediaUrls: mediaUrls || [],
+        aiTranscription: aiTranscription || null,
+        aiThought: aiThought || null
       }
     });
 

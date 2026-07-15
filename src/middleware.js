@@ -34,6 +34,15 @@ export async function middleware(request) {
     requestHeaders.set('x-user-role', payload.role);
     if (payload.groupId) requestHeaders.set('x-group-id', payload.groupId);
 
+    // Redirect admins and staff from root to their respective dashboards
+    if (pathname === '/') {
+      if (payload.role === 'admin') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      } else if (payload.role === 'staff') {
+        return NextResponse.redirect(new URL('/staff', request.url));
+      }
+    }
+
     return NextResponse.next({
       request: {
         headers: requestHeaders,

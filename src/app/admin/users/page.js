@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { Upload, Plus, Users, Save } from 'lucide-react';
 import styles from './users.module.css';
 
@@ -93,15 +93,20 @@ export default function AdminUsersPage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async function(results) {
-        const parsedData = results.data.map(row => ({
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: 'binary' });
+        const wsname = workbook.SheetNames[0];
+        const ws = workbook.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        const parsedData = data.map(row => ({
           fullName: row['שם מלא'] || row['name'] || '',
-          phoneNumber: row['טלפון'] || row['phone'] || null,
+          phoneNumber: row['טלפון'] || row['פלאפון'] || row['phone'] || null,
           email: row['אימייל'] || row['email'] || null,
-          role: row['תפקיד'] === 'צוות' ? 'staff' : 'student'
+          role: row['תפקיד'] === 'צוות' || row['תפקיד'] === 'staff' ? 'staff' : 'student'
         }));
 
         const res = await fetch('/api/admin/users', {
@@ -117,8 +122,12 @@ export default function AdminUsersPage() {
         } else {
           alert('שגיאה בהעלאת קובץ');
         }
+      } catch (err) {
+        console.error(err);
+        alert('שגיאה בקריאת הקובץ');
       }
-    });
+    };
+    reader.readAsBinaryString(file);
   };
 
   if (isLoading) return <div style={{padding:'20px'}}>טוען...</div>;
@@ -136,8 +145,8 @@ export default function AdminUsersPage() {
         </button>
         
         <label className={styles.btnSecondary}>
-          <Upload size={18} /> ייבוא מאקסל (CSV)
-          <input type="file" accept=".csv" style={{display:'none'}} onChange={handleFileUpload} />
+          <Upload size={18} /> ייבוא מאקסל (XLSX/CSV)
+          <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style={{display:'none'}} onChange={handleFileUpload} />
         </label>
       </div>
 

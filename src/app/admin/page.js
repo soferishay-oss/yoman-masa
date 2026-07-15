@@ -81,14 +81,49 @@ export default function AdminDashboard() {
           </div>
           
           <div className={styles.formGroup}>
-            <label>לוגו מוסד (כתובת URL)</label>
-            <input 
-              type="text" 
-              className={styles.input} 
-              placeholder="https://..."
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-            />
+            <label>לוגו מוסד</label>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                className={styles.input} 
+                placeholder="כתובת URL לתמונה (או העלה קובץ)"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <label style={{
+                padding: '10px 15px', 
+                backgroundColor: 'var(--primary-color)', 
+                color: 'white', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}>
+                העלה קובץ
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      // In a real app, upload to S3/Cloudinary and get URL. 
+                      // Here we use Base64 for demonstration or a placeholder if too large.
+                      const reader = new FileReader();
+                      reader.onload = (evt) => {
+                        setLogoUrl(evt.target.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            {logoUrl && (
+              <div style={{ marginTop: '10px' }}>
+                <img src={logoUrl} alt="לוגו מוסד" style={{ maxHeight: '60px', borderRadius: '8px' }} />
+              </div>
+            )}
           </div>
 
           <div className={styles.formGroup}>

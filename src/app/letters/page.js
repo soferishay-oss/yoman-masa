@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, User } from 'lucide-react';
+import { Heart, User, Image as ImageIcon, Video, Mic, Sparkles } from 'lucide-react';
 import styles from './letters.module.css';
 
 export default function LettersPage() {
@@ -11,6 +11,10 @@ export default function LettersPage() {
   const [isComposing, setIsComposing] = useState(false);
   const [selectedUser, setSelectedUser] = useState('');
   const [letterContent, setLetterContent] = useState('');
+  const [mediaUrls, setMediaUrls] = useState([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [aiThought, setAiThought] = useState('');
+  const [aiTranscription, setAiTranscription] = useState('');
 
   useEffect(() => {
     fetchLetters();
@@ -43,27 +47,76 @@ export default function LettersPage() {
     }
   };
 
+  const handleSimulateMediaUpload = (type) => {
+    if (type === 'image') {
+      setMediaUrls([...mediaUrls, { type: 'image', url: 'https://via.placeholder.com/400x300.png?text=Simulated+Letter+Image' }]);
+    } else {
+      setMediaUrls([...mediaUrls, { type: 'video', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }]);
+    }
+  };
+
+  const handleSimulateAudioRecording = async () => {
+    setIsRecording(true);
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const res = await fetch('/api/ai/transcribe', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setLetterContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
+        setAiTranscription(data.basicText);
+        setAiThought(data.aiThought);
+      }
+    } catch (err) {
+      console.error('Failed to transcribe', err);
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!selectedUser || !letterContent) return;
+    if (!selectedUser || (!letterContent && mediaUrls.length === 0)) return;
 
     try {
       const res = await fetch('/api/letters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientId: selectedUser, content: letterContent })
+        body: JSON.stringify({ 
+          recipientId: selectedUser, 
+          content: letterContent,
+          mediaUrls,
+          aiTranscription,
+          aiThought 
+        })
       });
       if (res.ok) {
         alert('המכתב נשלח בהצלחה!');
         setIsComposing(false);
         setLetterContent('');
         setSelectedUser('');
+        setMediaUrls([]);
+        setAiThought('');
+        setAiTranscription('');
+        fetchLetters();
       } else {
         alert('שגיאה בשליחת המכתב');
       }
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const renderMediaPreview = () => {
+    if (mediaUrls.length === 0) return null;
+    return (
+      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+        {mediaUrls.map((media, idx) => (
+          media.type === 'image' ? 
+            <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} /> :
+            <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -104,10 +157,33 @@ export default function LettersPage() {
               value={letterContent}
               onChange={e => setLetterContent(e.target.value)}
               style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '100px' }}
-              required
             />
           </div>
-          <button type="submit" style={{ width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}>
+
+          {aiThought && (
+            <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid var(--primary-color)' }}>
+              <span style={{color: 'var(--primary-color)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                <Sparkles size={16} /> עצה מה-AI לתוספת אישית:
+              </span>
+              <p style={{fontSize: '14px', margin: '5px 0 0'}}>{aiThought}</p>
+            </div>
+          )}
+
+          {renderMediaPreview()}
+
+          <div style={{display: 'flex', gap: '10px', marginTop: '10px', marginBottom: '15px'}}>
+            <button type="button" onClick={() => handleSimulateMediaUpload('image')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <ImageIcon size={18} /> תמונה
+            </button>
+            <button type="button" onClick={() => handleSimulateMediaUpload('video')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <Video size={18} /> וידאו
+            </button>
+            <button type="button" onClick={handleSimulateAudioRecording} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: isRecording ? '#fee2e2' : 'white', color: isRecording ? '#ef4444' : 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <Mic size={18} /> {isRecording ? 'מקליט...' : 'הקלטה'}
+            </button>
+          </div>
+
+          <button type="submit" disabled={!selectedUser || (!letterContent && mediaUrls.length === 0)} style={{ width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}>
             שלח מכתב
           </button>
         </form>
@@ -127,6 +203,16 @@ export default function LettersPage() {
                 <span className={styles.letterDate}>{new Date(letter.createdAt).toLocaleDateString('he-IL')}</span>
               </div>
               <p className={styles.letterBody}>"{letter.content}"</p>
+
+              {letter.mediaUrls && letter.mediaUrls.length > 0 && (
+                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
+                  {letter.mediaUrls.map((media, idx) => (
+                    media.type === 'image' ? 
+                      <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} /> :
+                      <video key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
+                  ))}
+                </div>
+              )}
             </div>
           ))
         ) : (
