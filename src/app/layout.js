@@ -10,8 +10,8 @@ export const metadata = {
   description: 'המסע האישי שלך',
 };
 
-export default function RootLayout({ children }) {
-  const headersList = headers();
+export default async function RootLayout({ children }) {
+  const headersList = await headers();
   const userRole = headersList.get('x-user-role') || 'student';
   const isStudent = userRole === 'student';
 
