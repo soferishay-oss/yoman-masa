@@ -31,7 +31,7 @@ export async function POST(request) {
     
     const prompt = `You are a thoughtful AI journaling assistant. 
 1. Transcribe the user's audio exactly (basicText).
-2. Rewrite the transcription into a beautiful, evocative diary entry in Hebrew (smartText).
+2. Rewrite the transcription into a beautiful, evocative diary entry in Hebrew (smartText). CRITICAL INSTRUCTION: Improve grammar and style ONLY. Do NOT add new facts, thoughts, or events that the user did not explicitly mention in the audio. Do not invent details.
 3. Ask a deep, reflective coaching question based on the entry (aiThought).
 Respond ONLY with a valid JSON object containing exactly these three string keys.`;
 

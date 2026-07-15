@@ -9,20 +9,23 @@ export async function GET(request) {
     const token = cookieStore.get('auth_token')?.value;
     const auth = token ? await verifyToken(token) : null;
     const userId = auth?.userId;
-    const tenantId = auth?.tenantId;
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // In a real app, tasks would be assigned to users or groups.
-    // For this prototype, we'll just fetch tasks in the tenant that are open
-    const tasks = await prisma.task.findMany({
-      where: { tenantId, status: 'open' },
+    const assignments = await prisma.taskAssignment.findMany({
+      where: { 
+        userId, 
+        status: { in: ['assigned', 'opened'] } 
+      },
+      include: {
+        task: true
+      },
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json(tasks);
+    return NextResponse.json(assignments);
   } catch (error) {
     console.error('Failed to fetch tasks:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -39,22 +42,25 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { taskId } = await request.json();
+    const { assignmentId, status, checklistState } = await request.json();
 
-    if (!taskId) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+    if (!assignmentId) {
+      return NextResponse.json({ error: 'Assignment ID is required' }, { status: 400 });
     }
+    
+    const updateData = { status };
+    if (status === 'completed') updateData.completedAt = new Date();
+    if (status === 'opened') updateData.openedAt = new Date();
+    if (checklistState) updateData.checklistState = checklistState;
 
-    // Mark as complete. In reality, we'd want a UserTask table to track per-user completion.
-    // For now we'll just close the task.
-    const updatedTask = await prisma.task.update({
-      where: { id: taskId },
-      data: { status: 'completed' }
+    const updatedAssignment = await prisma.taskAssignment.update({
+      where: { id: assignmentId, userId },
+      data: updateData
     });
 
-    return NextResponse.json(updatedTask);
+    return NextResponse.json(updatedAssignment);
   } catch (error) {
-    console.error('Failed to complete task:', error);
+    console.error('Failed to update task:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

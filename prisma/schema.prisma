@@ -52,6 +52,7 @@ model User {
   contentEntries   ContentEntry[]
   moodChecks       MoodCheck[]
   createdTasks     Task[]
+  taskAssignments  TaskAssignment[]
   createdEvents    Event[]
   eventRsvps       EventRSVP[]
   authoredLetters  Letter[] @relation("AuthoredLetters")
@@ -101,16 +102,44 @@ model Task {
   tenant           Tenant   @relation(fields: [tenantId], references: [id])
   creatorUserId    String
   creatorUser      User     @relation(fields: [creatorUserId], references: [id])
+  
   title            String
-  description      String?
-  scheduleType     String
-  dueDate          DateTime?
-  dueTime          String?
-  reminderRules    Json?
-  multiPartEnabled Boolean  @default(false)
+  type             String   // e.g. "short_message", "long_message", "checklist"
+  content          String?  
+  mediaUrls        Json?
+  checklistItems   Json?    
+  
+  requireCompletion Boolean @default(true)
+  timerDeadline    DateTime?
+  dateMode         String   @default("gregorian")
+  
+  isArchived       Boolean  @default(false)
+  archiveType      String?  // e.g. "private", "public"
+  linkedEventId    String?
+  
   status           String   @default("open")
-  targetAudience   Json?
+  targetAudience   Json?    
   createdAt        DateTime @default(now())
+  
+  assignments      TaskAssignment[]
+}
+
+model TaskAssignment {
+  id               String   @id @default(uuid())
+  taskId           String
+  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status           String   @default("assigned") // "assigned", "opened", "completed"
+  checklistState   Json?    
+  openedAt         DateTime?
+  completedAt      DateTime?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@unique([taskId, userId])
 }
 
 model Station {

@@ -4,14 +4,23 @@ import { useContext, useState, useEffect } from 'react';
 import { ThemeContext } from '@/components/ThemeProvider';
 import { Map, Users, Star, Mail, Flag, User, BookOpen, ImageIcon, ChevronLeft, Shield } from 'lucide-react';
 import styles from './page.module.css';
+import Link from 'next/link';
+import TaskItem from '@/components/TaskItem';
 
 export default function Home() {
   const theme = useContext(ThemeContext);
   const [tasks, setTasks] = useState([]);
   const [selectedMood, setSelectedMood] = useState(null);
   const [userName, setUserName] = useState('');
+  const [greeting, setGreeting] = useState('שלום');
 
   useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setGreeting('בוקר טוב');
+    else if (hour >= 12 && hour < 17) setGreeting('צהריים טובים');
+    else if (hour >= 17 && hour < 21) setGreeting('ערב טוב');
+    else setGreeting('לילה טוב');
+    
     async function fetchTasks() {
       const res = await fetch('/api/student/tasks');
       if(res.ok) setTasks(await res.json());
@@ -43,7 +52,7 @@ export default function Home() {
             {theme.slogan}
           </div>
         </div>
-        <h1 className={styles.greeting}>שלום {userName || 'חבר'}, מה מחכה לך היום?</h1>
+        <h1 className={styles.greeting}>{greeting} {userName || 'חבר'}, מה מחכה לך היום?</h1>
         <p className={styles.subtitle}>המסע שלך. הסיפור שלך.</p>
       </header>
 
@@ -97,30 +106,30 @@ export default function Home() {
         <h2 className={styles.sectionTitle}>משימות פתוחות מהצוות</h2>
         <div className={styles.activitiesList}>
           
-          {tasks.map(task => (
-            <div key={task.id} className={styles.activityCard} onClick={async () => {
-              if (window.confirm('האם סיימת את המשימה?')) {
+          {tasks.map(assignment => (
+            <TaskItem 
+              key={assignment.id} 
+              assignment={assignment} 
+              onComplete={async (assignmentId, checklistState) => {
                 const res = await fetch('/api/student/tasks', {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ taskId: task.id })
+                  body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
                 });
                 if(res.ok) {
-                  alert('כל הכבוד!');
-                  setTasks(tasks.filter(t => t.id !== task.id));
+                  alert('כל הכבוד! המשימה הושלמה.');
+                  setTasks(tasks.filter(t => t.id !== assignmentId));
                 }
-              }
-            }}>
-              <div className={`${styles.iconWrapper} ${styles.bgOrange}`}>
-                 <Star size={24} color="var(--primary-color)" />
-              </div>
-              <div className={styles.activityContent}>
-                <h3>{task.title}</h3>
-                <p>{task.description}</p>
-              </div>
-              <span className={`${styles.statusTag} ${styles.tagOpen}`}>לביצוע</span>
-              <ChevronLeft className={styles.chevron} size={20} />
-            </div>
+              }}
+              onProgress={async (assignmentId, checklistState, status) => {
+                await fetch('/api/student/tasks', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ assignmentId, status, checklistState })
+                });
+                setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
+              }}
+            />
           ))}
 
           {tasks.length === 0 && (
@@ -157,17 +166,19 @@ export default function Home() {
       {/* Your Journal Section */}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>היומן שלך</h2>
-        <div className={styles.journalCard}>
-          <div className={styles.journalImagePlaceholder}>
-            <ImageIcon size={32} color="var(--text-muted)" />
+        <Link href="/vault" style={{textDecoration: 'none', color: 'inherit'}}>
+          <div className={styles.journalCard}>
+            <div className={styles.journalImagePlaceholder}>
+              <ImageIcon size={32} color="var(--text-muted)" />
+            </div>
+            <div className={styles.journalContent}>
+              <h3>תיבת הזיכרונות</h3>
+              <p className={styles.journalMeta}>הכספת האישית שלך</p>
+              <p className={styles.journalSnippet}>לחץ כאן כדי לצפות ברגעים ששמרת...</p>
+            </div>
+            <ChevronLeft className={styles.chevron} size={20} />
           </div>
-          <div className={styles.journalContent}>
-            <h3>זיכרונות מהדרך</h3>
-            <p className={styles.journalMeta}>מסע יהודה • 22.05.25</p>
-            <p className={styles.journalSnippet}>"רגעים פשוטים שהפכו למשמעותיים..."</p>
-          </div>
-          <ChevronLeft className={styles.chevron} size={20} />
-        </div>
+        </Link>
       </section>
       
     </div>

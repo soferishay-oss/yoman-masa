@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PenLine, Map, Sunrise, Image as ImageIcon, Video, Mic, Sparkles, Star } from 'lucide-react';
+import { PenLine, Map, Sunrise, Image as ImageIcon, Video, Mic, Sparkles, Star, Trash2 } from 'lucide-react';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
 
@@ -14,7 +14,9 @@ export default function JournalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [aiThought, setAiThought] = useState('');
-  const [aiTranscription, setAiTranscription] = useState('');
+  const [smartDraft, setSmartDraft] = useState('');
+  const [basicDraft, setBasicDraft] = useState('');
+  const [showDrafts, setShowDrafts] = useState(false);
 
   useEffect(() => {
     fetchEntries();
@@ -67,7 +69,9 @@ export default function JournalPage() {
         setNewEntryTitle('');
         setNewEntryContent('');
         setMediaUrls([]);
-        setAiTranscription('');
+        setSmartDraft('');
+        setBasicDraft('');
+        setShowDrafts(false);
         setAiThought('');
         setIsComposing(false);
       }
@@ -95,12 +99,10 @@ export default function JournalPage() {
           alert(data.basicText + '\n' + data.aiThought);
           return;
         }
-        if (type === 'smart') {
-          setNewEntryContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
-          setAiThought(data.aiThought);
-        } else {
-          setNewEntryContent(prev => prev ? prev + '\n' + data.basicText : data.basicText);
-        }
+        setSmartDraft(data.smartText);
+        setBasicDraft(data.basicText);
+        setAiThought(data.aiThought);
+        setShowDrafts(true);
       }
     } catch (err) {
       console.error(err);
@@ -116,21 +118,37 @@ export default function JournalPage() {
     return (
       <div style={{ marginTop: '10px' }}>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {mediaUrls.map((media, idx) => {
-            if (media.type === 'image') return <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />;
-            if (media.type === 'video') return <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />;
-            if (media.type === 'audio') return <audio key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px'}} />;
-            return null;
-          })}
+          {mediaUrls.map((media, idx) => (
+            <div key={idx} style={{position: 'relative'}}>
+              {media.type === 'image' && <img src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />}
+              {media.type === 'video' && <video src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />}
+              {media.type === 'audio' && <audio src={media.url} controls style={{width: '100%', maxWidth: '250px'}} />}
+              <button type="button" onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== idx))} style={{position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 24, height: 24, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>X</button>
+            </div>
+          ))}
         </div>
-        {audioMedia && audioMedia.file && (
+        {audioMedia && audioMedia.file && !showDrafts && (
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'basic')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              {isRecording ? 'מעבד...' : 'תמלול רגיל'}
+            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'all')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מעבד הקלטה...' : 'עבד הקלטה לטקסט'}
             </button>
-            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'smart')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              {isRecording ? 'מעבד...' : 'תמלול חכם'}
-            </button>
+          </div>
+        )}
+        {showDrafts && (
+          <div style={{ marginTop: '15px', padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <h4 style={{marginBottom: '10px'}}>בחר איזה תמלול להוסיף ליומן:</h4>
+            <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+              <div 
+                onClick={() => { setNewEntryContent(prev => prev ? prev + '\n\n' + basicDraft : basicDraft); setShowDrafts(false); }}
+                style={{ padding: '10px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer' }}>
+                <strong>תמלול רגיל:</strong><br/>{basicDraft}
+              </div>
+              <div 
+                onClick={() => { setNewEntryContent(prev => prev ? prev + '\n\n' + smartDraft : smartDraft); setShowDrafts(false); }}
+                style={{ padding: '10px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', borderLeft: '4px solid var(--primary-color)' }}>
+                <strong>תמלול חכם (ערוך):</strong><br/>{smartDraft}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -161,6 +179,23 @@ export default function JournalPage() {
     }
   };
 
+  const handleDeleteEntry = async (entryId) => {
+    if (!window.confirm('האם אתה בטוח שברצונך למחוק רשומה זו? מחיקה זו אינה ניתנת לביטול.')) return;
+    try {
+      const res = await fetch(`/api/journal/${entryId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setEntries(entries.filter(e => e.id !== entryId));
+        alert('הרשומה נמחקה בהצלחה.');
+      } else {
+        const data = await res.json();
+        alert(data.error || 'שגיאה במחיקת הרשומה.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('שגיאה במחיקת הרשומה.');
+    }
+  };
+
   const renderIcon = (type) => {
     switch (type) {
       case 'map': return <Map size={24} color="var(--primary-color)" />;
@@ -183,6 +218,9 @@ export default function JournalPage() {
         </button>
       ) : (
         <form onSubmit={handleSave} className={styles.composeForm}>
+          <div style={{fontSize: '12px', color: '#64748b', marginBottom: '10px', textAlign: 'left'}}>
+            * רשומה ניתנת לעריכה או מחיקה רק עד חצי שעה מכתיבתה
+          </div>
           <input 
             type="text" 
             placeholder="כותרת (אופציונלי)" 
@@ -260,9 +298,22 @@ export default function JournalPage() {
         ) : (
           entries.map(entry => {
             const dateStr = new Date(entry.createdAt).toLocaleDateString('he-IL');
+            const isDeletable = (new Date() - new Date(entry.createdAt)) / (1000 * 60) <= 30;
 
             return (
               <div key={entry.id} className={styles.entryCard} style={{position:'relative'}}>
+                {isDeletable && (
+                  <button 
+                    onClick={() => handleDeleteEntry(entry.id)}
+                    style={{
+                      position:'absolute', left:'45px', top:'15px', background:'none', border:'none', 
+                      color:'#ef4444', cursor:'pointer', padding:'5px'
+                    }}
+                    title="מחק רשומה (זמין עד חצי שעה מהפרסום)"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
                 <button 
                   onClick={() => handleSaveToVault(entry)}
                   style={{
