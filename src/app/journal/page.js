@@ -41,6 +41,9 @@ export default function JournalPage() {
     if (!newEntryContent && mediaUrls.length === 0) return;
 
     try {
+      // Strip 'file' object from media to prevent JSON serialization issues
+      const cleanMediaUrls = mediaUrls.map(m => ({ type: m.type, url: m.url }));
+      
       const res = await fetch('/api/journal', {
         method: 'POST',
         headers: {
@@ -50,7 +53,7 @@ export default function JournalPage() {
           title: newEntryTitle || null,
           content: newEntryContent,
           isDraft: false,
-          mediaUrls,
+          mediaUrls: cleanMediaUrls,
           aiTranscription,
           aiThought
         })
@@ -74,9 +77,13 @@ export default function JournalPage() {
         setShowDrafts(false);
         setAiThought('');
         setIsComposing(false);
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || 'שגיאה בשמירת הרשומה. ייתכן שהקובץ גדול מדי.');
       }
     } catch (error) {
       console.error('Error saving post:', error);
+      alert('שגיאה בשמירת הרשומה. ייתכן שהקובץ גדול מדי (מעל 4MB).');
     }
   };
 
@@ -247,12 +254,19 @@ export default function JournalPage() {
 
           {renderMediaPreview()}
 
-          <div style={{display: 'flex', gap: '10px', marginTop: '10px', marginBottom: '15px'}}>
+          <div style={{fontSize: '12px', color: '#64748b', marginBottom: '5px', textAlign: 'left'}}>
+            * ניתן להעלות קבצים עד 4MB
+          </div>
+          <div style={{display: 'flex', gap: '10px', marginTop: '5px', marginBottom: '15px'}}>
             <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
               <ImageIcon size={18} /> תמונה
               <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => {
                 const file = e.target.files[0];
                 if (file) {
+                  if (file.size > 4 * 1024 * 1024) {
+                    alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
+                    return;
+                  }
                   const reader = new FileReader();
                   reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'image', url: reader.result }]);
                   reader.readAsDataURL(file);
@@ -264,6 +278,10 @@ export default function JournalPage() {
               <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
                 const file = e.target.files[0];
                 if (file) {
+                  if (file.size > 4 * 1024 * 1024) {
+                    alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
+                    return;
+                  }
                   const reader = new FileReader();
                   reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
                   reader.readAsDataURL(file);
@@ -275,6 +293,10 @@ export default function JournalPage() {
               <input type="file" accept="audio/*" capture="microphone" style={{display: 'none'}} onChange={(e) => {
                 const file = e.target.files[0];
                 if (file) {
+                  if (file.size > 4 * 1024 * 1024) {
+                    alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
+                    return;
+                  }
                   const reader = new FileReader();
                   reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'audio', url: reader.result, file: file }]);
                   reader.readAsDataURL(file);

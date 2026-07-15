@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '@/app/staff/staff.module.css';
 import { Plus, Trash, Image as ImageIcon, Video, Mic, Upload, FileText, CheckSquare, AlignLeft } from 'lucide-react';
 
@@ -12,7 +12,14 @@ export default function TaskBuilder({ onTaskCreated }) {
   const [requireCompletion, setRequireCompletion] = useState(true);
   const [timerDeadline, setTimerDeadline] = useState('');
   const [dateMode, setDateMode] = useState('gregorian');
+  const [linkedEventId, setLinkedEventId] = useState('');
+  const [relativeDaysToEvent, setRelativeDaysToEvent] = useState(0);
+  const [events, setEvents] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/staff/events').then(r => r.json()).then(data => setEvents(Array.isArray(data) ? data : [])).catch(console.error);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +41,10 @@ export default function TaskBuilder({ onTaskCreated }) {
     }
     if (mediaUrls.length > 0) {
       taskData.mediaUrls = mediaUrls;
+    }
+    if (linkedEventId) {
+      taskData.linkedEventId = linkedEventId;
+      taskData.relativeDaysToEvent = Number(relativeDaysToEvent);
     }
 
     try {
@@ -148,6 +159,34 @@ export default function TaskBuilder({ onTaskCreated }) {
             onChange={(e) => setTimerDeadline(e.target.value)}
             style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
           />
+        </div>
+
+        <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#475569' }}>תזמון יחסית לאירוע (אופציונלי)</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '5px' }}>בחר אירוע מלוח השנה</label>
+              <select value={linkedEventId} onChange={e => setLinkedEventId(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <option value="">ללא קישור לאירוע</option>
+                {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title} ({new Date(ev.scheduledDate).toLocaleDateString('he-IL')})</option>)}
+              </select>
+            </div>
+            {linkedEventId && (
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '5px' }}>תזמון ביחס לאירוע</label>
+                <select value={relativeDaysToEvent} onChange={e => setRelativeDaysToEvent(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                  <option value={0}>ביום האירוע</option>
+                  <option value={-1}>יום לפני</option>
+                  <option value={-2}>יומיים לפני</option>
+                  <option value={-3}>3 ימים לפני</option>
+                  <option value={-7}>שבוע לפני</option>
+                  <option value={1}>יום אחרי</option>
+                  <option value={2}>יומיים אחרי</option>
+                  <option value={7}>שבוע אחרי</option>
+                </select>
+              </div>
+            )}
+          </div>
         </div>
 
         <button type="submit" disabled={isSubmitting} style={{ padding: '12px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', fontSize: '16px', fontWeight: 'bold', border: 'none', cursor: 'pointer', marginTop: '10px' }}>

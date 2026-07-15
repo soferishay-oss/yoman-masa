@@ -6,6 +6,8 @@ import styles from './staff.module.css';
 import TaskBuilder from '@/components/TaskBuilder';
 import TaskTracker from '@/components/TaskTracker';
 import MoodDashboard from '@/components/MoodDashboard';
+import EventBuilder from '@/components/EventBuilder';
+import { CalendarDays } from 'lucide-react';
 
 export default function StaffDashboard() {
   const [students, setStudents] = useState([]);
@@ -77,6 +79,12 @@ export default function StaffDashboard() {
         >
           <CheckSquare size={18} /> מעקב משימות
         </button>
+        <button 
+          onClick={() => setActiveTab('events')} 
+          style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'events' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'events' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+        >
+          <CalendarDays size={18} /> לוח אירועים
+        </button>
       </div>
 
       {activeTab === 'overview' && (
@@ -94,6 +102,12 @@ export default function StaffDashboard() {
       {activeTab === 'task_tracker' && (
         <section className={styles.section}>
           <TaskTracker />
+        </section>
+      )}
+
+      {activeTab === 'events' && (
+        <section className={styles.section}>
+          <EventBuilder />
         </section>
       )}
 

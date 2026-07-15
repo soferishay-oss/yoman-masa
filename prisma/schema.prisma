@@ -116,6 +116,7 @@ model Task {
   isArchived       Boolean  @default(false)
   archiveType      String?  // e.g. "private", "public"
   linkedEventId    String?
+  relativeDaysToEvent Int?
   
   status           String   @default("open")
   targetAudience   Json?    
@@ -178,7 +179,12 @@ model Event {
   creator          User        @relation(fields: [creatorId], references: [id])
   title            String
   description      String?
+  type             String?     // e.g., "שבת", "מסע", "יום חזון", "סיור סליחות", "אחר"
+  subtitle         String?
+  color            String?
   scheduledDate    DateTime?
+  endDate          DateTime?
+  dateMode         String      @default("gregorian")
   location         String?
   status           String      @default("upcoming")
   createdAt        DateTime    @default(now())

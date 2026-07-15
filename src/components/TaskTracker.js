@@ -7,6 +7,8 @@ export default function TaskTracker() {
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedTaskId, setExpandedTaskId] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
     fetchTasks();
@@ -26,6 +28,46 @@ export default function TaskTracker() {
     }
   };
 
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('האם אתה בטוח שברצונך למחוק משימה זו? (כל נתוני התלמידים במשימה יימחקו)')) return;
+    try {
+      const res = await fetch(`/api/staff/tasks/${taskId}`, { method: 'DELETE' });
+      if (res.ok) setTasks(tasks.filter(t => t.id !== taskId));
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה במחיקת המשימה');
+    }
+  };
+
+  const handleArchiveTask = async (taskId, archiveType) => {
+    try {
+      const res = await fetch(`/api/staff/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isArchived: true, archiveType })
+      });
+      if (res.ok) fetchTasks(); // Refresh to reflect archive status
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSaveEdit = async (taskId) => {
+    try {
+      const res = await fetch(`/api/staff/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: editTitle })
+      });
+      if (res.ok) {
+        setEditingTask(null);
+        fetchTasks();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (isLoading) return <p>טוען משימות...</p>;
   if (tasks.length === 0) return <p>לא נוצרו משימות עדיין.</p>;
 
@@ -41,22 +83,53 @@ export default function TaskTracker() {
         return (
           <div key={task.id} style={{ background: 'white', borderRadius: '8px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
             <div 
-              onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
-              style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: isExpanded ? '#f8fafc' : 'white' }}
+              onClick={() => { if (!editingTask) setExpandedTaskId(isExpanded ? null : task.id) }}
+              style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: editingTask ? 'default' : 'pointer', background: isExpanded ? '#f8fafc' : 'white' }}
             >
-              <div>
-                <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileText size={18} color="var(--primary-color)"/> {task.title}
-                </h4>
-                <div style={{ fontSize: '13px', color: '#64748b', marginTop: '5px', display: 'flex', gap: '15px' }}>
-                  <span>סה"כ: {total}</span>
-                  <span style={{ color: '#22c55e' }}>סיימו: {completed}</span>
-                  <span style={{ color: '#f59e0b' }}>באמצע: {opened}</span>
-                  <span style={{ color: '#ef4444' }}>לא פתחו: {assigned}</span>
-                </div>
+              <div style={{flex: 1}}>
+                {editingTask === task.id ? (
+                  <div style={{display: 'flex', gap: '10px', alignItems: 'center'}} onClick={e => e.stopPropagation()}>
+                    <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} style={{padding: '5px', borderRadius: '4px', border: '1px solid #cbd5e1'}} />
+                    <button onClick={() => handleSaveEdit(task.id)} style={{background: '#22c55e', color: 'white', padding: '5px 10px', borderRadius: '4px', border: 'none', cursor: 'pointer'}}>שמור</button>
+                    <button onClick={() => setEditingTask(null)} style={{background: '#ef4444', color: 'white', padding: '5px 10px', borderRadius: '4px', border: 'none', cursor: 'pointer'}}>ביטול</button>
+                  </div>
+                ) : (
+                  <>
+                    <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FileText size={18} color="var(--primary-color)"/> 
+                      {task.title}
+                      {task.isArchived && <span style={{fontSize: '11px', background: '#e2e8f0', color: '#64748b', padding: '2px 6px', borderRadius: '12px'}}>בארכיון ({task.archiveType === 'public' ? 'ציבורי' : 'פרטי'})</span>}
+                    </h4>
+                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '5px', display: 'flex', gap: '15px' }}>
+                      <span>סה"כ: {total}</span>
+                      <span style={{ color: '#22c55e' }}>סיימו: {completed}</span>
+                      <span style={{ color: '#f59e0b' }}>באמצע: {opened}</span>
+                      <span style={{ color: '#ef4444' }}>לא פתחו: {assigned}</span>
+                    </div>
+                  </>
+                )}
               </div>
-              {isExpanded ? <ChevronUp size={20} color="#94a3b8" /> : <ChevronDown size={20} color="#94a3b8" />}
+              {!editingTask && (
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}} onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { setEditTitle(task.title); setEditingTask(task.id); }} style={{background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '12px', textDecoration: 'underline'}}>ערוך</button>
+                  {!task.isArchived && (
+                    <div style={{position: 'relative', display: 'inline-block'}}>
+                      <button onClick={(e) => { e.currentTarget.nextSibling.style.display = e.currentTarget.nextSibling.style.display === 'block' ? 'none' : 'block'; }} style={{background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '12px', textDecoration: 'underline'}}>ארכיון</button>
+                      <div style={{display: 'none', position: 'absolute', top: '100%', right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '5px', zIndex: 10, minWidth: '100px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'}}>
+                        <button onClick={() => handleArchiveTask(task.id, 'private')} style={{display: 'block', width: '100%', padding: '5px', background: 'none', border: 'none', textAlign: 'right', cursor: 'pointer', fontSize: '12px'}}>ארכיון פרטי</button>
+                        <button onClick={() => handleArchiveTask(task.id, 'public')} style={{display: 'block', width: '100%', padding: '5px', background: 'none', border: 'none', textAlign: 'right', cursor: 'pointer', fontSize: '12px'}}>ארכיון ציבורי (לכולם)</button>
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={() => handleDeleteTask(task.id)} style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '12px', textDecoration: 'underline'}}>מחק</button>
+                  <div style={{cursor: 'pointer'}} onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}>
+                    {isExpanded ? <ChevronUp size={20} color="#94a3b8" /> : <ChevronDown size={20} color="#94a3b8" />}
+                  </div>
+                </div>
+              )}
             </div>
+
+
             
             {isExpanded && (
               <div style={{ padding: '15px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>

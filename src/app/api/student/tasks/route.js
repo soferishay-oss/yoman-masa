@@ -25,7 +25,27 @@ export async function GET(request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json(assignments);
+    const now = new Date();
+    
+    // Filter tasks if they are linked to an event and not yet due
+    const validAssignments = [];
+    for (const assignment of assignments) {
+      if (assignment.task.linkedEventId) {
+        const event = await prisma.event.findUnique({ where: { id: assignment.task.linkedEventId } });
+        if (event) {
+          const targetDate = new Date(event.scheduledDate);
+          if (assignment.task.relativeDaysToEvent) {
+            targetDate.setDate(targetDate.getDate() + assignment.task.relativeDaysToEvent);
+          }
+          if (now < targetDate) {
+            continue; // Skip this assignment, it's not time yet
+          }
+        }
+      }
+      validAssignments.push(assignment);
+    }
+
+    return NextResponse.json(validAssignments);
   } catch (error) {
     console.error('Failed to fetch tasks:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

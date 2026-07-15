@@ -6,6 +6,7 @@ import { Map, Users, Star, Mail, Flag, User, BookOpen, ImageIcon, ChevronLeft, S
 import styles from './page.module.css';
 import Link from 'next/link';
 import TaskItem from '@/components/TaskItem';
+import StudentTimeline from '@/components/StudentTimeline';
 
 export default function Home() {
   const theme = useContext(ThemeContext);
@@ -143,24 +144,8 @@ export default function Home() {
 
       {/* Upcoming Stations Section */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>התחנות הבאות</h2>
-        <div className={styles.stationsScroll}>
-          <div className={styles.stationCard}>
-            <div className={styles.stationIcon}><Flag size={24} color="white" /></div>
-            <h4>מסע סיכום</h4>
-            <p>15.07.25</p>
-          </div>
-          <div className={styles.stationCard}>
-            <div className={styles.stationIcon}><User size={24} color="white" /></div>
-            <h4>שיחת סיום</h4>
-            <p>22.07.25</p>
-          </div>
-          <div className={styles.stationCard}>
-            <div className={styles.stationIcon}><BookOpen size={24} color="white" /></div>
-            <h4>טקס סיום שנה</h4>
-            <p>05.08.25</p>
-          </div>
-        </div>
+        <h2 className={styles.sectionTitle}>ציר הזמן שלי</h2>
+        <StudentTimeline />
       </section>
 
       {/* Your Journal Section */}

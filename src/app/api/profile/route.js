@@ -49,6 +49,8 @@ export async function GET(request) {
     return NextResponse.json({
       id: user.id,
       fullName: user.fullName,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
       role: user.role,
       status: user.status,
       groupName: user.group?.name || 'ללא קבוצה',
@@ -73,11 +75,21 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { fullName, phoneNumber } = await request.json();
+    const { fullName, phoneNumber, email, password } = await request.json();
+
+    const dataToUpdate = {};
+    if (fullName !== undefined) dataToUpdate.fullName = fullName;
+    if (phoneNumber !== undefined) dataToUpdate.phoneNumber = phoneNumber;
+    if (email !== undefined) dataToUpdate.email = email;
+    
+    if (password) {
+      const bcrypt = require('bcryptjs');
+      dataToUpdate.passwordHash = await bcrypt.hash(password, 10);
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { fullName, phoneNumber }
+      data: dataToUpdate
     });
 
     return NextResponse.json(updatedUser);
