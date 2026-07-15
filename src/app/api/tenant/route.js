@@ -29,7 +29,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      schoolName: tenant.schoolName,
+      schoolName: tenant.name,
       slogan: tenant.slogan,
       logoUrl: tenant.logoUrl,
       primaryColor: primaryColor
