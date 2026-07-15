@@ -43,7 +43,7 @@ export async function PUT(request) {
     // We only allow updating specific fields
     const updateData = {};
     if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl;
-    if (data.name !== undefined) updateData.name = data.name;
+    if (data.name !== undefined) updateData.schoolName = data.name;
     if (data.slogan !== undefined) updateData.slogan = data.slogan;
     if (data.dateMode !== undefined) updateData.dominantDateMode = data.dateMode;
     if (data.primaryColor !== undefined) {
