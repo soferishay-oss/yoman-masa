@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 export async function GET(request) {
   try {
-    const headersList = await request.headers;
+    const headersList = await headers();
     const tenantId = headersList.get('x-tenant-id');
     const role = headersList.get('x-user-role');
 
     if (!tenantId || role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized missing headers' }, { status: 401 });
     }
 
     const users = await prisma.user.findMany({
@@ -27,12 +28,12 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const headersList = await request.headers;
+    const headersList = await headers();
     const tenantId = headersList.get('x-tenant-id');
     const role = headersList.get('x-user-role');
 
     if (!tenantId || role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized missing headers' }, { status: 401 });
     }
 
     const data = await request.json();
