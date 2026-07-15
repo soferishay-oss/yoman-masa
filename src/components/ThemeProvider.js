@@ -17,6 +17,28 @@ export const ThemeContext = React.createContext(DEFAULT_THEME);
 export default function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(DEFAULT_THEME);
 
+  useEffect(() => {
+    async function fetchTenantConfig() {
+      try {
+        const res = await fetch('/api/tenant');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.schoolName) {
+            setTheme(prev => ({
+              ...prev,
+              schoolName: data.schoolName || prev.schoolName,
+              slogan: data.slogan || prev.slogan,
+              primaryColor: data.primaryColor || prev.primaryColor
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load tenant config', err);
+      }
+    }
+    fetchTenantConfig();
+  }, []);
+
   return (
     <ThemeContext.Provider value={theme}>
       <style dangerouslySetInnerHTML={{
