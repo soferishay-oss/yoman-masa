@@ -98,16 +98,20 @@ export default function ProfilePage() {
               <span className={styles.menuText}>הגדרות חשבון (עריכת פרטים אישיים)</span>
               <ChevronLeft size={18} className={styles.chevron} />
             </div>
-            <a href="/staff" className={styles.menuItem} style={{textDecoration: 'none'}}>
-              <Shield size={20} className={styles.menuIcon} />
-              <span className={styles.menuText}>אזור צוות הדרכה</span>
-              <ChevronLeft size={18} className={styles.chevron} />
-            </a>
-            <a href="/admin" className={styles.menuItem} style={{textDecoration: 'none'}}>
-              <Settings size={20} className={styles.menuIcon} />
-              <span className={styles.menuText}>ניהול מוסד (Admin)</span>
-              <ChevronLeft size={18} className={styles.chevron} />
-            </a>
+            {(profile.role === 'staff' || profile.role === 'admin') && (
+              <a href="/staff" className={styles.menuItem} style={{textDecoration: 'none'}}>
+                <Shield size={20} className={styles.menuIcon} />
+                <span className={styles.menuText}>אזור צוות הדרכה</span>
+                <ChevronLeft size={18} className={styles.chevron} />
+              </a>
+            )}
+            {profile.role === 'admin' && (
+              <a href="/admin" className={styles.menuItem} style={{textDecoration: 'none'}}>
+                <Settings size={20} className={styles.menuIcon} />
+                <span className={styles.menuText}>ניהול מוסד (Admin)</span>
+                <ChevronLeft size={18} className={styles.chevron} />
+              </a>
+            )}
             <div className={styles.menuItem}>
               <HelpCircle size={20} className={styles.menuIcon} />
               <span className={styles.menuText}>עזרה ותמיכה</span>

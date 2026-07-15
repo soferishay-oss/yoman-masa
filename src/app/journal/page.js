@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PenLine, Map, Sunrise, Image as ImageIcon, Video, Mic, Sparkles } from 'lucide-react';
+import { PenLine, Map, Sunrise, Image as ImageIcon, Video, Mic, Sparkles, Star } from 'lucide-react';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
 
@@ -76,14 +76,7 @@ export default function JournalPage() {
     }
   };
 
-  const handleSimulateMediaUpload = (type) => {
-    // In production this would upload to S3/Cloudinary. Here we use placeholders.
-    if (type === 'image') {
-      setMediaUrls([...mediaUrls, { type: 'image', url: 'https://via.placeholder.com/400x300.png?text=Simulated+Image' }]);
-    } else {
-      setMediaUrls([...mediaUrls, { type: 'video', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }]);
-    }
-  };
+
 
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
@@ -220,12 +213,28 @@ export default function JournalPage() {
           {renderMediaPreview()}
 
           <div style={{display: 'flex', gap: '10px', marginTop: '10px', marginBottom: '15px'}}>
-            <button type="button" onClick={() => handleSimulateMediaUpload('image')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
               <ImageIcon size={18} /> תמונה
-            </button>
-            <button type="button" onClick={() => handleSimulateMediaUpload('video')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'image', url: reader.result }]);
+                  reader.readAsDataURL(file);
+                }
+              }} />
+            </label>
+            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
               <Video size={18} /> וידאו
-            </button>
+              <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
+                  reader.readAsDataURL(file);
+                }
+              }} />
+            </label>
             <button 
               type="button"
               onClick={mediaRecorder ? handleStopAudioRecording : handleStartAudioRecording} 
