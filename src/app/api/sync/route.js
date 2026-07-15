@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse }
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth'; from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
     const action = await request.json();
-    const userId = request.headers.get('x-user-id');
-    const tenantId = request.headers.get('x-tenant-id');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    const userId = auth?.userId;
+    const tenantId = auth?.tenantId;
 
     if (!userId || !tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

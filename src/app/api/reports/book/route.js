@@ -1,17 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextResponse }
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth'; from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function GET(request) {
   try {
-    const userId = request.headers.get('x-user-id');
-    const tenantId = request.headers.get('x-tenant-id');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    const userId = auth?.userId;
+    const tenantId = auth?.tenantId;
     
     // Admin/Staff can request any student's book, Student can request their own
     // For simplicity in this endpoint, we'll assume the requester wants their own book
     // To support admin/staff, we would read a `?studentId=` from URL.
     const { searchParams } = new URL(request.url);
     const targetStudentId = searchParams.get('studentId') || userId;
-    const role = request.headers.get('x-user-role');
+    const role = auth?.role;
 
     if (!tenantId || !userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
