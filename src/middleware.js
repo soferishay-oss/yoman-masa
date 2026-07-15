@@ -9,6 +9,7 @@ export async function middleware(request) {
   
   if (
     pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/debug_roles') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon.ico')
