@@ -65,7 +65,8 @@ export default function AdminUsersPage() {
         setShowAddForm(false);
         fetchUsers();
       } else {
-        alert('שגיאה ביצירת משתמש');
+        const errData = await res.json().catch(() => ({}));
+        alert('שגיאה ביצירת משתמש: ' + (errData.error || res.statusText));
       }
     } catch (err) {
       console.error(err);

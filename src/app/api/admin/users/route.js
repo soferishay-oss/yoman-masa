@@ -89,6 +89,6 @@ export async function POST(request) {
     return NextResponse.json(newUser, { status: 201 });
   } catch (error) {
     console.error('Failed to create user(s):', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
