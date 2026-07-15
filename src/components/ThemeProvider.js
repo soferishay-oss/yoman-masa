@@ -28,7 +28,8 @@ export default function ThemeProvider({ children }) {
               ...prev,
               schoolName: data.schoolName || prev.schoolName,
               slogan: data.slogan || prev.slogan,
-              primaryColor: data.primaryColor || prev.primaryColor
+              primaryColor: data.primaryColor || prev.primaryColor,
+              logoUrl: data.logoUrl || prev.logoUrl
             }));
           }
         }

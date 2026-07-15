@@ -34,7 +34,11 @@ export default function Home() {
         <div className={styles.logoContainer}>
           <p className={styles.schoolName}>{theme.schoolName}</p>
           <div className={styles.logoBadge}>
-            <Shield className={styles.logoIcon} size={28} />
+            {theme.logoUrl ? (
+              <img src={theme.logoUrl} alt="Logo" style={{width: 40, height: 40, objectFit: 'contain', marginBottom: 5}} />
+            ) : (
+              <Shield className={styles.logoIcon} size={28} />
+            )}
             <br/>
             {theme.slogan}
           </div>
