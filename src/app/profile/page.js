@@ -80,9 +80,22 @@ export default function ProfilePage() {
         <h2 className={styles.sectionTitle}>הגדרות וניהול</h2>
         <div className={styles.card}>
           <div className={styles.menuList}>
-            <div className={styles.menuItem}>
+            <div className={styles.menuItem} onClick={() => {
+              const newName = prompt('הכנס שם מלא חדש:', profile.fullName);
+              const newPhone = prompt('הכנס טלפון חדש:', profile.phoneNumber || '');
+              if (newName) {
+                fetch('/api/profile', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ fullName: newName, phoneNumber: newPhone })
+                }).then(res => res.json()).then(data => {
+                  setProfile({...profile, fullName: data.fullName, phoneNumber: data.phoneNumber});
+                  alert('הפרופיל עודכן בהצלחה');
+                });
+              }
+            }} style={{cursor: 'pointer'}}>
               <User size={20} className={styles.menuIcon} />
-              <span className={styles.menuText}>הגדרות חשבון</span>
+              <span className={styles.menuText}>הגדרות חשבון (עריכת פרטים אישיים)</span>
               <ChevronLeft size={18} className={styles.chevron} />
             </div>
             <a href="/staff" className={styles.menuItem} style={{textDecoration: 'none'}}>

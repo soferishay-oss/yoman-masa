@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [slogan, setSlogan] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor);
+  const [dateMode, setDateMode] = useState('hebrew');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,9 @@ export default function AdminDashboard() {
         const data = await res.json();
         setSchoolName(data.name || '');
         setLogoUrl(data.logoUrl || '');
-        // We'll map slogan and color later if we add them to DB schema, for now just use theme/local
+        if (data.slogan) setSlogan(data.slogan);
+        if (data.themeConfig?.primaryColor) setPrimaryColor(data.themeConfig.primaryColor);
+        if (data.dominantDateMode) setDateMode(data.dominantDateMode);
       }
     } catch (error) {
       console.error('Failed to fetch tenant:', error);
@@ -39,7 +42,7 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/tenant', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: schoolName, logoUrl })
+        body: JSON.stringify({ name: schoolName, logoUrl, slogan, primaryColor, dateMode }) 
       });
       if (res.ok) {
         alert('הגדרות נשמרו בהצלחה!');
@@ -151,7 +154,7 @@ export default function AdminDashboard() {
           
           <div className={styles.formGroup}>
             <label>תצוגת תאריכים (ברירת מחדל)</label>
-            <select className={styles.input} defaultValue="hebrew">
+            <select className={styles.input} value={dateMode} onChange={(e) => setDateMode(e.target.value)}>
               <option value="hebrew">לוח שנה עברי</option>
               <option value="gregorian">לוח שנה לועזי</option>
             </select>
@@ -167,19 +170,18 @@ export default function AdminDashboard() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}><Users size={20} style={{display:'inline', verticalAlign:'middle'}}/> ניהול משתמשים</h2>
         <div className={styles.card}>
-          <div className={styles.userList}>
-            {mockUsers.map(user => (
-              <div key={user.id} className={styles.userRow}>
-                <div className={styles.userInfo}>
-                  <span className={styles.userName}>{user.name}</span>
-                  <span className={styles.userRole}>{user.role}</span>
-                </div>
-                <button className={styles.actionBtn}>
-                  <Edit size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
+          <p style={{marginBottom: '15px'}}>ניהול מלא של תלמידים, אנשי צוות, קבוצות והרשאות מערכת. ניתן להוסיף משתמשים בודדים או לייבא רשימות מאקסל.</p>
+          <a href="/admin/users" style={{
+            display: 'inline-block',
+            padding: '12px 24px',
+            backgroundColor: 'var(--primary-color)',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontWeight: 'bold'
+          }}>
+            מעבר למערכת ניהול המשתמשים
+          </a>
         </div>
       </section>
 

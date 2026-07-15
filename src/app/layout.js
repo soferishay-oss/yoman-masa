@@ -36,8 +36,10 @@ export default async function RootLayout({ children }) {
             </Link>
             
             <div className={styles.fabContainer}>
-              <button className={styles.fabBtn}><Plus size={28} /></button>
-              <span className={styles.fabLabel}>חדש</span>
+              <Link href="/journal" style={{textDecoration: 'none'}}>
+                <button className={styles.fabBtn}><Plus size={28} /></button>
+                <span className={styles.fabLabel}>חדש</span>
+              </Link>
             </div>
             
             <Link href="/calendar" className={styles.navItem}>

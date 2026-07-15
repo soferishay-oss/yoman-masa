@@ -36,6 +36,11 @@ export async function PUT(request) {
     const updateData = {};
     if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl;
     if (data.name !== undefined) updateData.name = data.name;
+    if (data.slogan !== undefined) updateData.slogan = data.slogan;
+    if (data.dateMode !== undefined) updateData.dominantDateMode = data.dateMode;
+    if (data.primaryColor !== undefined) {
+      updateData.themeConfig = { primaryColor: data.primaryColor };
+    }
 
     const updatedTenant = await prisma.tenant.update({
       where: { id: tenantId },

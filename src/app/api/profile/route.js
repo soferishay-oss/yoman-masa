@@ -16,7 +16,7 @@ export async function GET(request) {
         group: true,
         tenant: true,
         _count: {
-          select: { journalPosts: true }
+          select: { contentEntries: true }
         }
       }
     });
@@ -28,7 +28,7 @@ export async function GET(request) {
     // For now, we don't have "completed trips" explicitly modeled per user. 
     // We will just mock it or infer it if they have journals from certain stations.
     const stats = {
-      journalCount: user._count.journalPosts,
+      journalCount: user._count.contentEntries,
       completedStations: 3, // mocked for now
       progress: 45 // mocked for now
     };
@@ -43,6 +43,29 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Failed to fetch profile:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const userId = request.headers.get('x-user-id');
+    const tenantId = request.headers.get('x-tenant-id');
+
+    if (!userId || !tenantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { fullName, phoneNumber } = await request.json();
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { fullName, phoneNumber }
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error('Failed to update profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

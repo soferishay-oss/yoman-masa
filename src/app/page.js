@@ -9,13 +9,22 @@ export default function Home() {
   const theme = useContext(ThemeContext);
   const [tasks, setTasks] = useState([]);
   const [selectedMood, setSelectedMood] = useState(null);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     async function fetchTasks() {
       const res = await fetch('/api/student/tasks');
       if(res.ok) setTasks(await res.json());
     }
+    async function fetchProfile() {
+      const res = await fetch('/api/profile');
+      if(res.ok) {
+        const data = await res.json();
+        setUserName(data.fullName);
+      }
+    }
     fetchTasks();
+    fetchProfile();
   }, []);
 
   return (
@@ -30,7 +39,7 @@ export default function Home() {
             {theme.slogan}
           </div>
         </div>
-        <h1 className={styles.greeting}>מה מחכה לך היום?</h1>
+        <h1 className={styles.greeting}>שלום {userName || 'חבר'}, מה מחכה לך היום?</h1>
         <p className={styles.subtitle}>המסע שלך. הסיפור שלך.</p>
       </header>
 
