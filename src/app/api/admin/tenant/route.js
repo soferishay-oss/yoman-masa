@@ -52,6 +52,6 @@ export async function PUT(request) {
     return NextResponse.json(updatedTenant);
   } catch (error) {
     console.error('Failed to update tenant:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -47,7 +47,8 @@ export default function AdminDashboard() {
       if (res.ok) {
         alert('הגדרות נשמרו בהצלחה!');
       } else {
-        alert('שגיאה בשמירת הגדרות');
+        const errData = await res.json().catch(() => ({}));
+        alert('שגיאה בשמירת הגדרות: ' + (errData.error || res.statusText));
       }
     } catch (error) {
       console.error(error);
