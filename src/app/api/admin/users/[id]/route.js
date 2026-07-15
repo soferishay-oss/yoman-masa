@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 
 export async function PUT(request, { params }) {
   try {
-    const tenantId = request.headers.get('x-tenant-id');
-    const role = request.headers.get('x-user-role');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    const tenantId = auth?.tenantId;
+    const role = auth?.role?.toLowerCase();
+    
     const { id } = params;
 
     if (!tenantId || role !== 'admin') {
@@ -41,8 +47,12 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const tenantId = request.headers.get('x-tenant-id');
-    const role = request.headers.get('x-user-role');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    const tenantId = auth?.tenantId;
+    const role = auth?.role?.toLowerCase();
+    
     const { id } = params;
 
     if (!tenantId || role !== 'admin') {

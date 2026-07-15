@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-mvp-only';
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev';
 const encodedSecret = new TextEncoder().encode(JWT_SECRET);
 
 export async function signToken(payload) {

@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
 export async function GET(request) {
   try {
-    const tenantId = request.headers.get('x-tenant-id');
-    const role = request.headers.get('x-user-role');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    const tenantId = auth?.tenantId;
+    const role = auth?.role?.toLowerCase();
 
     if (!tenantId || role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,8 +34,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const tenantId = request.headers.get('x-tenant-id');
-    const role = request.headers.get('x-user-role');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    const tenantId = auth?.tenantId;
+    const role = auth?.role?.toLowerCase();
 
     if (!tenantId || role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
