@@ -21,7 +21,8 @@ export async function GET() {
       group = await prisma.group.create({
         data: {
           tenantId: tenant.id,
-          name: 'קבוצת טסט'
+          name: 'קבוצת טסט',
+          type: 'class'
         }
       });
     }
