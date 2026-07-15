@@ -3,8 +3,9 @@ import prisma from '@/lib/prisma';
 
 export async function GET(request) {
   try {
-    const tenantId = request.headers.get('x-tenant-id');
-    const role = request.headers.get('x-user-role');
+    const headersList = await request.headers;
+    const tenantId = headersList.get('x-tenant-id');
+    const role = headersList.get('x-user-role');
 
     if (!tenantId || role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,8 +24,9 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const tenantId = request.headers.get('x-tenant-id');
-    const role = request.headers.get('x-user-role');
+    const headersList = await request.headers;
+    const tenantId = headersList.get('x-tenant-id');
+    const role = headersList.get('x-user-role');
 
     if (!tenantId || role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
