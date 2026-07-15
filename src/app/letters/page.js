@@ -55,21 +55,63 @@ export default function LettersPage() {
     }
   };
 
-  const handleSimulateAudioRecording = async () => {
-    setIsRecording(true);
-    await new Promise(r => setTimeout(r, 2000));
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+
+  const handleStartAudioRecording = async () => {
     try {
-      const res = await fetch('/api/ai/transcribe', { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        setLetterContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
-        setAiTranscription(data.basicText);
-        setAiThought(data.aiThought);
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+
+        setIsRecording(true);
+        try {
+          const res = await fetch('/api/ai/transcribe', {
+            method: 'POST',
+            body: formData
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+              alert(data.basicText + '\n' + data.aiThought);
+              return;
+            }
+            setLetterContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
+            setAiTranscription(data.basicText);
+            setAiThought(data.aiThought);
+          }
+        } catch (err) {
+          console.error('Failed to transcribe', err);
+          alert('שגיאה בעיבוד הקלטה');
+        } finally {
+          setIsRecording(false);
+          setAudioChunks([]);
+          stream.getTracks().forEach(track => track.stop());
+        }
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
     } catch (err) {
-      console.error('Failed to transcribe', err);
-    } finally {
-      setIsRecording(false);
+      console.error('Microphone access denied', err);
+      alert('יש לאפשר גישה למיקרופון כדי להקליט');
+    }
+  };
+
+  const handleStopAudioRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setMediaRecorder(null);
     }
   };
 

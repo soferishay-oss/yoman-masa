@@ -85,23 +85,63 @@ export default function JournalPage() {
     }
   };
 
-  const handleSimulateAudioRecording = async () => {
-    setIsRecording(true);
-    // Simulate recording for 2 seconds
-    await new Promise(r => setTimeout(r, 2000));
-    
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+
+  const handleStartAudioRecording = async () => {
     try {
-      const res = await fetch('/api/ai/transcribe', { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        setNewEntryContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
-        setAiTranscription(data.basicText);
-        setAiThought(data.aiThought);
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+
+        setIsRecording(true);
+        try {
+          const res = await fetch('/api/ai/transcribe', {
+            method: 'POST',
+            body: formData
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+              alert(data.basicText + '\n' + data.aiThought);
+              return;
+            }
+            setNewEntryContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
+            setAiTranscription(data.basicText);
+            setAiThought(data.aiThought);
+          }
+        } catch (err) {
+          console.error('Failed to transcribe', err);
+          alert('שגיאה בעיבוד הקלטה');
+        } finally {
+          setIsRecording(false);
+          setAudioChunks([]);
+          stream.getTracks().forEach(track => track.stop());
+        }
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
     } catch (err) {
-      console.error('Failed to transcribe', err);
-    } finally {
-      setIsRecording(false);
+      console.error('Microphone access denied', err);
+      alert('יש לאפשר גישה למיקרופון כדי להקליט');
+    }
+  };
+
+  const handleStopAudioRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setMediaRecorder(null);
     }
   };
 
@@ -186,8 +226,14 @@ export default function JournalPage() {
             <button type="button" onClick={() => handleSimulateMediaUpload('video')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
               <Video size={18} /> וידאו
             </button>
-            <button type="button" onClick={handleSimulateAudioRecording} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: isRecording ? '#fee2e2' : 'white', color: isRecording ? '#ef4444' : 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-              <Mic size={18} /> {isRecording ? 'מקליט ומעבד...' : 'הקלטה חכמה'}
+            <button 
+              type="button"
+              onClick={mediaRecorder ? handleStopAudioRecording : handleStartAudioRecording} 
+              className={mediaRecorder ? styles.recording : ''}
+              title="הקלטה קולית חכמה"
+              style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: mediaRecorder ? '#fee2e2' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}
+            >
+              <Mic size={20}/> {mediaRecorder && <span className={styles.pulsingDot}></span>}
             </button>
           </div>
 
