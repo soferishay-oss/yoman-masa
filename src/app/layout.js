@@ -4,6 +4,7 @@ import { User, Heart, Calendar, Home, Plus } from 'lucide-react';
 import { headers } from 'next/headers';
 import styles from './layout.module.css';
 import ThemeProvider from '@/components/ThemeProvider';
+import ErrorTracker from '@/components/ErrorTracker';
 
 export const metadata = {
   title: 'יומן מסע חינוכי',
@@ -20,6 +21,7 @@ export default async function RootLayout({ children }) {
       <body>
         <ThemeProvider>
           <main className={styles.mainContent}>
+            <ErrorTracker />
             {children}
           </main>
         

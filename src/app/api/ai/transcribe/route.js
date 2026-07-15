@@ -1,6 +1,6 @@
-import { NextResponse }
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth'; from 'next/server';
+import { verifyToken } from '@/lib/auth';
 import { GoogleGenAI } from '@google/genai';
 
 export async function POST(request) {
