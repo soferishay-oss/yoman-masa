@@ -55,65 +55,7 @@ export default function LettersPage() {
     }
   };
 
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]);
 
-  const handleStartAudioRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
-
-        setIsRecording(true);
-        try {
-          const res = await fetch('/api/ai/transcribe', {
-            method: 'POST',
-            body: formData
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.basicText?.includes('שגיאה: חסר מפתח')) {
-              alert(data.basicText + '\n' + data.aiThought);
-              return;
-            }
-            setLetterContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
-            setAiTranscription(data.basicText);
-            setAiThought(data.aiThought);
-          }
-        } catch (err) {
-          console.error('Failed to transcribe', err);
-          alert('שגיאה בעיבוד הקלטה');
-        } finally {
-          setIsRecording(false);
-          setAudioChunks([]);
-          stream.getTracks().forEach(track => track.stop());
-        }
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-    } catch (err) {
-      console.error('Microphone access denied', err);
-      alert('יש לאפשר גישה למיקרופון כדי להקליט');
-    }
-  };
-
-  const handleStopAudioRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
-    }
-  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -148,15 +90,56 @@ export default function LettersPage() {
     }
   };
 
+  const handleTranscribe = async (file, type) => {
+    try {
+      const formData = new FormData();
+      formData.append('audio', file, 'recording.webm');
+      const res = await fetch('/api/ai/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+          alert(data.basicText + '\n' + data.aiThought);
+          return;
+        }
+        if (type === 'smart') {
+          setLetterContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
+          setAiThought(data.aiThought);
+        } else {
+          setLetterContent(prev => prev ? prev + '\n' + data.basicText : data.basicText);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בתמלול');
+    }
+  };
+
   const renderMediaPreview = () => {
     if (mediaUrls.length === 0) return null;
+    const audioMedia = mediaUrls.find(m => m.type === 'audio');
     return (
-      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-        {mediaUrls.map((media, idx) => (
-          media.type === 'image' ? 
-            <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} /> :
-            <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />
-        ))}
+      <div style={{ marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {mediaUrls.map((media, idx) => {
+            if (media.type === 'image') return <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />;
+            if (media.type === 'video') return <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />;
+            if (media.type === 'audio') return <audio key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px'}} />;
+            return null;
+          })}
+        </div>
+        {audioMedia && audioMedia.file && (
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'basic')} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              תמלול רגיל
+            </button>
+            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'smart')} style={{padding: '8px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              תמלול חכם
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -214,15 +197,39 @@ export default function LettersPage() {
           {renderMediaPreview()}
 
           <div style={{display: 'flex', gap: '10px', marginTop: '10px', marginBottom: '15px'}}>
-            <button type="button" onClick={() => handleSimulateMediaUpload('image')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
               <ImageIcon size={18} /> תמונה
-            </button>
-            <button type="button" onClick={() => handleSimulateMediaUpload('video')} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'image', url: reader.result }]);
+                  reader.readAsDataURL(file);
+                }
+              }} />
+            </label>
+            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
               <Video size={18} /> וידאו
-            </button>
-            <button type="button" onClick={handleSimulateAudioRecording} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: isRecording ? '#fee2e2' : 'white', color: isRecording ? '#ef4444' : 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-              <Mic size={18} /> {isRecording ? 'מקליט...' : 'הקלטה'}
-            </button>
+              <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
+                  reader.readAsDataURL(file);
+                }
+              }} />
+            </label>
+            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <Mic size={18} /> הקלטה
+              <input type="file" accept="audio/*" capture="microphone" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'audio', url: reader.result, file: file }]);
+                  reader.readAsDataURL(file);
+                }
+              }} />
+            </label>
           </div>
 
           <button type="submit" disabled={!selectedUser || (!letterContent && mediaUrls.length === 0)} style={{ width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}>

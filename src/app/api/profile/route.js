@@ -26,8 +26,16 @@ export async function GET(request) {
       }
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!user || user.status === 'deleted') {
+      const response = NextResponse.json({ error: 'User not found' }, { status: 404 });
+      response.cookies.delete('auth_token');
+      return response;
+    }
+
+    if (user.status === 'suspended') {
+      const response = NextResponse.json({ error: 'חשבונך ננעל ע"י מנהל המערכת. נא פנה למחנך או למנהל.' }, { status: 403 });
+      response.cookies.delete('auth_token');
+      return response;
     }
 
     // For now, we don't have "completed trips" explicitly modeled per user. 
@@ -42,6 +50,7 @@ export async function GET(request) {
       id: user.id,
       fullName: user.fullName,
       role: user.role,
+      status: user.status,
       groupName: user.group?.name || 'ללא קבוצה',
       tenantName: user.tenant?.name || 'מערכת מסע',
       stats

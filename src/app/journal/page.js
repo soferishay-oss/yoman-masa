@@ -78,89 +78,86 @@ export default function JournalPage() {
 
 
 
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]);
 
-  const handleStartAudioRecording = async () => {
+
+  const handleTranscribe = async (file, type) => {
+    setIsRecording(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
-
-        setIsRecording(true);
-        try {
-          const res = await fetch('/api/ai/transcribe', {
-            method: 'POST',
-            body: formData
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.basicText?.includes('שגיאה: חסר מפתח')) {
-              alert(data.basicText + '\n' + data.aiThought);
-              return;
-            }
-            setNewEntryContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
-            setAiTranscription(data.basicText);
-            setAiThought(data.aiThought);
-          }
-        } catch (err) {
-          console.error('Failed to transcribe', err);
-          alert('שגיאה בעיבוד הקלטה');
-        } finally {
-          setIsRecording(false);
-          setAudioChunks([]);
-          stream.getTracks().forEach(track => track.stop());
+      const formData = new FormData();
+      formData.append('audio', file, 'recording.webm');
+      const res = await fetch('/api/ai/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+          alert(data.basicText + '\n' + data.aiThought);
+          return;
         }
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
+        if (type === 'smart') {
+          setNewEntryContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
+          setAiThought(data.aiThought);
+        } else {
+          setNewEntryContent(prev => prev ? prev + '\n' + data.basicText : data.basicText);
+        }
+      }
     } catch (err) {
-      console.error('Microphone access denied', err);
-      alert('יש לאפשר גישה למיקרופון כדי להקליט');
-    }
-  };
-
-  const handleStopAudioRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
+      console.error(err);
+      alert('שגיאה בתמלול');
+    } finally {
+      setIsRecording(false);
     }
   };
 
   const renderMediaPreview = () => {
     if (mediaUrls.length === 0) return null;
+    const audioMedia = mediaUrls.find(m => m.type === 'audio');
     return (
-      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-        {mediaUrls.map((media, idx) => (
-          media.type === 'image' ? 
-            <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} /> :
-            <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />
-        ))}
+      <div style={{ marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {mediaUrls.map((media, idx) => {
+            if (media.type === 'image') return <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />;
+            if (media.type === 'video') return <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />;
+            if (media.type === 'audio') return <audio key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px'}} />;
+            return null;
+          })}
+        </div>
+        {audioMedia && audioMedia.file && (
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'basic')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מעבד...' : 'תמלול רגיל'}
+            </button>
+            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'smart')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מעבד...' : 'תמלול חכם'}
+            </button>
+          </div>
+        )}
       </div>
     );
   };
 
-  const handleSaveToVault = async (id) => {
+  const handleSaveToVault = async (entry) => {
+    const newVaultStatus = !entry.isVault;
+    
+    // Optimistic UI update
+    setEntries(entries.map(e => e.id === entry.id ? { ...e, isVault: newVaultStatus } : e));
+    
     try {
       const res = await fetch('/api/vault', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryId: id, isVault: true })
+        body: JSON.stringify({ entryId: entry.id, isVault: newVaultStatus })
       });
-      if (res.ok) alert('נשמר לכספת הזיכרונות!');
+      if (!res.ok) {
+        // Revert on failure
+        setEntries(entries.map(e => e.id === entry.id ? { ...e, isVault: entry.isVault } : e));
+        alert('שגיאה בשמירה לכספת');
+      }
     } catch (error) {
       console.error(error);
+      // Revert on failure
+      setEntries(entries.map(e => e.id === entry.id ? { ...e, isVault: entry.isVault } : e));
     }
   };
 
@@ -235,15 +232,17 @@ export default function JournalPage() {
                 }
               }} />
             </label>
-            <button 
-              type="button"
-              onClick={mediaRecorder ? handleStopAudioRecording : handleStartAudioRecording} 
-              className={mediaRecorder ? styles.recording : ''}
-              title="הקלטה קולית חכמה"
-              style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: mediaRecorder ? '#fee2e2' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}
-            >
-              <Mic size={20}/> {mediaRecorder && <span className={styles.pulsingDot}></span>}
-            </button>
+            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
+              <Mic size={20}/> הקלטה
+              <input type="file" accept="audio/*" capture="microphone" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'audio', url: reader.result, file: file }]);
+                  reader.readAsDataURL(file);
+                }
+              }} />
+            </label>
           </div>
 
           <div className={styles.formActions}>
@@ -265,14 +264,14 @@ export default function JournalPage() {
             return (
               <div key={entry.id} className={styles.entryCard} style={{position:'relative'}}>
                 <button 
-                  onClick={() => handleSaveToVault(entry.id)}
+                  onClick={() => handleSaveToVault(entry)}
                   style={{
                     position:'absolute', left:'15px', top:'15px', background:'none', border:'none', 
-                    color:'#94a3b8', cursor:'pointer', padding:'5px'
+                    color: entry.isVault ? '#f59e0b' : '#94a3b8', cursor:'pointer', padding:'5px'
                   }}
-                  title="שמור לכספת הזיכרונות"
+                  title={entry.isVault ? "הסר מכספת הזיכרונות" : "שמור לכספת הזיכרונות"}
                 >
-                  <Star size={20} />
+                  <Star size={20} fill={entry.isVault ? '#f59e0b' : 'none'} />
                 </button>
                 <div className={styles.entryHeader}>
                   <div className={styles.entryImage}>{renderIcon('default')}</div>

@@ -11,10 +11,25 @@ export const metadata = {
   description: 'המסע האישי שלך',
 };
 
+import { redirect } from 'next/navigation';
+import prisma from '@/lib/prisma';
+
 export default async function RootLayout({ children }) {
   const headersList = await headers();
   const userRole = headersList.get('x-user-role') || 'student';
+  const userId = headersList.get('x-user-id');
   const isStudent = userRole === 'student';
+
+  // If user is authenticated, check their status in the database
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { status: true }
+    });
+    if (!user || user.status === 'deleted' || user.status === 'suspended') {
+      redirect('/login?error=suspended');
+    }
+  }
 
   return (
     <html lang="he" dir="rtl">

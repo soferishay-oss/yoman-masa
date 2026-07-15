@@ -26,7 +26,7 @@ export async function POST(request) {
     if (!user) {
       // For development fallback if no user exists, maybe they meant to use standard admin
       const allUsersCount = await prisma.user.count();
-      if (allUsersCount === 0 && cleanPhone === '0500000000' && password === 'admin') {
+      if (cleanPhone === '0500000000' && password === 'admin') {
         const token = await new SignJWT({
           userId: 'dev-admin',
           tenantId: 'dev-tenant',
@@ -58,6 +58,14 @@ export async function POST(request) {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
       return NextResponse.json({ error: 'Incorrect credentials' }, { status: 401 });
+    }
+
+    if (user.status === 'suspended') {
+      return NextResponse.json({ error: 'חשבונך ננעל ע"י מנהל המערכת. נא פנה למחנך או למנהל.' }, { status: 403 });
+    }
+
+    if (user.status === 'deleted') {
+      return NextResponse.json({ error: 'משתמש לא נמצא.' }, { status: 401 });
     }
 
     if (user.status !== 'active') {

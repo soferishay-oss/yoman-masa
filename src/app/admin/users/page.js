@@ -20,6 +20,9 @@ export default function AdminUsersPage() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [editData, setEditData] = useState({});
 
+  // Bulk Actions State
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+
   useEffect(() => {
     fetchUsers();
     fetchGroups();
@@ -73,6 +76,30 @@ export default function AdminUsersPage() {
     }
   };
 
+  const [showAddGroup, setShowAddGroup] = useState(false);
+  const [groupData, setGroupData] = useState({ name: '', type: 'class' });
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/admin/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(groupData)
+      });
+      if (res.ok) {
+        alert('קבוצה נוצרה בהצלחה');
+        setGroupData({ name: '', type: 'class' });
+        setShowAddGroup(false);
+        fetchGroups();
+      } else {
+        alert('שגיאה ביצירת קבוצה');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleUpdateUser = async (id) => {
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
@@ -87,6 +114,47 @@ export default function AdminUsersPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleBulkAction = async (action, data = {}) => {
+    if (selectedUserIds.length === 0) return;
+    
+    if (action === 'delete') {
+      if (!window.confirm(`האם אתה בטוח שברצונך למחוק ${selectedUserIds.length} משתמשים? המידע שלהם יימחק מתצוגת בית הספר אך יישמר בענן.`)) return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedUserIds, action, data })
+      });
+      if (res.ok) {
+        alert('הפעולה בוצעה בהצלחה');
+        setSelectedUserIds([]);
+        fetchUsers();
+      } else {
+        alert('שגיאה בביצוע הפעולה');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedUserIds(users.map(u => u.id));
+    } else {
+      setSelectedUserIds([]);
+    }
+  };
+
+  const handleSelectUser = (id) => {
+    if (selectedUserIds.includes(id)) {
+      setSelectedUserIds(selectedUserIds.filter(userId => userId !== id));
+    } else {
+      setSelectedUserIds([...selectedUserIds, id]);
     }
   };
 
@@ -140,16 +208,35 @@ export default function AdminUsersPage() {
         <p>קליטת תלמידים וצוות, שיוך לקבוצות ועריכת פרטים</p>
       </header>
 
-      <div className={styles.actionsBar}>
-        <button onClick={() => setShowAddForm(!showAddForm)} className={styles.btnPrimary}>
-          <Plus size={18} /> הוסף משתמש בודד
-        </button>
-        
-        <label className={styles.btnSecondary}>
-          <Upload size={18} /> ייבוא מאקסל (XLSX/CSV)
-          <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style={{display:'none'}} onChange={handleFileUpload} />
-        </label>
+      <div className={styles.header}>
+        <h1>ניהול משתמשים וקבוצות</h1>
+        <div style={{display: 'flex', gap: '10px'}}>
+          <button className={styles.btnAdd} onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus size={18} /> משתמש חדש
+          </button>
+          <button className={styles.btnAdd} onClick={() => setShowAddGroup(!showAddGroup)} style={{backgroundColor: '#4f46e5'}}>
+            <Users size={18} /> קבוצה חדשה
+          </button>
+          <label className={styles.btnUpload}>
+            <Upload size={18} /> ייבוא קובץ
+            <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style={{display:'none'}} onChange={handleFileUpload} />
+          </label>
+        </div>
       </div>
+
+      {showAddGroup && (
+        <form onSubmit={handleCreateGroup} className={styles.addForm}>
+          <h3>הוספת קבוצה חדשה</h3>
+          <div className={styles.formGrid}>
+            <input type="text" placeholder="שם הקבוצה (למשל: כיתה ט'1)" value={groupData.name} onChange={e => setGroupData({...groupData, name: e.target.value})} required />
+            <select value={groupData.type} onChange={e => setGroupData({...groupData, type: e.target.value})}>
+              <option value="class">כיתה אורגנית</option>
+              <option value="group">קבוצת עבודה/מגמה</option>
+            </select>
+          </div>
+          <button type="submit" className={styles.btnPrimary}>שמור קבוצה</button>
+        </form>
+      )}
 
       {showAddForm && (
         <form onSubmit={handleCreateUser} className={styles.addForm}>
@@ -172,21 +259,51 @@ export default function AdminUsersPage() {
       )}
 
       <div className={styles.tableContainer}>
+        {selectedUserIds.length > 0 && (
+          <div style={{ padding: '10px', backgroundColor: '#f1f5f9', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <strong>פעולות ל-{selectedUserIds.length} משתמשים:</strong>
+            <button onClick={() => handleBulkAction('delete')} style={{ backgroundColor: '#ef4444', color: 'white', padding: '5px 10px', borderRadius: '5px', border: 'none' }}>מחק</button>
+            <select onChange={(e) => { if(e.target.value) handleBulkAction('update_group', { groupId: e.target.value }) }} style={{ padding: '5px' }}>
+              <option value="">-- שייך לקבוצה --</option>
+              {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+            <select onChange={(e) => { if(e.target.value) handleBulkAction('update_status', { status: e.target.value }) }} style={{ padding: '5px' }}>
+              <option value="">-- שנה סטטוס --</option>
+              <option value="active">פעיל</option>
+              <option value="suspended">מושהה</option>
+            </select>
+          </div>
+        )}
         <table className={styles.table}>
           <thead>
             <tr>
+              <th><input type="checkbox" onChange={handleSelectAll} checked={selectedUserIds.length === users.length && users.length > 0} /></th>
               <th>שם מלא</th>
               <th>תפקיד</th>
               <th>קבוצה/כיתה</th>
               <th>טלפון</th>
+              <th>סטטוס</th>
               <th>פעולות</th>
             </tr>
           </thead>
           <tbody>
             {users.map(u => (
-              <tr key={u.id}>
-                <td>{u.fullName}</td>
-                <td>{u.role === 'student' ? 'חניך' : u.role === 'staff' ? 'צוות' : 'מנהל'}</td>
+              <tr key={u.id} style={{ opacity: u.status === 'suspended' ? 0.6 : 1 }}>
+                <td><input type="checkbox" checked={selectedUserIds.includes(u.id)} onChange={() => handleSelectUser(u.id)} /></td>
+                <td>
+                  {editingUserId === u.id ? (
+                    <input type="text" value={editData[u.id]?.fullName ?? u.fullName} onChange={e => setEditData({...editData, [u.id]: {...editData[u.id], fullName: e.target.value}})} style={{width: '100px'}} />
+                  ) : u.fullName}
+                </td>
+                <td>
+                  {editingUserId === u.id ? (
+                    <select value={editData[u.id]?.role ?? u.role} onChange={e => setEditData({...editData, [u.id]: {...editData[u.id], role: e.target.value}})}>
+                      <option value="student">חניך</option>
+                      <option value="staff">צוות</option>
+                      <option value="admin">מנהל</option>
+                    </select>
+                  ) : (u.role === 'student' ? 'חניך' : u.role === 'staff' ? 'צוות' : 'מנהל')}
+                </td>
                 <td>
                   {editingUserId === u.id ? (
                     <select 
@@ -206,6 +323,7 @@ export default function AdminUsersPage() {
                       type="text" 
                       value={editData[u.id]?.phoneNumber ?? u.phoneNumber ?? ''} 
                       onChange={e => setEditData({...editData, [u.id]: {...editData[u.id], phoneNumber: e.target.value}})}
+                      style={{width: '100px'}}
                     />
                   ) : (
                     u.phoneNumber || '-'
@@ -213,9 +331,17 @@ export default function AdminUsersPage() {
                 </td>
                 <td>
                   {editingUserId === u.id ? (
+                    <select value={editData[u.id]?.status ?? u.status} onChange={e => setEditData({...editData, [u.id]: {...editData[u.id], status: e.target.value}})}>
+                      <option value="active">פעיל</option>
+                      <option value="suspended">מושהה</option>
+                    </select>
+                  ) : (u.status === 'suspended' ? <span style={{color: 'red'}}>מושהה</span> : 'פעיל')}
+                </td>
+                <td>
+                  {editingUserId === u.id ? (
                     <button onClick={() => handleUpdateUser(u.id)} className={styles.btnAction}><Save size={16}/></button>
                   ) : (
-                    <button onClick={() => setEditingUserId(u.id)} className={styles.btnAction}>ערוך</button>
+                    <button onClick={() => { setEditingUserId(u.id); setEditData({...editData, [u.id]: u}); }} className={styles.btnAction}>ערוך</button>
                   )}
                 </td>
               </tr>

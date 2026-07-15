@@ -27,7 +27,8 @@ export async function GET(request) {
     const users = await prisma.user.findMany({
       where: {
         tenantId: currentUser.tenantId,
-        id: { not: userId } // exclude self
+        id: { not: userId }, // exclude self
+        status: { not: 'deleted' }
       },
       select: {
         id: true,

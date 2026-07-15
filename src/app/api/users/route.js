@@ -17,10 +17,7 @@ export async function GET(request) {
     }
 
     const users = await prisma.user.findMany({
-      where: { 
-        tenantId,
-        status: { not: 'deleted' }
-      },
+      where: { tenantId },
       include: { group: true },
       orderBy: { fullName: 'asc' }
     });

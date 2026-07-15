@@ -11,7 +11,7 @@ export async function PUT(request, { params }) {
     const tenantId = auth?.tenantId;
     const role = auth?.role?.toLowerCase();
     
-    const { id } = params;
+    const { id } = await params;
 
     if (!tenantId || role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -28,6 +28,8 @@ export async function PUT(request, { params }) {
     if (data.classId !== undefined) updateData.classId = data.classId || null;
     if (data.groupId !== undefined) updateData.groupId = data.groupId || null;
     if (data.status !== undefined) updateData.status = data.status;
+    if (data.password !== undefined) updateData.password = data.password;
+    if (data.username !== undefined) updateData.username = data.username;
 
     const updatedUser = await prisma.user.update({
       where: { 
@@ -53,20 +55,22 @@ export async function DELETE(request, { params }) {
     const tenantId = auth?.tenantId;
     const role = auth?.role?.toLowerCase();
     
-    const { id } = params;
+    const { id } = await params;
 
     if (!tenantId || role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await prisma.user.delete({
+    // Soft delete by updating status to 'deleted'
+    await prisma.user.update({
       where: { 
         id,
         tenantId
-      }
+      },
+      data: { status: 'deleted' }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Failed to delete user:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

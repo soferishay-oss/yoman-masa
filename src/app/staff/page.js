@@ -7,10 +7,24 @@ import styles from './staff.module.css';
 export default function StaffDashboard() {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [groups, setGroups] = useState([]);
 
   useEffect(() => {
     fetchStudents();
+    fetchGroups();
   }, []);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch('/api/staff/groups');
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch groups:', error);
+    }
+  };
 
   const fetchStudents = async () => {
     try {
@@ -26,6 +40,34 @@ export default function StaffDashboard() {
     }
   };
 
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    try {
+      const res = await fetch('/api/staff/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          scheduleType: 'once',
+          dueDate: data.dueDate,
+          targetAudience: data.groupId ? { groupId: data.groupId } : { type: 'all' }
+        })
+      });
+      if (res.ok) {
+        alert('המשימה נשלחה בהצלחה!');
+        e.target.reset();
+      } else {
+        alert('שגיאה בשליחת המשימה');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -36,7 +78,7 @@ export default function StaffDashboard() {
       <section className={styles.section}>
         <div className={styles.statGrid}>
           <div className={styles.statBox}>
-            <div className={styles.statNumber}>24</div>
+            <div className={styles.statNumber}>{students.length}</div>
             <div className={styles.statLabel}>חניכים פעילים</div>
           </div>
           <div className={styles.statBox}>
@@ -59,49 +101,34 @@ export default function StaffDashboard() {
                     <User size={20} />
                   </div>
                   <div className={styles.studentInfo}>
-                    <div className={styles.studentName}>{student.name}</div>
-                    <div className={`${styles.studentMood} ${student.trend === 'down' ? styles.moodWarning : styles.moodGood}`}>
-                      {student.trend === 'down' ? '⚠️' : '✅'} {student.mood}
-                    </div>
+                    <h3>{student.fullName}</h3>
+                    <p>עדכון אחרון: {student.journalPosts?.[0] ? new Date(student.journalPosts[0].createdAt).toLocaleDateString('he-IL') : 'אין עדכונים'}</p>
                   </div>
-                  <button style={{background:'none', border:'none', color:'var(--primary-light)', cursor:'pointer'}}>
-                    <MessageCircle size={20} />
-                  </button>
+                  <div className={styles.moodIndicator} style={{backgroundColor: student.journalPosts?.[0]?.mood?.ratingValue > 3 ? '#10b981' : '#f59e0b'}}>
+                    {student.journalPosts?.[0]?.mood?.ratingValue || '?'}
+                  </div>
                 </div>
               ))
             ) : (
-              <p style={{padding:'20px'}}>אין חניכים בקבוצה זו.</p>
+              <p style={{padding:'20px'}}>לא נמצאו חניכים פעילים או שאינך משויך לקבוצה.</p>
             )}
           </div>
         </div>
       </section>
+
       <section className={styles.section} style={{marginTop: '30px'}}>
-        <h2 className={styles.sectionTitle}><Activity size={20} style={{display:'inline', verticalAlign:'middle'}}/> ניהול משימות אישיות (Task Builder)</h2>
+        <h2 className={styles.sectionTitle}><MessageCircle size={20} style={{display:'inline', verticalAlign:'middle'}}/> שליחת משימה חדשה</h2>
         <div className={styles.card} style={{padding: '20px'}}>
-          <p style={{marginBottom: '15px'}}>שלח משימה אישית לחניך או לקבוצה.</p>
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const res = await fetch('/api/staff/tasks', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                title: formData.get('title'),
-                description: formData.get('description'),
-                scheduleType: 'once',
-                dueDate: formData.get('dueDate') || null
-              })
-            });
-            if (res.ok) {
-              alert('משימה נוצרה בהצלחה!');
-              e.target.reset();
-            } else {
-              alert('שגיאה ביצירת משימה');
-            }
-          }}>
+          <form onSubmit={handleCreateTask}>
             <div style={{display:'flex', gap:'10px', marginBottom: '10px'}}>
               <input name="title" type="text" placeholder="כותרת המשימה" required style={{flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ccc'}} />
               <input name="dueDate" type="date" style={{padding: '10px', borderRadius: '8px', border: '1px solid #ccc'}} />
+            </div>
+            <div style={{marginBottom: '10px'}}>
+              <select name="groupId" style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc'}}>
+                <option value="">-- כל החניכים (כללי) --</option>
+                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
             </div>
             <textarea name="description" placeholder="תיאור מפורט..." style={{width:'100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px'}}></textarea>
             <button type="submit" style={{padding: '10px 20px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer'}}>שלח משימה לחניכים</button>

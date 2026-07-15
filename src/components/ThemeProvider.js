@@ -20,7 +20,7 @@ export default function ThemeProvider({ children }) {
   useEffect(() => {
     async function fetchTenantConfig() {
       try {
-        const res = await fetch('/api/tenant');
+        const res = await fetch('/api/tenant', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data.schoolName) {
