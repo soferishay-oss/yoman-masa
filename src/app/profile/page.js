@@ -179,6 +179,7 @@ export default function ProfilePage() {
               <span className={styles.menuText} style={{color: '#e53e3e'}}>התנתק</span>
             </div>
           </div>
+          )}
         </div>
       </section>
     </div>

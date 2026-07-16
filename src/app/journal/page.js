@@ -315,17 +315,6 @@ export default function JournalPage() {
                   reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
                   reader.readAsDataURL(file);
                 }
-              <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  if (file.size > 4 * 1024 * 1024) {
-                    alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
-                    return;
-                  }
-                  const reader = new FileReader();
-                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
-                  reader.readAsDataURL(file);
-                }
               }} />
             </label>
             <AudioRecorder onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} />
