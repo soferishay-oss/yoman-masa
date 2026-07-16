@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Lock, Star, BookOpen, Clock, X } from 'lucide-react';
 import styles from '../journal/journal.module.css'; // Reusing journal styles
+import { useToast } from '@/components/ToastProvider';
 
 export default function VaultPage() {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     fetchVaultItems();
@@ -26,7 +28,8 @@ export default function VaultPage() {
   };
 
   const handleRemoveFromVault = async (id) => {
-    if (!window.confirm('האם להסיר מכספת הזיכרונות? זה לא ימחק את הפוסט עצמו.')) return;
+    const confirmed = await toast.confirm('האם להסיר מכספת הזיכרונות? זה לא ימחק את הפוסט עצמו.');
+    if (!confirmed) return;
     try {
       const res = await fetch('/api/vault', {
         method: 'PUT',
@@ -35,9 +38,13 @@ export default function VaultPage() {
       });
       if (res.ok) {
         setItems(items.filter(item => item.id !== id));
+        toast.show('הוסר מהכספת בהצלחה', 'success');
+      } else {
+        toast.show('שגיאה בהסרת הפריט', 'error');
       }
     } catch (err) {
       console.error(err);
+      toast.show('שגיאה בהסרת הפריט', 'error');
     }
   };
 

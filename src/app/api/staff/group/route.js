@@ -30,16 +30,21 @@ export async function GET(request) {
     if (staff?.groupId) groupIds.push(staff.groupId);
     if (staff?.managedGroups) groupIds.push(...staff.managedGroups.map(g => g.id));
 
-    if (groupIds.length === 0) {
+    if (role !== 'admin' && groupIds.length === 0) {
       return NextResponse.json({ error: 'Staff is not assigned to a group' }, { status: 400 });
     }
 
-    // Fetch all students in these groups
+    // Fetch students: all for admin, filtered for staff
+    const whereClause = {
+      tenantId,
+      role: 'student'
+    };
+    if (role !== 'admin') {
+      whereClause.groupId = { in: groupIds };
+    }
+
     const students = await prisma.user.findMany({
-      where: {
-        groupId: { in: groupIds },
-        role: 'student'
-      },
+      where: whereClause,
       include: {
         group: true,
         journalPosts: {
