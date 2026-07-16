@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import { PenLine, Map, Sunrise, Image as ImageIcon, Video, Mic, Sparkles, Star, Trash2 } from 'lucide-react';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
+import AudioRecorder from '@/components/AudioRecorder';
+import { useToast } from '@/components/ToastProvider';
+import EmojiPickerButton from '@/components/EmojiPickerButton';
 
 export default function JournalPage() {
+  const toast = useToast();
   const [entries, setEntries] = useState([]);
   const [newEntryTitle, setNewEntryTitle] = useState('');
   const [newEntryContent, setNewEntryContent] = useState('');
@@ -54,8 +58,8 @@ export default function JournalPage() {
           content: newEntryContent,
           isDraft: false,
           mediaUrls: cleanMediaUrls,
-          aiTranscription,
-          aiThought
+          aiTranscription: basicDraft || null,
+          aiThought: aiThought || null
         })
       });
 
@@ -77,13 +81,14 @@ export default function JournalPage() {
         setShowDrafts(false);
         setAiThought('');
         setIsComposing(false);
+        toast.show('הרשומה נשמרה ביומן', 'success');
       } else {
         const errorData = await res.json();
-        alert(errorData.error || 'שגיאה בשמירת הרשומה. ייתכן שהקובץ גדול מדי.');
+        toast.show(errorData.error || 'שגיאה בשמירת הרשומה. ייתכן שהקובץ גדול מדי.', 'error');
       }
     } catch (error) {
       console.error('Error saving post:', error);
-      alert('שגיאה בשמירת הרשומה. ייתכן שהקובץ גדול מדי (מעל 4MB).');
+      toast.show('שגיאה בשמירת הרשומה. ייתכן שהקובץ גדול מדי.', 'error');
     }
   };
 
@@ -91,29 +96,45 @@ export default function JournalPage() {
 
 
 
-  const handleTranscribe = async (file, type) => {
+  const handleTranscribeAll = async () => {
     setIsRecording(true);
     try {
-      const formData = new FormData();
-      formData.append('audio', file, 'recording.webm');
-      const res = await fetch('/api/ai/transcribe', {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.basicText?.includes('שגיאה: חסר מפתח')) {
-          alert(data.basicText + '\n' + data.aiThought);
-          return;
+      const audioFiles = mediaUrls.filter(m => m.type === 'audio' && m.file).map(m => m.file);
+      if (audioFiles.length === 0) return;
+
+      let combinedBasic = '';
+      let combinedSmart = '';
+      let lastAiThought = '';
+
+      for (let i = 0; i < audioFiles.length; i++) {
+        const formData = new FormData();
+        formData.append('audio', audioFiles[i], `recording_${i}.webm`);
+        const res = await fetch('/api/ai/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+            toast.show(data.basicText + '\n' + data.aiThought, 'error');
+            setIsRecording(false);
+            return;
+          }
+          combinedBasic += (combinedBasic ? '\n\n' : '') + (data.basicText || '');
+          combinedSmart += (combinedSmart ? '\n\n' : '') + (data.smartText || '');
+          if (data.aiThought) lastAiThought = data.aiThought;
         }
-        setSmartDraft(data.smartText);
-        setBasicDraft(data.basicText);
-        setAiThought(data.aiThought);
-        setShowDrafts(true);
       }
+
+      setBasicDraft(combinedBasic);
+      setSmartDraft(combinedSmart);
+      setAiThought(lastAiThought);
+      setShowDrafts(true);
+      toast.show('הקלטות תומללו בהצלחה', 'success');
     } catch (err) {
       console.error(err);
-      alert('שגיאה בתמלול');
+      toast.show('שגיאה בתמלול', 'error');
     } finally {
       setIsRecording(false);
     }
@@ -136,8 +157,8 @@ export default function JournalPage() {
         </div>
         {audioMedia && audioMedia.file && !showDrafts && (
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'all')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              {isRecording ? 'מעבד הקלטה...' : 'עבד הקלטה לטקסט'}
+            <button type="button" onClick={handleTranscribeAll} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מעבד הקלטות...' : 'עבד הקלטות לטקסט'}
             </button>
           </div>
         )}
@@ -177,7 +198,9 @@ export default function JournalPage() {
       if (!res.ok) {
         // Revert on failure
         setEntries(entries.map(e => e.id === entry.id ? { ...e, isVault: entry.isVault } : e));
-        alert('שגיאה בשמירה לכספת');
+        toast.show('שגיאה בשמירה לכספת', 'error');
+      } else {
+        toast.show(newVaultStatus ? 'נשמר לכספת' : 'הוסר מהכספת', 'success');
       }
     } catch (error) {
       console.error(error);
@@ -187,19 +210,20 @@ export default function JournalPage() {
   };
 
   const handleDeleteEntry = async (entryId) => {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק רשומה זו? מחיקה זו אינה ניתנת לביטול.')) return;
+    const isConfirmed = await toast.confirm('האם אתה בטוח שברצונך למחוק רשומה זו?');
+    if (!isConfirmed) return;
     try {
       const res = await fetch(`/api/journal/${entryId}`, { method: 'DELETE' });
       if (res.ok) {
         setEntries(entries.filter(e => e.id !== entryId));
-        alert('הרשומה נמחקה בהצלחה.');
+        toast.show('הרשומה נמחקה בהצלחה', 'success');
       } else {
         const data = await res.json();
-        alert(data.error || 'שגיאה במחיקת הרשומה.');
+        toast.show(data.error || 'שגיאה במחיקת הרשומה.', 'error');
       }
     } catch (error) {
       console.error(error);
-      alert('שגיאה במחיקת הרשומה.');
+      toast.show('שגיאה במחיקת הרשומה.', 'error');
     }
   };
 
@@ -235,13 +259,18 @@ export default function JournalPage() {
             onChange={(e) => setNewEntryTitle(e.target.value)}
             className={styles.titleInput}
           />
-          <textarea 
-            placeholder="מה עבר עליך היום?..." 
-            value={newEntryContent}
-            onChange={(e) => setNewEntryContent(e.target.value)}
-            className={styles.contentInput}
-            rows={5}
-          />
+          <div style={{ position: 'relative' }}>
+            <textarea 
+              placeholder="מה עבר עליך היום?..." 
+              value={newEntryContent}
+              onChange={(e) => setNewEntryContent(e.target.value)}
+              className={styles.contentInput}
+              rows={5}
+            />
+            <div style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+              <EmojiPickerButton onEmojiClick={(emoji) => setNewEntryContent(prev => prev + emoji)} />
+            </div>
+          </div>
           
           {aiThought && (
             <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid var(--primary-color)' }}>
@@ -264,7 +293,7 @@ export default function JournalPage() {
                 const file = e.target.files[0];
                 if (file) {
                   if (file.size > 4 * 1024 * 1024) {
-                    alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
+                    toast.show('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB', 'error');
                     return;
                   }
                   const reader = new FileReader();
@@ -279,6 +308,17 @@ export default function JournalPage() {
                 const file = e.target.files[0];
                 if (file) {
                   if (file.size > 4 * 1024 * 1024) {
+                    toast.show('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB', 'error');
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
+                  reader.readAsDataURL(file);
+                }
+              <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  if (file.size > 4 * 1024 * 1024) {
                     alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
                     return;
                   }
@@ -288,21 +328,7 @@ export default function JournalPage() {
                 }
               }} />
             </label>
-            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-              <Mic size={20}/> הקלטה
-              <input type="file" accept="audio/*" capture="microphone" style={{display: 'none'}} onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  if (file.size > 4 * 1024 * 1024) {
-                    alert('הקובץ גדול מדי. ניתן להעלות קבצים עד 4MB');
-                    return;
-                  }
-                  const reader = new FileReader();
-                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'audio', url: reader.result, file: file }]);
-                  reader.readAsDataURL(file);
-                }
-              }} />
-            </label>
+            <AudioRecorder onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} />
           </div>
 
           <div className={styles.formActions}>

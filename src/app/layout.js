@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import styles from './layout.module.css';
 import ThemeProvider from '@/components/ThemeProvider';
 import ErrorTracker from '@/components/ErrorTracker';
+import { ToastProvider } from '@/components/ToastProvider';
 
 export const metadata = {
   title: 'יומן מסע חינוכי',
@@ -34,6 +35,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl">
       <body>
+        <ToastProvider>
         <ThemeProvider>
           <main className={styles.mainContent}>
             <ErrorTracker />
@@ -81,6 +83,7 @@ export default async function RootLayout({ children }) {
           </nav>
         )}
         </ThemeProvider>
+        </ToastProvider>
       </body>
     </html>
   );

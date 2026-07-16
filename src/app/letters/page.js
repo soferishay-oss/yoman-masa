@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, User, Image as ImageIcon, Video, Mic, Sparkles } from 'lucide-react';
+import { Heart, User, Image as ImageIcon, Video, Mic, Sparkles, Reply, Smile } from 'lucide-react';
 import styles from './letters.module.css';
+import { useToast } from '@/components/ToastProvider';
+import AudioRecorder from '@/components/AudioRecorder';
+import EmojiPickerButton from '@/components/EmojiPickerButton';
 
 export default function LettersPage() {
+  const toast = useToast();
   const [letters, setLetters] = useState([]);
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,7 +78,7 @@ export default function LettersPage() {
         })
       });
       if (res.ok) {
-        alert('המכתב נשלח בהצלחה!');
+        toast.show('המכתב נשלח בהצלחה!', 'success');
         setIsComposing(false);
         setLetterContent('');
         setSelectedUser('');
@@ -83,37 +87,83 @@ export default function LettersPage() {
         setAiTranscription('');
         fetchLetters();
       } else {
-        alert('שגיאה בשליחת המכתב');
+        toast.show('שגיאה בשליחת המכתב', 'error');
       }
     } catch (error) {
       console.error(error);
+      toast.show('שגיאה בשליחת המכתב', 'error');
     }
   };
 
-  const handleTranscribe = async (file, type) => {
+  const handleTranscribeAll = async (type = 'smart') => {
+    setIsRecording(true);
     try {
-      const formData = new FormData();
-      formData.append('audio', file, 'recording.webm');
-      const res = await fetch('/api/ai/transcribe', {
-        method: 'POST',
-        body: formData
+      const audioFiles = mediaUrls.filter(m => m.type === 'audio' && m.file).map(m => m.file);
+      if (audioFiles.length === 0) return;
+
+      let combinedBasic = '';
+      let combinedSmart = '';
+      let lastAiThought = '';
+
+      for (let i = 0; i < audioFiles.length; i++) {
+        const formData = new FormData();
+        formData.append('audio', audioFiles[i], `recording_${i}.webm`);
+        const res = await fetch('/api/ai/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+            toast.show(data.basicText + '\n' + data.aiThought, 'error');
+            setIsRecording(false);
+            return;
+          }
+          combinedBasic += (combinedBasic ? '\n\n' : '') + (data.basicText || '');
+          combinedSmart += (combinedSmart ? '\n\n' : '') + (data.smartText || '');
+          if (data.aiThought) lastAiThought = data.aiThought;
+        }
+      }
+
+      if (type === 'smart') {
+        setLetterContent(prev => prev ? prev + '\n' + combinedSmart : combinedSmart);
+        setAiThought(lastAiThought);
+      } else {
+        setLetterContent(prev => prev ? prev + '\n' + combinedBasic : combinedBasic);
+      }
+      toast.show('ההקלטות תומללו בהצלחה', 'success');
+    } catch (err) {
+      console.error(err);
+      toast.show('שגיאה בתמלול', 'error');
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
+  const handleAddReaction = async (letterId, emoji) => {
+    const letter = letters.find(l => l.id === letterId);
+    if (!letter) return;
+    
+    let currentReactions = Array.isArray(letter.reactions) ? letter.reactions : [];
+    const newReactions = [...currentReactions, emoji];
+
+    // Optimistic
+    setLetters(letters.map(l => l.id === letterId ? { ...l, reactions: newReactions } : l));
+    
+    try {
+      const res = await fetch(`/api/letters/${letterId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reactions: newReactions })
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.basicText?.includes('שגיאה: חסר מפתח')) {
-          alert(data.basicText + '\n' + data.aiThought);
-          return;
-        }
-        if (type === 'smart') {
-          setLetterContent(prev => prev ? prev + '\n' + data.smartText : data.smartText);
-          setAiThought(data.aiThought);
-        } else {
-          setLetterContent(prev => prev ? prev + '\n' + data.basicText : data.basicText);
-        }
+      if (!res.ok) {
+        toast.show('שגיאה בהוספת תגובה', 'error');
+        setLetters(letters.map(l => l.id === letterId ? { ...l, reactions: currentReactions } : l));
       }
     } catch (err) {
       console.error(err);
-      alert('שגיאה בתמלול');
+      setLetters(letters.map(l => l.id === letterId ? { ...l, reactions: currentReactions } : l));
     }
   };
 
@@ -126,17 +176,18 @@ export default function LettersPage() {
           {mediaUrls.map((media, idx) => {
             if (media.type === 'image') return <img key={idx} src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />;
             if (media.type === 'video') return <video key={idx} src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />;
-            if (media.type === 'audio') return <audio key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px'}} />;
-            return null;
+              <button type="button" onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== idx))} style={{position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 24, height: 24, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>X</button>
+            </div>
+            );
           })}
         </div>
         {audioMedia && audioMedia.file && (
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'basic')} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              תמלול רגיל
+            <button type="button" onClick={() => handleTranscribeAll('basic')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מעבד...' : 'תמלול רגיל'}
             </button>
-            <button type="button" onClick={() => handleTranscribe(audioMedia.file, 'smart')} style={{padding: '8px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              תמלול חכם
+            <button type="button" onClick={() => handleTranscribeAll('smart')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מעבד...' : 'תמלול חכם'}
             </button>
           </div>
         )}
@@ -178,11 +229,16 @@ export default function LettersPage() {
           </div>
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px' }}>תוכן המכתב</label>
-            <textarea 
-              value={letterContent}
-              onChange={e => setLetterContent(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '100px' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <textarea 
+                value={letterContent}
+                onChange={e => setLetterContent(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '100px' }}
+              />
+              <div style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+                <EmojiPickerButton onEmojiClick={(emoji) => setLetterContent(prev => prev + emoji)} />
+              </div>
+            </div>
           </div>
 
           {aiThought && (
@@ -213,23 +269,17 @@ export default function LettersPage() {
               <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
                 const file = e.target.files[0];
                 if (file) {
+                  if (file.size > 4 * 1024 * 1024) {
+                    toast.show('הקובץ גדול מדי. מותר עד 4MB.', 'error');
+                    return;
+                  }
                   const reader = new FileReader();
                   reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
                   reader.readAsDataURL(file);
                 }
               }} />
             </label>
-            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-              <Mic size={18} /> הקלטה
-              <input type="file" accept="audio/*" capture="microphone" style={{display: 'none'}} onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'audio', url: reader.result, file: file }]);
-                  reader.readAsDataURL(file);
-                }
-              }} />
-            </label>
+            <AudioRecorder onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} />
           </div>
 
           <button type="submit" disabled={!selectedUser || (!letterContent && mediaUrls.length === 0)} style={{ width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}>
@@ -262,6 +312,32 @@ export default function LettersPage() {
                   ))}
                 </div>
               )}
+
+              {/* Reactions UI */}
+              {Array.isArray(letter.reactions) && letter.reactions.length > 0 && (
+                <div style={{ display: 'flex', gap: '5px', marginTop: '10px', flexWrap: 'wrap' }}>
+                  {letter.reactions.map((rx, idx) => (
+                    <span key={idx} style={{ background: '#f1f5f9', padding: '4px 8px', borderRadius: '16px', fontSize: '14px' }}>{rx}</span>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
+                <EmojiPickerButton onEmojiClick={(emoji) => handleAddReaction(letter.id, emoji)} />
+                {letter.authorId && (
+                  <button 
+                    onClick={() => {
+                      setSelectedUser(letter.authorId);
+                      setIsComposing(true);
+                      setLetterContent(`בתגובה למכתבך מהתאריך ${new Date(letter.createdAt).toLocaleDateString('he-IL')}:\n\n`);
+                      window.scrollTo(0, 0);
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 'bold' }}
+                  >
+                    <Reply size={16} /> השב
+                  </button>
+                )}
+              </div>
             </div>
           ))
         ) : (

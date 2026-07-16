@@ -213,6 +213,7 @@ model Letter {
   mediaUrls        Json?
   aiTranscription  String?
   aiThought        String?
+  reactions        Json?
   createdAt        DateTime @default(now())
 }
 
