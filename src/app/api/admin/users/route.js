@@ -21,7 +21,7 @@ export async function GET(request) {
         tenantId,
         status: { not: 'deleted' }
       },
-      include: { group: true },
+      include: { group: true, managedGroups: true },
       orderBy: { fullName: 'asc' }
     });
 
@@ -77,22 +77,30 @@ export async function POST(request) {
     }
 
     // Handle Single User Creation
-    const { fullName, phoneNumber, email, userRole, subRole, classId, groupId } = data;
+    const { fullName, phoneNumber, email, userRole, subRole, classId, groupId, managedGroupIds } = data;
     const defaultPassword = await bcrypt.hash('123456', 10);
 
+    const userData = {
+      tenantId,
+      fullName,
+      phoneNumber: phoneNumber || null,
+      email: email || null,
+      role: userRole || 'student',
+      subRole: subRole || null,
+      classId: classId || null,
+      groupId: groupId || null,
+      passwordHash: defaultPassword
+    };
+
+    if ((userRole === 'staff' || userRole === 'admin') && managedGroupIds && managedGroupIds.length > 0) {
+      userData.managedGroups = {
+        connect: managedGroupIds.map(id => ({ id }))
+      };
+    }
+
     const newUser = await prisma.user.create({
-      data: {
-        tenantId,
-        fullName,
-        phoneNumber: phoneNumber || null,
-        email: email || null,
-        role: userRole || 'student',
-        subRole: subRole || null,
-        classId: classId || null,
-        groupId: groupId || null,
-        passwordHash: defaultPassword
-      },
-      include: { group: true }
+      data: userData,
+      include: { group: true, managedGroups: true }
     });
 
     return NextResponse.json(newUser, { status: 201 });

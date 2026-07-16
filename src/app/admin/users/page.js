@@ -13,7 +13,7 @@ export default function AdminUsersPage() {
   // Single User Form State
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '', phoneNumber: '', email: '', role: 'student', groupId: ''
+    fullName: '', phoneNumber: '', email: '', role: 'student', groupId: '', managedGroupIds: []
   });
 
   // Edit User State
@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
       });
       if (res.ok) {
         alert('משתמש נוצר בהצלחה');
-        setFormData({ fullName: '', phoneNumber: '', email: '', role: 'student', groupId: '' });
+        setFormData({ fullName: '', phoneNumber: '', email: '', role: 'student', groupId: '', managedGroupIds: [] });
         setShowAddForm(false);
         fetchUsers();
       } else {
@@ -248,11 +248,24 @@ export default function AdminUsersPage() {
             <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
               <option value="student">חניך</option>
               <option value="staff">איש צוות</option>
+              <option value="admin">מנהל</option>
             </select>
-            <select value={formData.groupId} onChange={e => setFormData({...formData, groupId: e.target.value})}>
-              <option value="">-- ללא קבוצה --</option>
-              {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
+            {formData.role === 'student' ? (
+              <select value={formData.groupId} onChange={e => setFormData({...formData, groupId: e.target.value})}>
+                <option value="">-- שייך לכיתה/קבוצה --</option>
+                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            ) : (
+              <div>
+                <small style={{display:'block', marginBottom:'5px', color:'#64748b'}}>ניתן לבחור מספר כיתות עם Ctrl</small>
+                <select multiple value={formData.managedGroupIds} onChange={e => {
+                  const values = Array.from(e.target.selectedOptions, option => option.value);
+                  setFormData({...formData, managedGroupIds: values});
+                }} style={{ height: '80px', width: '100%' }}>
+                  {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
+            )}
           </div>
           <button type="submit" className={styles.btnPrimary}>שמור</button>
         </form>
@@ -306,15 +319,29 @@ export default function AdminUsersPage() {
                 </td>
                 <td>
                   {editingUserId === u.id ? (
-                    <select 
-                      value={editData[u.id]?.groupId || u.groupId || ''}
-                      onChange={e => setEditData({...editData, [u.id]: {...editData[u.id], groupId: e.target.value}})}
-                    >
-                      <option value="">-- בחר --</option>
-                      {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                    </select>
+                    (editData[u.id]?.role ?? u.role) === 'student' ? (
+                      <select 
+                        value={editData[u.id]?.groupId || u.groupId || ''}
+                        onChange={e => setEditData({...editData, [u.id]: {...editData[u.id], groupId: e.target.value}})}
+                      >
+                        <option value="">-- בחר --</option>
+                        {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    ) : (
+                      <select 
+                        multiple 
+                        value={editData[u.id]?.managedGroupIds ?? (u.managedGroups?.map(mg => mg.id) || [])}
+                        onChange={e => {
+                          const values = Array.from(e.target.selectedOptions, option => option.value);
+                          setEditData({...editData, [u.id]: {...editData[u.id], managedGroupIds: values}});
+                        }}
+                        style={{ height: '60px' }}
+                      >
+                        {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    )
                   ) : (
-                    u.group?.name || '-'
+                    u.role === 'student' ? (u.group?.name || '-') : (u.managedGroups?.map(mg => mg.name).join(', ') || 'הכל')
                   )}
                 </td>
                 <td>

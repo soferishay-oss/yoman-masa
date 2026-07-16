@@ -15,22 +15,26 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({ 
+      where: { id: userId },
+      include: { managedGroups: true }
+    });
     if (!user || (user.role !== 'staff' && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get moods. If staff, ideally only for their group. If admin, all.
-    // For simplicity, we get all for tenant and filter on client, or filter here.
     let whereClause = { tenantId };
     
-    if (user.role === 'staff' && user.groupId) {
-      // Find students in this group
-      const studentsInGroup = await prisma.user.findMany({
-        where: { tenantId, groupId: user.groupId },
+    if (user.role === 'staff') {
+      const groupIds = [];
+      if (user.groupId) groupIds.push(user.groupId);
+      if (user.managedGroups) groupIds.push(...user.managedGroups.map(g => g.id));
+      
+      const studentsInGroups = await prisma.user.findMany({
+        where: { tenantId, groupId: { in: groupIds } },
         select: { id: true }
       });
-      const studentIds = studentsInGroup.map(s => s.id);
+      const studentIds = studentsInGroups.map(s => s.id);
       whereClause.userId = { in: studentIds };
     }
 

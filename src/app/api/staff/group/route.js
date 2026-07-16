@@ -23,20 +23,25 @@ export async function GET(request) {
     // Get staff's group
     const staff = await prisma.user.findUnique({
       where: { id: userId },
-      select: { groupId: true }
+      select: { groupId: true, managedGroups: { select: { id: true } } }
     });
 
-    if (!staff?.groupId) {
+    const groupIds = [];
+    if (staff?.groupId) groupIds.push(staff.groupId);
+    if (staff?.managedGroups) groupIds.push(...staff.managedGroups.map(g => g.id));
+
+    if (groupIds.length === 0) {
       return NextResponse.json({ error: 'Staff is not assigned to a group' }, { status: 400 });
     }
 
-    // Fetch all students in this group and their latest journal/mood
+    // Fetch all students in these groups
     const students = await prisma.user.findMany({
       where: {
-        groupId: staff.groupId,
+        groupId: { in: groupIds },
         role: 'student'
       },
       include: {
+        group: true,
         journalPosts: {
           orderBy: { createdAt: 'desc' },
           take: 1,

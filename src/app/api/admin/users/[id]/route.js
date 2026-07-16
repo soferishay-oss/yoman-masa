@@ -30,6 +30,15 @@ export async function PUT(request, { params }) {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.password !== undefined) updateData.password = data.password;
     if (data.username !== undefined) updateData.username = data.username;
+    
+    // Determine the role for checking if managedGroups should be updated
+    const finalRole = updateData.role || (await prisma.user.findUnique({ where: { id } }))?.role;
+    
+    if ((finalRole === 'staff' || finalRole === 'admin') && data.managedGroupIds !== undefined) {
+      updateData.managedGroups = {
+        set: data.managedGroupIds.map(id => ({ id }))
+      };
+    }
 
     const updatedUser = await prisma.user.update({
       where: { 
@@ -37,7 +46,7 @@ export async function PUT(request, { params }) {
         tenantId // ensure they only update users in their tenant
       },
       data: updateData,
-      include: { group: true }
+      include: { group: true, managedGroups: true }
     });
 
     return NextResponse.json(updatedUser);

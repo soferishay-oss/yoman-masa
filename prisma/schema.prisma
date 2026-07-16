@@ -44,7 +44,8 @@ model User {
   subRole          String?
   classId          String?
   groupId          String?
-  group            Group?   @relation(fields: [groupId], references: [id])
+  group            Group?   @relation("UserGroup", fields: [groupId], references: [id])
+  managedGroups    Group[]  @relation("StaffManagedGroups")
   status           String   @default("active")
   avatarUrl        String?
   createdAt        DateTime @default(now())
@@ -68,7 +69,8 @@ model Group {
   type             String
   description      String?
   createdAt        DateTime @default(now())
-  users            User[]
+  users            User[]   @relation("UserGroup")
+  managers         User[]   @relation("StaffManagedGroups")
 }
 
 model ContentEntry {

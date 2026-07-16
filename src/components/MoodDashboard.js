@@ -7,6 +7,7 @@ export default function MoodDashboard({ isAdmin = false }) {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, attention, negative_trend
+  const [selectedGroupId, setSelectedGroupId] = useState('all');
 
   useEffect(() => {
     fetchStudents();
@@ -45,6 +46,10 @@ export default function MoodDashboard({ isAdmin = false }) {
 
   const getFilteredStudents = () => {
     return students.filter(student => {
+      if (selectedGroupId !== 'all' && student.groupId !== selectedGroupId) {
+        return false;
+      }
+      
       const recentMoods = student.moods || [];
       
       if (filter === 'attention') {
@@ -67,8 +72,32 @@ export default function MoodDashboard({ isAdmin = false }) {
 
   const filteredStudents = getFilteredStudents();
 
+  const uniqueGroups = [];
+  const groupIds = new Set();
+  students.forEach(s => {
+    if (s.group && !groupIds.has(s.groupId)) {
+      groupIds.add(s.groupId);
+      uniqueGroups.push(s.group);
+    }
+  });
+
   return (
     <div className={styles.card} style={{ padding: '20px' }}>
+      {uniqueGroups.length > 0 && (
+        <div style={{ marginBottom: '15px' }}>
+          <select 
+            value={selectedGroupId} 
+            onChange={(e) => setSelectedGroupId(e.target.value)}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}
+          >
+            <option value="all">כל הכיתות/הקבוצות</option>
+            {uniqueGroups.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <button 
           onClick={() => setFilter('all')} 
