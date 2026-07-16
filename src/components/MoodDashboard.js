@@ -10,39 +10,31 @@ export default function MoodDashboard({ isAdmin = false }) {
   const [selectedGroupId, setSelectedGroupId] = useState('all');
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const fetchStudents = async () => {
-    try {
-      // If admin, we can fetch all. If staff, fetch their group.
-      const endpoint = isAdmin ? '/api/admin/users' : '/api/staff/group';
-      const res = await fetch(endpoint);
-      if (res.ok) {
-        let data = await res.json();
-        // Since admin API might return all users, filter out only students
-        if (isAdmin) {
-          data = data.filter(u => u.role === 'student');
+    const fetchStudents = async () => {
+      try {
+        const endpoint = isAdmin ? '/api/admin/users' : '/api/staff/group';
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          let data = await res.json();
+          
+          const moodsRes = await fetch('/api/staff/moods');
+          if (moodsRes.ok) {
+            const allMoods = await moodsRes.json();
+            data = data.map(student => {
+              const studentMoods = allMoods.filter(m => m.userId === student.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+              return { ...student, moods: studentMoods };
+            });
+          }
+          setStudents(data);
         }
-        
-        // Fetch moods for these students
-        const moodsRes = await fetch('/api/staff/moods');
-        if (moodsRes.ok) {
-          const allMoods = await moodsRes.json();
-          // Attach moods to students
-          data = data.map(student => {
-            const studentMoods = allMoods.filter(m => m.userId === student.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            return { ...student, moods: studentMoods };
-          });
-        }
-        setStudents(data);
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch students:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    fetchStudents();
+  }, [isAdmin]);
 
   const getFilteredStudents = () => {
     return students.filter(student => {

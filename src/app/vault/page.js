@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,21 +12,20 @@ export default function VaultPage() {
   const toast = useToast();
 
   useEffect(() => {
+    const fetchVaultItems = async () => {
+      try {
+        const res = await fetch('/api/vault');
+        if (res.ok) {
+          setItems(await res.json());
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchVaultItems();
   }, []);
-
-  const fetchVaultItems = async () => {
-    try {
-      const res = await fetch('/api/vault');
-      if (res.ok) {
-        setItems(await res.json());
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleRemoveFromVault = async (id) => {
     const confirmed = await toast.confirm('האם להסיר מכספת הזיכרונות? זה לא ימחק את הפוסט עצמו.');

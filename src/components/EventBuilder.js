@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
 import { Calendar, Plus, MapPin, Tag, Palette, CalendarDays } from 'lucide-react';
 import styles from '@/app/staff/staff.module.css';
@@ -23,7 +24,7 @@ export default function EventBuilder() {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async () => {
+  async function fetchEvents() {
     try {
       const res = await fetch('/api/staff/events');
       if (res.ok) {

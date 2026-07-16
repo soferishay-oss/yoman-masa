@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
 import styles from '@/app/staff/staff.module.css';
 import { Plus, Trash, Image as ImageIcon, Video, Mic, Upload, FileText, CheckSquare, AlignLeft } from 'lucide-react';

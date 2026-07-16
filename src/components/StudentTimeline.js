@@ -10,22 +10,20 @@ export default function StudentTimeline() {
   const router = useRouter();
 
   useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch('/api/student/events');
+        if (res.ok) {
+          setEvents(await res.json());
+        }
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchEvents();
   }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const res = await fetch('/api/student/events');
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (isLoading) return <p>טוען ציר זמן...</p>;
   if (events.length === 0) return null;

@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
 import styles from '@/app/staff/staff.module.css';
 import { ChevronDown, ChevronUp, CheckCircle, Clock, Circle, FileText } from 'lucide-react';
@@ -11,22 +12,21 @@ export default function TaskTracker() {
   const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch('/api/staff/tasks/tracking');
+        if (res.ok) {
+          const data = await res.json();
+          setTasks(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch tracking data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchTasks();
   }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const res = await fetch('/api/staff/tasks/tracking');
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch tracking data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm('האם אתה בטוח שברצונך למחוק משימה זו? (כל נתוני התלמידים במשימה יימחקו)')) return;
