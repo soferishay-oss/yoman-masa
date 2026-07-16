@@ -1,7 +1,8 @@
 .mainContent {
   padding: 20px;
-  max-width: 600px; /* Mobile first, centered on desktop */
+  max-width: 1200px; /* Expanded for desktop */
   margin: 0 auto;
+  padding-bottom: 100px; /* Space for bottom nav */
 }
 
 .bottomNav {

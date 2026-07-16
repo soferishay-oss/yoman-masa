@@ -4,6 +4,7 @@ import { useState, useContext, useEffect } from 'react';
 import { Settings, Users, Save, Edit } from 'lucide-react';
 import styles from './admin.module.css';
 import { ThemeContext } from '@/components/ThemeProvider';
+import { HexColorPicker } from 'react-colorful';
 
 export default function AdminDashboard() {
   const theme = useContext(ThemeContext);
@@ -142,14 +143,18 @@ export default function AdminDashboard() {
 
           <div className={styles.formGroup}>
             <label>צבע ראשי למערכת</label>
-            <div className={styles.colorPickerRow}>
-              <input 
-                type="color" 
-                className={styles.colorPicker} 
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-              />
-              <span>{primaryColor}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', maxWidth: '200px' }}>
+              <HexColorPicker color={primaryColor} onChange={setPrimaryColor} style={{ width: '100%' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: primaryColor, border: '1px solid #cbd5e1' }}></div>
+                <input 
+                  type="text" 
+                  className={styles.input} 
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  style={{ fontFamily: 'monospace', flex: 1 }}
+                />
+              </div>
             </div>
           </div>
           
