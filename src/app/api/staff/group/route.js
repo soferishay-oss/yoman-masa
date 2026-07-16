@@ -47,17 +47,16 @@ export async function GET(request) {
       where: whereClause,
       include: {
         group: true,
-        journalPosts: {
+        moodChecks: {
           orderBy: { createdAt: 'desc' },
-          take: 1,
-          include: { mood: true }
+          take: 1
         }
       }
     });
 
     const mappedStudents = students.map(student => {
-      const lastPost = student.journalPosts[0];
-      const moodValue = lastPost?.mood?.score || 5;
+      const lastPost = student.moodChecks[0];
+      const moodValue = lastPost?.score || 5;
       
       let trend = 'up';
       let moodStr = 'טוב';

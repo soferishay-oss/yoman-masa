@@ -46,15 +46,15 @@ export default function MoodDashboard({ isAdmin = false }) {
       
       if (filter === 'attention') {
         // Attention: At least 2 low moods (< 3) in recent history (e.g. last 5)
-        const lowCount = recentMoods.slice(0, 5).filter(m => m.ratingValue < 3).length;
+        const lowCount = recentMoods.slice(0, 5).filter(m => m.score < 3).length;
         return lowCount >= 2;
       }
       
       if (filter === 'negative_trend') {
         // Negative Trend: Latest mood is lower than the average of previous moods
         if (recentMoods.length < 2) return false;
-        const latest = recentMoods[0].ratingValue;
-        const prevAvg = recentMoods.slice(1, 4).reduce((sum, m) => sum + m.ratingValue, 0) / Math.min(3, recentMoods.length - 1);
+        const latest = recentMoods[0].score;
+        const prevAvg = recentMoods.slice(1, 4).reduce((sum, m) => sum + m.score, 0) / Math.min(3, recentMoods.length - 1);
         return latest < prevAvg;
       }
       
