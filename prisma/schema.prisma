@@ -29,6 +29,7 @@ model Tenant {
   stations         Station[]
   contentEntries   ContentEntry[]
   moodChecks       MoodCheck[]
+  staffAlerts      StaffAlert[]
 }
 
 model User {
@@ -215,3 +216,13 @@ model Letter {
   createdAt        DateTime @default(now())
 }
 
+model StaffAlert {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  type             String   // e.g., "message_rejected"
+  content          String
+  metadata         Json?
+  isRead           Boolean  @default(false)
+  createdAt        DateTime @default(now())
+}
