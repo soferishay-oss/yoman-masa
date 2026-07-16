@@ -28,7 +28,7 @@ export async function GET(request) {
 
     const groupIds = [];
     if (staff?.groupId) groupIds.push(staff.groupId);
-    if (staff?.managedGroups) groupIds.push(...staff.managedGroups.map(g => g.id));
+    if (staff?.managedGroups) groupIds.push(...(staff.managedGroups || []).map(g => g.id));
 
     if (role !== 'admin' && groupIds.length === 0) {
       return NextResponse.json({ error: 'Staff is not assigned to a group' }, { status: 400 });
@@ -55,8 +55,9 @@ export async function GET(request) {
     });
 
     const mappedStudents = students.map(student => {
-      const lastPost = student.moodChecks[0];
-      const moodValue = lastPost?.score || 5;
+      const moodChecks = student.moodChecks || [];
+      const lastPost = moodChecks.length > 0 ? moodChecks[0] : null;
+      const moodValue = lastPost?.ratingValue || 5;
       
       let trend = 'up';
       let moodStr = 'טוב';
