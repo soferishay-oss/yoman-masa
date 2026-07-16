@@ -7,7 +7,7 @@ export default function TaskBuilder({ onTaskCreated }) {
   const [taskType, setTaskType] = useState('short_message');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [checklistItems, setChecklistItems] = useState(['']);
+  const [checklistItems, setChecklistItems] = useState([{ text: '', required: true }]);
   const [mediaUrls, setMediaUrls] = useState([]);
   const [requireCompletion, setRequireCompletion] = useState(true);
   const [timerDeadline, setTimerDeadline] = useState('');
@@ -34,7 +34,7 @@ export default function TaskBuilder({ onTaskCreated }) {
     };
 
     if (taskType === 'checklist') {
-      taskData.checklistItems = checklistItems.filter(i => i.trim() !== '');
+      taskData.checklistItems = checklistItems.filter(i => i.text && i.text.trim() !== '');
     }
     if (timerDeadline) {
       taskData.timerDeadline = new Date(timerDeadline).toISOString();
@@ -58,7 +58,7 @@ export default function TaskBuilder({ onTaskCreated }) {
         if (onTaskCreated) onTaskCreated();
         setTitle('');
         setContent('');
-        setChecklistItems(['']);
+        setChecklistItems([{ text: '', required: true }]);
         setMediaUrls([]);
         setTimerDeadline('');
       } else {
@@ -118,27 +118,61 @@ export default function TaskBuilder({ onTaskCreated }) {
 
         {taskType === 'checklist' && (
           <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            <h4 style={{ marginBottom: '10px' }}>פריטי הצ'ק ליסט</h4>
+            <h4 style={{ marginBottom: '10px' }}>פריטי הצ'ק ליסט (אנטר להוספת שורה, הדבק רשימה לפיצול)</h4>
             {checklistItems.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+              <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center' }}>
                 <input 
                   type="text" 
+                  id={`checklist-item-${idx}`}
                   placeholder={`פריט ${idx + 1}`}
-                  value={item}
+                  value={item.text}
                   onChange={(e) => {
                     const newItems = [...checklistItems];
-                    newItems[idx] = e.target.value;
+                    newItems[idx].text = e.target.value;
                     setChecklistItems(newItems);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const newItems = [...checklistItems];
+                      newItems.splice(idx + 1, 0, { text: '', required: true });
+                      setChecklistItems(newItems);
+                      setTimeout(() => document.getElementById(`checklist-item-${idx + 1}`)?.focus(), 0);
+                    }
+                  }}
+                  onPaste={(e) => {
+                    const pasteData = e.clipboardData.getData('Text');
+                    if (pasteData.includes('\n')) {
+                      e.preventDefault();
+                      const lines = pasteData.split('\n').map(l => l.trim()).filter(l => l);
+                      const newItems = [...checklistItems];
+                      newItems[idx].text = lines[0];
+                      const newEntries = lines.slice(1).map(l => ({ text: l, required: true }));
+                      newItems.splice(idx + 1, 0, ...newEntries);
+                      setChecklistItems(newItems);
+                    }
                   }}
                   style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                 />
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={item.required}
+                    onChange={(e) => {
+                      const newItems = [...checklistItems];
+                      newItems[idx].required = e.target.checked;
+                      setChecklistItems(newItems);
+                    }}
+                  />
+                  חובה
+                </label>
                 <button type="button" onClick={() => {
                   const newItems = checklistItems.filter((_, i) => i !== idx);
-                  setChecklistItems(newItems.length ? newItems : ['']);
+                  setChecklistItems(newItems.length ? newItems : [{ text: '', required: true }]);
                 }} style={{ padding: '8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}><Trash size={16}/></button>
               </div>
             ))}
-            <button type="button" onClick={() => setChecklistItems([...checklistItems, ''])} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', color: '#475569' }}>
+            <button type="button" onClick={() => setChecklistItems([...checklistItems, { text: '', required: true }])} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', color: '#475569' }}>
               <Plus size={16} /> הוסף פריט
             </button>
           </div>

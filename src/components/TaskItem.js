@@ -18,14 +18,16 @@ export default function TaskItem({ assignment, onComplete, onProgress }) {
   };
 
   const allChecked = isChecklist && task.checklistItems?.length > 0 && 
-    task.checklistItems.every((_, i) => checklistState[i]);
+    task.checklistItems.every((item, i) => {
+      const isRequired = typeof item === 'object' ? item.required : true;
+      return !isRequired || checklistState[i];
+    });
   const hasSomeChecked = isChecklist && Object.values(checklistState).some(v => v);
 
   const handleComplete = () => {
     if (isChecklist && !allChecked) {
-      if (!window.confirm('המשימה לא הושלמה במלואה, האם לשלוח בכל זאת?')) {
-        return;
-      }
+      alert('המשימה לא הושלמה במלואה. יש לסמן לפחות את כל פריטי החובה כדי לשלוח דיווח ביצוע.');
+      return;
     } else {
       if (!window.confirm('האם סיימת את המשימה?')) {
         return;
@@ -83,20 +85,24 @@ export default function TaskItem({ assignment, onComplete, onProgress }) {
 
           {isChecklist && task.checklistItems && (
             <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {task.checklistItems.map((item, idx) => (
-                <label key={idx} onClick={(e) => { e.preventDefault(); toggleChecklist(idx); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '8px' }}>
-                  <div style={{ 
-                    width: '24px', height: '24px', borderRadius: '4px', border: '2px solid var(--primary-color)', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: checklistState[idx] ? 'var(--primary-color)' : 'transparent'
-                  }}>
-                    {checklistState[idx] && <Check size={16} color="white" />}
-                  </div>
-                  <span style={{ textDecoration: checklistState[idx] ? 'line-through' : 'none', color: checklistState[idx] ? '#94a3b8' : 'inherit' }}>
-                    {item}
-                  </span>
-                </label>
-              ))}
+              {task.checklistItems.map((item, idx) => {
+                const text = typeof item === 'object' ? item.text : item;
+                const isRequired = typeof item === 'object' ? item.required : true;
+                return (
+                  <label key={idx} onClick={(e) => { e.preventDefault(); toggleChecklist(idx); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '8px' }}>
+                    <div style={{ 
+                      width: '24px', height: '24px', borderRadius: '4px', border: '2px solid var(--primary-color)', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: checklistState[idx] ? 'var(--primary-color)' : 'transparent'
+                    }}>
+                      {checklistState[idx] && <Check size={16} color="white" />}
+                    </div>
+                    <span style={{ textDecoration: checklistState[idx] ? 'line-through' : 'none', color: checklistState[idx] ? '#94a3b8' : 'inherit' }}>
+                      {text} {!isRequired && <span style={{ fontSize: '12px', color: '#94a3b8', marginRight: '5px' }}>(לא חובה)</span>}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           )}
 
