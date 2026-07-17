@@ -18,6 +18,7 @@ export async function GET(request) {
     const groups = await prisma.group.findMany({
       where: { tenantId },
       include: {
+        managers: { select: { id: true, fullName: true } },
         _count: {
           select: { users: true }
         }

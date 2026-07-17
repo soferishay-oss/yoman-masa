@@ -46,6 +46,8 @@ export async function PUT(request) {
     if (data.name !== undefined) updateData.name = data.name;
     if (data.slogan !== undefined) updateData.slogan = data.slogan;
     if (data.dateMode !== undefined) updateData.dominantDateMode = data.dateMode;
+    if (data.institutionType !== undefined) updateData.institutionType = data.institutionType;
+    if (data.studyYears !== undefined) updateData.studyYears = parseInt(data.studyYears, 10);
     if (data.primaryColor !== undefined) {
       updateData.themeConfig = { primaryColor: data.primaryColor };
     }

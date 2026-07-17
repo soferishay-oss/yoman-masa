@@ -17,6 +17,7 @@ model Tenant {
   themeConfig      Json?
   dominantDateMode String   @default("gregorian")
   studyYears       Int      @default(1)
+  institutionType  String?  // e.g. "elementary", "highschool", "college"
   enabledModules   Json?
   retentionPolicy  String?
   createdAt        DateTime @default(now())
@@ -46,6 +47,7 @@ model User {
   groupId          String?
   group            Group?   @relation("UserGroup", fields: [groupId], references: [id])
   managedGroups    Group[]  @relation("StaffManagedGroups")
+  isDutyStudent    Boolean  @default(false)
   status           String   @default("active")
   avatarUrl        String?
   createdAt        DateTime @default(now())
@@ -200,7 +202,8 @@ model EventRSVP {
   event            Event    @relation(fields: [eventId], references: [id])
   userId           String
   user             User     @relation(fields: [userId], references: [id])
-  status           String   @default("pending")
+  status           String   @default("pending") // pending, attending, declined, present
+  attendedAt       DateTime?
   createdAt        DateTime @default(now())
 }
 

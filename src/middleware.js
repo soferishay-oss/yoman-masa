@@ -34,6 +34,7 @@ export async function middleware(request) {
     requestHeaders.set('x-tenant-id', payload.tenantId);
     requestHeaders.set('x-user-role', payload.role);
     if (payload.groupId) requestHeaders.set('x-group-id', payload.groupId);
+    if (payload.isDutyStudent) requestHeaders.set('x-is-duty-student', 'true');
 
     // Redirect admins and staff from root to their respective dashboards
     if (pathname === '/') {

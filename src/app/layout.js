@@ -1,6 +1,6 @@
 import './globals.css';
 import Link from 'next/link';
-import { User, Heart, Calendar, Home, Plus } from 'lucide-react';
+import { User, Heart, Calendar, Home, Plus, Shield } from 'lucide-react';
 import { headers } from 'next/headers';
 import styles from './layout.module.css';
 import ThemeProvider from '@/components/ThemeProvider';
@@ -20,6 +20,7 @@ export default async function RootLayout({ children }) {
   const userRole = headersList.get('x-user-role') || 'student';
   const userId = headersList.get('x-user-id');
   const isStudent = userRole === 'student';
+  const isDutyStudent = headersList.get('x-is-duty-student') === 'true';
 
   // If user is authenticated, check their status in the database
   if (userId) {
@@ -47,7 +48,7 @@ export default async function RootLayout({ children }) {
           <nav className={styles.bottomNav}>
             <Link href="/profile" className={styles.navItem}>
               <div className={styles.icon}><User size={24} /></div>
-              <span>פרופיל</span>
+              <span>פרופיל אישי</span>
             </Link>
             <Link href="/letters" className={styles.navItem}>
               <div className={styles.icon}><Heart size={24} /></div>
@@ -55,17 +56,23 @@ export default async function RootLayout({ children }) {
             </Link>
             
             <div className={styles.fabContainer}>
-              <Link href="/journal" style={{textDecoration: 'none'}}>
-                <button className={styles.fabBtn}><Plus size={28} /></button>
-                <span className={styles.fabLabel}>חדש</span>
+              <Link href="/journal" className={styles.fab}>
+                <Plus size={32} />
               </Link>
             </div>
             
             <Link href="/calendar" className={styles.navItem}>
               <div className={styles.icon}><Calendar size={24} /></div>
-              <span>לוח שנה</span>
+              <span>לוח מסע</span>
             </Link>
-            <Link href="/" className={`${styles.navItem} ${styles.active}`}>
+            
+            {isDutyStudent && (
+              <Link href="/duty" className={`${styles.navItem} ${styles.dutyItem}`}>
+                <div className={styles.icon}><Shield size={24} /></div>
+                <span>תורן</span>
+              </Link>
+            )}
+            <Link href="/" className={styles.navItem}>
               <div className={styles.icon}><Home size={24} /></div>
               <span>בית</span>
             </Link>
@@ -74,7 +81,7 @@ export default async function RootLayout({ children }) {
           <nav className={styles.bottomNav}>
             <Link href="/profile" className={styles.navItem}>
               <div className={styles.icon}><User size={24} /></div>
-              <span>הגדרות</span>
+              <span>פרופיל</span>
             </Link>
             <Link href={userRole === 'admin' ? '/admin' : '/staff'} className={`${styles.navItem} ${styles.active}`}>
               <div className={styles.icon}><Home size={24} /></div>

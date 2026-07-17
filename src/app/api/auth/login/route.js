@@ -77,7 +77,8 @@ export async function POST(request) {
       userId: user.id,
       tenantId: user.tenantId,
       role: user.role,
-      groupId: user.groupId
+      groupId: user.groupId,
+      isDutyStudent: user.isDutyStudent || false
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
