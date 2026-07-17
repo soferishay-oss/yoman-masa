@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { verifyAuth } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function GET(request) {
   try {
-    const auth = await verifyAuth(request);
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
     if (!auth || auth.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

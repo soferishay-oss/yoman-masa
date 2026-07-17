@@ -200,8 +200,6 @@ export default function AdminDashboard() {
           </button>
         </div>
       </section>
-
-      </section>
     </div>
   );
 }
