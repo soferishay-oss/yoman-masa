@@ -79,7 +79,14 @@ Message to check: "${content}"`;
           config: { responseMimeType: "application/json" }
         });
 
-        const result = JSON.parse(aiResponse.text);
+        let rawText = aiResponse.text;
+        if (rawText.startsWith('```json')) {
+          rawText = rawText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        } else if (rawText.startsWith('```')) {
+          rawText = rawText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        }
+
+        const result = JSON.parse(rawText);
 
         if (!result.isApproved) {
           // Find sender and recipient names for the alert

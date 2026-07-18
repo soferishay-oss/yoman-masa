@@ -51,7 +51,14 @@ Respond ONLY with a valid JSON object containing exactly these three string keys
       }
     });
 
-    const result = JSON.parse(response.text);
+    let rawText = response.text;
+    if (rawText.startsWith('```json')) {
+      rawText = rawText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    } else if (rawText.startsWith('```')) {
+      rawText = rawText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+    }
+
+    const result = JSON.parse(rawText);
 
     return NextResponse.json({
       basicText: result.basicText || '',
