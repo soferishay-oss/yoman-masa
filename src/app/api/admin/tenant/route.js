@@ -40,6 +40,9 @@ export async function PUT(request) {
 
     const data = await request.json();
     
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    const currentThemeConfig = typeof tenant.themeConfig === 'object' && tenant.themeConfig !== null ? tenant.themeConfig : {};
+    
     // We only allow updating specific fields
     const updateData = {};
     if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl;
@@ -50,8 +53,34 @@ export async function PUT(request) {
     if (data.studyYears !== undefined) updateData.studyYears = parseInt(data.studyYears, 10);
     if (data.moderationLevel !== undefined) updateData.moderationLevel = parseInt(data.moderationLevel, 10);
     if (data.nameFormat !== undefined) updateData.nameFormat = data.nameFormat;
+    
+    const newThemeConfig = { ...currentThemeConfig };
+    let themeConfigChanged = false;
+
     if (data.primaryColor !== undefined) {
-      updateData.themeConfig = { primaryColor: data.primaryColor };
+      newThemeConfig.primaryColor = data.primaryColor;
+      themeConfigChanged = true;
+    }
+    
+    if (data.showHolidays !== undefined) {
+      newThemeConfig.showHolidays = data.showHolidays;
+      themeConfigChanged = true;
+    }
+    if (data.showParasha !== undefined) {
+      newThemeConfig.showParasha = data.showParasha;
+      themeConfigChanged = true;
+    }
+    if (data.showOmer !== undefined) {
+      newThemeConfig.showOmer = data.showOmer;
+      themeConfigChanged = true;
+    }
+    if (data.showSchoolEvents !== undefined) {
+      newThemeConfig.showSchoolEvents = data.showSchoolEvents;
+      themeConfigChanged = true;
+    }
+
+    if (themeConfigChanged) {
+      updateData.themeConfig = newThemeConfig;
     }
 
     const updatedTenant = await prisma.tenant.update({

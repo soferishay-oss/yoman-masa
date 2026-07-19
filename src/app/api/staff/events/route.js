@@ -34,14 +34,32 @@ export async function POST(request) {
 
     if (!userId || !tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { title, type, subtitle, color, scheduledDate, endDate, location } = await request.json();
+    const { title, type, subtitle, color, scheduledDate, endDate, location, targetAudience, showOnCalendar } = await request.json();
 
     const newEvent = await prisma.event.create({
       data: {
         title, type, subtitle, color, scheduledDate, endDate, location,
+        targetAudience: targetAudience || null,
+        showOnCalendar: showOnCalendar !== undefined ? showOnCalendar : true,
         tenantId, creatorId: userId
       }
     });
+
+    // Update the color mapping in Tenant themeConfig if it's a valid type
+    if (type && type !== 'אחר') {
+      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+      const themeConfig = typeof tenant.themeConfig === 'object' && tenant.themeConfig !== null ? tenant.themeConfig : {};
+      
+      const eventTypeColors = themeConfig.eventTypeColors || {};
+      if (eventTypeColors[type] !== color) {
+        eventTypeColors[type] = color;
+        await prisma.tenant.update({
+          where: { id: tenantId },
+          data: { themeConfig: { ...themeConfig, eventTypeColors } }
+        });
+      }
+    }
+
     return NextResponse.json(newEvent, { status: 201 });
   } catch (error) {
     console.error('Failed to create event:', error);

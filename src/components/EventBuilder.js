@@ -3,12 +3,18 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Plus, MapPin, Tag, Palette, CalendarDays } from 'lucide-react';
 import styles from '@/app/staff/staff.module.css';
+import { ThemeContext } from '@/components/ThemeProvider';
+import { useContext } from 'react';
 
 const EVENT_TYPES = ['שבת', 'מסע', 'יום חזון', 'סיור סליחות', 'אחר'];
 const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#f43f5e'];
 
 export default function EventBuilder() {
+  const theme = useContext(ThemeContext);
+  const eventTypeColors = theme.themeConfig?.eventTypeColors || {};
+  
   const [events, setEvents] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [title, setTitle] = useState('');
@@ -19,19 +25,29 @@ export default function EventBuilder() {
   const [scheduledDate, setScheduledDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [location, setLocation] = useState('');
+  const [showOnCalendar, setShowOnCalendar] = useState(true);
+  const [audienceType, setAudienceType] = useState('all'); // all, classes
+  const [audienceClassIds, setAudienceClassIds] = useState([]);
   const [statusMsg, setStatusMsg] = useState('');
   
   useEffect(() => {
     fetchEvents();
   }, []);
 
+  useEffect(() => {
+    if (type && type !== 'אחר' && eventTypeColors[type]) {
+      setColor(eventTypeColors[type]);
+    }
+  }, [type]);
+
   async function fetchEvents() {
     try {
-      const res = await fetch('/api/staff/events');
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(data);
-      }
+      const [resEvents, resClasses] = await Promise.all([
+        fetch('/api/staff/events'),
+        fetch('/api/staff/classes')
+      ]);
+      if (resEvents.ok) setEvents(await resEvents.json());
+      if (resClasses.ok) setClasses(await resClasses.json());
     } catch (err) {
       console.error(err);
     } finally {
@@ -54,7 +70,9 @@ export default function EventBuilder() {
           color,
           scheduledDate: new Date(scheduledDate).toISOString(),
           endDate: endDate ? new Date(endDate).toISOString() : null,
-          location
+          location,
+          showOnCalendar,
+          targetAudience: audienceType === 'all' ? { type: 'all' } : { type: 'classes', classIds: audienceClassIds }
         })
       });
       if (res.ok) {
@@ -136,6 +154,28 @@ export default function EventBuilder() {
                 <div key={c} onClick={() => setColor(c)} style={{ width: '24px', height: '24px', borderRadius: '50%', background: c, cursor: 'pointer', border: color === c ? '2px solid black' : '2px solid transparent' }} />
               ))}
             </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#64748b' }}>קהל יעד</label>
+            <select value={audienceType} onChange={e => setAudienceType(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', marginBottom: '5px' }}>
+              <option value="all">כלל המוסד</option>
+              <option value="classes">כיתות ספציפיות</option>
+            </select>
+            {audienceType === 'classes' && (
+              <select multiple value={audienceClassIds} onChange={e => setAudienceClassIds(Array.from(e.target.selectedOptions, option => option.value))} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '80px' }}>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            )}
+          </div>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '30px' }}>
+              <input type="checkbox" checked={showOnCalendar} onChange={e => setShowOnCalendar(e.target.checked)} style={{ width: '20px', height: '20px' }} />
+              <span style={{ fontSize: '14px', color: '#334155', fontWeight: 'bold' }}>הצג אירוע בלוח השנה</span>
+            </label>
+            <p style={{ fontSize: '12px', color: '#64748b', marginTop: '5px', marginRight: '30px' }}>אם מבוטל, האירוע יישמר במערכת אך לא יופיע בלוחות השנה של התלמידים והצוות.</p>
           </div>
         </div>
 

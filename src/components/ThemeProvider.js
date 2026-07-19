@@ -29,7 +29,10 @@ export default function ThemeProvider({ children }) {
               schoolName: data.schoolName || prev.schoolName,
               slogan: data.slogan || prev.slogan,
               primaryColor: data.primaryColor || prev.primaryColor,
-              logoUrl: data.logoUrl || prev.logoUrl
+              logoUrl: data.logoUrl || prev.logoUrl,
+              defaultDateMode: data.defaultDateMode || prev.defaultDateMode,
+              themeConfig: data.themeConfig || {},
+              enabledModules: data.enabledModules || {}
             }));
           }
         }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useMemo } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import styles from './calendar.module.css';
 import { getCalendarGrid, getHebrewDate, getGregorianDate } from '@/lib/dateUtils';
@@ -10,32 +10,85 @@ export default function CalendarPage() {
   const theme = useContext(ThemeContext);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState({});
+  const [userPrefs, setUserPrefs] = useState({});
+  const [personalDominantMode, setPersonalDominantMode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch actual stations from DB
   useEffect(() => {
-    fetchStations();
+    fetchData();
   }, []);
 
-  const fetchStations = async () => {
+  const fetchData = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch('/api/stations');
-      if (res.ok) {
-        const data = await res.json();
-        // Map array of stations into an object keyed by date string (e.g., YYYY-MM-DD or just day of month if same month)
-        // To be safe, let's key by YYYY-MM-DD
-        const eventMap = {};
+      const [stationsRes, eventsRes, prefsRes] = await Promise.all([
+        fetch('/api/stations'),
+        fetch('/api/events'),
+        fetch('/api/user/preferences')
+      ]);
+
+      const eventMap = {};
+
+      if (stationsRes.ok) {
+        const data = await stationsRes.json();
         data.forEach(station => {
-          const d = new Date(station.date);
+          const d = new Date(station.date || station.scheduledDate);
           const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-          eventMap[key] = { title: station.name, type: 'station' };
+          if (!eventMap[key]) eventMap[key] = [];
+          eventMap[key].push({ id: station.id, title: station.name, type: 'station', color: 'var(--accent-color)' });
         });
-        setEvents(eventMap);
+      }
+
+      if (eventsRes.ok) {
+        const data = await eventsRes.json();
+        data.forEach(ev => {
+          const start = new Date(ev.scheduledDate);
+          const key = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`;
+          if (!eventMap[key]) eventMap[key] = [];
+          eventMap[key].push({ id: ev.id, title: ev.title, type: ev.type, color: ev.color });
+          
+          if (ev.endDate) {
+            let curr = new Date(start);
+            curr.setDate(curr.getDate() + 1);
+            const end = new Date(ev.endDate);
+            while (curr <= end) {
+              const k = `${curr.getFullYear()}-${curr.getMonth()}-${curr.getDate()}`;
+              if (!eventMap[k]) eventMap[k] = [];
+              eventMap[k].push({ id: ev.id, title: ev.title, type: ev.type, color: ev.color });
+              curr.setDate(curr.getDate() + 1);
+            }
+          }
+        });
+      }
+
+      setEvents(eventMap);
+
+      if (prefsRes.ok) {
+        const prefs = await prefsRes.json();
+        setUserPrefs(prefs);
+        if (prefs.dominantDateMode) {
+          setPersonalDominantMode(prefs.dominantDateMode);
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch stations:', error);
+      console.error('Failed to fetch calendar data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const toggleDominantMode = async () => {
+    const currentMode = dominantMode;
+    const newMode = currentMode === 'hebrew' ? 'gregorian' : 'hebrew';
+    setPersonalDominantMode(newMode);
+    try {
+      await fetch('/api/user/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dominantDateMode: newMode })
+      });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -47,30 +100,46 @@ export default function CalendarPage() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const grid = getCalendarGrid(currentDate.getFullYear(), currentDate.getMonth());
+  const grid = useMemo(() => {
+    return getCalendarGrid(currentDate.getFullYear(), currentDate.getMonth(), theme.themeConfig || {});
+  }, [currentDate, theme.themeConfig]);
+  
   const weekdays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   const today = new Date();
 
-  const dominantMode = theme.defaultDateMode || 'hebrew';
+  const dominantMode = personalDominantMode || theme.defaultDateMode || 'hebrew';
+
+  // Gather unique Hebrew/Gregorian months spanning this grid
+  const hebrewMonthsInView = [...new Set(grid.filter(d => d.isCurrentMonth).map(d => `${d.hebrewMonthStr} ${d.hebrewYearStr}`))];
+  const gregorianMonthsInView = [...new Set(grid.filter(d => d.isCurrentMonth).map(d => d.date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })))];
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <h1>לוח השנה</h1>
-        <p>מעקב אחר התחנות והמסעות</p>
+        <p>מעקב אחר אירועים, חגים ותחנות</p>
+        <button 
+          onClick={toggleDominantMode}
+          style={{ marginTop: '10px', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--primary-color)', background: 'transparent', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '13px' }}
+        >
+          שנה לתצוגה {dominantMode === 'hebrew' ? 'לועזית' : 'עברית'}
+        </button>
       </header>
 
       <div className={styles.controls}>
         <button onClick={handlePrevMonth}><ChevronRight size={24} /></button>
-        <div className={styles.monthLabel}>
-          <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-            {currentDate.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
-          </div>
-          {grid[15] && (
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary, #666)' }}>
-              {grid[15].hebrewMonthStr} {grid[15].hebrewYearStr}
-            </div>
+        <div className={styles.monthLabel} style={{ textAlign: 'center' }}>
+          {dominantMode === 'hebrew' ? (
+            <>
+              <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{hebrewMonthsInView.join(' / ')}</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary, #666)' }}>{gregorianMonthsInView.join(' / ')}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{gregorianMonthsInView.join(' / ')}</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary, #666)' }}>{hebrewMonthsInView.join(' / ')}</div>
+            </>
           )}
         </div>
         <button onClick={handleNextMonth}><ChevronLeft size={24} /></button>
@@ -87,7 +156,7 @@ export default function CalendarPage() {
                           dayObj.date.getFullYear() === today.getFullYear();
           
           const eventKey = `${dayObj.date.getFullYear()}-${dayObj.date.getMonth()}-${dayObj.date.getDate()}`;
-          const event = events[eventKey];
+          const dayEvents = events[eventKey] || [];
 
           return (
             <div 
@@ -108,15 +177,33 @@ export default function CalendarPage() {
                 )}
               </div>
               
-              {dayObj.parasha && dayObj.isCurrentMonth && (
+              {theme.themeConfig?.showParasha !== false && dayObj.parasha && dayObj.isCurrentMonth && (
                 <div className={styles.parasha}>{dayObj.parasha}</div>
               )}
               
-              {event && (
+              {dayObj.isCurrentMonth && dayObj.holidays && dayObj.holidays.length > 0 && (
+                <div className={styles.events} style={{ marginTop: '2px' }}>
+                  {dayObj.holidays.map((h, idx) => (
+                    <span key={`h-${idx}`} className={styles.eventIndicator} style={{ backgroundColor: 'transparent', color: 'var(--primary-color)', border: '1px solid var(--primary-light)', padding: '0 2px' }}>
+                      {h}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {dayObj.isCurrentMonth && dayObj.omer && (
+                <div style={{ fontSize: '0.65rem', color: '#666', textAlign: 'center', marginTop: '2px' }}>
+                  {dayObj.omer}
+                </div>
+              )}
+              
+              {dayEvents.length > 0 && (
                 <div className={styles.events}>
-                  <span className={`${styles.eventIndicator} ${event.type === 'station' ? styles.eventStation : ''}`}>
-                    {event.title}
-                  </span>
+                  {dayEvents.map((ev, idx) => (
+                    <span key={idx} className={styles.eventIndicator} style={ev.color ? { backgroundColor: ev.color } : {}}>
+                      {ev.title}
+                    </span>
+                  ))}
                 </div>
               )}
             </div>

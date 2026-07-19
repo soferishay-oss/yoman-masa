@@ -29,12 +29,14 @@ export async function GET() {
     if (tenant.themeConfig && typeof tenant.themeConfig === 'object' && tenant.themeConfig.primaryColor) {
       primaryColor = tenant.themeConfig.primaryColor;
     }
-
     return NextResponse.json({
       schoolName: tenant.name,
       slogan: tenant.slogan,
       logoUrl: tenant.logoUrl,
-      primaryColor: primaryColor
+      primaryColor: tenant.themeConfig?.primaryColor,
+      defaultDateMode: tenant.dominantDateMode,
+      themeConfig: tenant.themeConfig,
+      enabledModules: tenant.enabledModules
     });
   } catch (err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

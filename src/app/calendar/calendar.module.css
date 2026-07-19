@@ -5,6 +5,15 @@
   padding-bottom: 40px;
   max-width: 600px;
   margin: 0 auto;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-bottom: 90px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
 }
 
 .header {
@@ -53,6 +62,12 @@
   gap: 8px;
 }
 
+@media (max-width: 480px) {
+  .calendarGrid {
+    gap: 2px;
+  }
+}
+
 .weekday {
   text-align: center;
   font-size: 12px;
@@ -72,6 +87,14 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   position: relative;
   cursor: pointer;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .dayCell {
+    padding: 2px;
+    min-height: 60px;
+  }
 }
 
 .notCurrentMonth {
@@ -123,5 +146,12 @@
 
 .dominantDate { font-weight: bold; font-size: 1.1rem; }
 .subDate { font-size: 0.8rem; color: #888; }
-.parasha { font-size: 0.7rem; color: var(--primary, #0056b3); font-weight: bold; margin-top: 4px; text-align: center; }
+.parasha { font-size: 0.7rem; color: var(--primary-light, #0056b3); font-weight: bold; margin-top: 4px; text-align: center; }
+
+@media (max-width: 480px) {
+  .dominantDate { font-size: 0.9rem; }
+  .subDate { font-size: 0.7rem; }
+  .eventIndicator { font-size: 8px; padding: 1px 2px; }
+  .weekday { font-size: 10px; }
+}
 

@@ -60,6 +60,7 @@ model User {
   managedGroups    Group[]  @relation("StaffManagedGroups")
   status           String   @default("active")
   avatarUrl        String?
+  preferences      Json?    // e.g. { dominantDateMode: "hebrew" }
   createdAt        DateTime @default(now())
   lastLoginAt      DateTime?
 
@@ -217,6 +218,8 @@ model Event {
   dateMode         String      @default("gregorian")
   location         String?
   status           String      @default("upcoming")
+  targetAudience   Json?       // {"type":"all"} or {"type":"classes","classIds":["..."]}
+  showOnCalendar   Boolean     @default(true)
   createdAt        DateTime    @default(now())
   rsvps            EventRSVP[]
 }

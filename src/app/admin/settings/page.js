@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
-import { Settings, Users, Save, Edit } from 'lucide-react';
+import { Settings, Users, Save, Edit, Calendar } from 'lucide-react';
 import styles from '../dashboard.module.css'; // changed to dashboard.module.css since we removed admin.module.css
 import { ThemeContext } from '@/components/ThemeProvider';
 import { HexColorPicker } from 'react-colorful';
@@ -18,6 +18,10 @@ export default function AdminDashboard() {
   const [studyYears, setStudyYears] = useState(1);
   const [moderationLevel, setModerationLevel] = useState(3);
   const [nameFormat, setNameFormat] = useState('last_first');
+  const [showHolidays, setShowHolidays] = useState(true);
+  const [showParasha, setShowParasha] = useState(true);
+  const [showOmer, setShowOmer] = useState(true);
+  const [showSchoolEvents, setShowSchoolEvents] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -34,6 +38,10 @@ export default function AdminDashboard() {
         setLogoUrl(data.logoUrl || '');
         if (data.slogan) setSlogan(data.slogan);
         if (data.themeConfig?.primaryColor) setPrimaryColor(data.themeConfig.primaryColor);
+        if (data.themeConfig?.showHolidays !== undefined) setShowHolidays(data.themeConfig.showHolidays);
+        if (data.themeConfig?.showParasha !== undefined) setShowParasha(data.themeConfig.showParasha);
+        if (data.themeConfig?.showOmer !== undefined) setShowOmer(data.themeConfig.showOmer);
+        if (data.themeConfig?.showSchoolEvents !== undefined) setShowSchoolEvents(data.themeConfig.showSchoolEvents);
         if (data.dominantDateMode) setDateMode(data.dominantDateMode);
         if (data.institutionType) setInstitutionType(data.institutionType);
         if (data.studyYears) setStudyYears(data.studyYears);
@@ -53,7 +61,10 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/tenant', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat }) 
+        body: JSON.stringify({ 
+          name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
+          showHolidays, showParasha, showOmer, showSchoolEvents
+        }) 
       });
       if (res.ok) {
         setSaveStatus('ההגדרות נשמרו בהצלחה!');
@@ -220,8 +231,35 @@ export default function AdminDashboard() {
               <option value={5}>רמה 5 - מחמיר מאוד (אפס סובלנות לכל מילה שלילית או מרומזת)</option>
             </select>
           </div>
+        </div>
+      </section>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}><Calendar size={20} style={{display:'inline', verticalAlign:'middle'}}/> הגדרות לוח שנה</h2>
+        <div className={styles.card}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showHolidays} onChange={e => setShowHolidays(e.target.checked)} style={{ width: '18px', height: '18px' }} />
+              <span>הצג חגים ומועדים יהודיים (מובנה בלוח)</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showParasha} onChange={e => setShowParasha(e.target.checked)} style={{ width: '18px', height: '18px' }} />
+              <span>הצג פרשות שבוע בשבתות</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showOmer} onChange={e => setShowOmer(e.target.checked)} style={{ width: '18px', height: '18px' }} />
+              <span>הצג ספירת העומר בימים הרלוונטיים</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={showSchoolEvents} onChange={e => setShowSchoolEvents(e.target.checked)} style={{ width: '18px', height: '18px' }} />
+              <span>הצג אירועים בית ספריים בלוח השנה הראשי כברירת מחדל</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <button className={styles.saveBtn} onClick={handleSave}>
               <Save size={18} style={{display:'inline', verticalAlign:'middle', marginRight:'5px'}} />
               שמור שינויים
@@ -231,7 +269,6 @@ export default function AdminDashboard() {
                 {saveStatus}
               </span>
             )}
-          </div>
         </div>
       </section>
     </div>
