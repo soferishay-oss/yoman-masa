@@ -19,7 +19,9 @@ export async function GET(request) {
       where: { id: userId },
       include: {
         class: true,
-        tenant: true,
+        tenant: {
+          include: { currentAcademicYear: true }
+        },
         _count: {
           select: { contentEntries: true }
         }
@@ -54,8 +56,11 @@ export async function GET(request) {
       email: user.email,
       role: user.role,
       status: user.status,
-      groupName: user.group?.name || 'ללא קבוצה',
-      tenantName: user.tenant?.name || 'מערכת מסע',
+      groupName: user.class?.name || 'ללא קבוצה',
+      tenant: {
+        name: user.tenant?.name || 'מערכת מסע',
+        currentAcademicYear: user.tenant?.currentAcademicYear || null
+      },
       stats
     });
   } catch (error) {

@@ -1,14 +1,37 @@
 import Link from 'next/link';
 import { Home, Users, Settings, BarChart2, Shield } from 'lucide-react';
 import styles from './layout.module.css';
+import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/auth';
 
-export default function AdminLayout({ children }) {
+export default async function AdminLayout({ children }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth_token')?.value;
+  const auth = token ? await verifyToken(token) : null;
+  let academicYearName = 'תשפ״ה'; // Default
+
+  if (auth?.tenantId) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: auth.tenantId },
+      include: { currentAcademicYear: true }
+    });
+    if (tenant?.currentAcademicYear) {
+      academicYearName = tenant.currentAcademicYear.name;
+    }
+  }
+
   return (
     <div className={styles.adminContainer}>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <Shield className={styles.logoIcon} />
-          <h2>פאנל ניהול</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h2>פאנל ניהול</h2>
+            <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '12px', marginTop: '4px' }}>
+              שנת הלימודים {academicYearName}
+            </span>
+          </div>
         </div>
         <nav className={styles.sidebarNav}>
           <Link href="/admin" className={styles.navLink}>

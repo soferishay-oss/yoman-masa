@@ -16,6 +16,7 @@ export default function Home() {
   const [moodExplanation, setMoodExplanation] = useState('');
   const [showMoodOptions, setShowMoodOptions] = useState(false);
   const [userName, setUserName] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
   const [greeting, setGreeting] = useState('שלום');
   const toast = useToast();
 
@@ -35,6 +36,7 @@ export default function Home() {
       if(res.ok) {
         const data = await res.json();
         setUserName(data.firstName || data.fullName);
+        setAcademicYear(data.tenant?.currentAcademicYear?.name || 'תשפ״ה');
       }
     }
     fetchTasks();
@@ -46,7 +48,10 @@ export default function Home() {
       {/* Header Section */}
       <header className={styles.header}>
         <div className={styles.logoContainer}>
-          <p className={styles.schoolName}>{theme.schoolName}</p>
+          <p className={styles.schoolName}>
+            {theme.schoolName}
+            {academicYear && <span className={styles.academicYearBadge}>{academicYear}</span>}
+          </p>
           <div className={styles.logoBadge}>
             {theme.logoUrl ? (
               <img src={theme.logoUrl} alt="Logo" style={{width: 40, height: 40, objectFit: 'contain', marginBottom: 5}} />
@@ -57,8 +62,8 @@ export default function Home() {
             {theme.slogan}
           </div>
         </div>
-        <h1 className={styles.greeting}>{greeting} {userName || 'חבר'}, מה מחכה לך היום?</h1>
-        <p className={styles.subtitle}>המסע שלך. הסיפור שלך.</p>
+        <h1 className={styles.greeting} style={{ fontSize: '22px' }}>{greeting} {userName || 'חבר'}, מה מחכה לך היום?</h1>
+        <p className={styles.subtitle} style={{ fontSize: '14px' }}>המסע שלך. הסיפור שלך.</p>
       </header>
 
       {/* Mood Tracker */}

@@ -22,6 +22,8 @@ model Tenant {
   nameFormat       String   @default("last_first") // "last_first" or "first_last"
   enabledModules   Json?
   retentionPolicy  String?
+  currentAcademicYearId String?
+  currentAcademicYear AcademicYear? @relation("TenantCurrentYear", fields: [currentAcademicYearId], references: [id])
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -34,6 +36,7 @@ model Tenant {
   customRoles      CustomRole[]
   moodChecks       MoodCheck[]
   staffAlerts      StaffAlert[]
+  academicYears    AcademicYear[]
 }
 
 model User {
@@ -81,6 +84,7 @@ model Group {
   classUsers       User[]   @relation("UserClass")
   groupMembers     GroupMember[]
   managers         User[]   @relation("StaffManagedGroups")
+  yearHistories    GroupYearHistory[]
 }
 
 model GroupMember {
@@ -263,4 +267,36 @@ model CustomRole {
   users       User[]
 
   @@unique([tenantId, name])
+}
+
+model AcademicYear {
+  id             String   @id @default(uuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name           String   // e.g. "תשפ״ה"
+  startDate      DateTime
+  endDate        DateTime
+  isCurrent      Boolean  @default(false)
+  currentForTenants Tenant[] @relation("TenantCurrentYear")
+
+  groupHistories GroupYearHistory[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([tenantId, name])
+}
+
+model GroupYearHistory {
+  id             String   @id @default(uuid())
+  groupId        String
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  groupName      String   // The name the group had in this year
+  managerNames   String   // Snapshot string of manager names, e.g. "דוד הלוי, משה כהן"
+  
+  createdAt      DateTime @default(now())
+
+  @@unique([groupId, academicYearId])
 }
