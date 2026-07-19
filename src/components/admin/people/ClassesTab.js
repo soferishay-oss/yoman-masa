@@ -19,7 +19,7 @@ export default function ClassesTab() {
 
   const fetchClasses = async () => {
     try {
-      const res = await fetch('/api/admin/groups?type=class');
+      const res = await fetch('/api/admin/groups?type=class', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) setClasses(data);
     } catch (err) {

@@ -25,7 +25,7 @@ export default function StaffTab() {
   const fetchData = async () => {
     try {
       const [usersRes, rolesRes] = await Promise.all([
-        fetch('/api/admin/users?role=non_student'),
+        fetch('/api/admin/users?role=non_student', { cache: 'no-store' }),
         fetch('/api/admin/roles')
       ]);
       

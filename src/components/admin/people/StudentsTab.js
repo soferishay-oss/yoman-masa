@@ -25,8 +25,8 @@ export default function StudentsTab() {
   const fetchData = async () => {
     try {
       const [usersRes, classesRes] = await Promise.all([
-        fetch('/api/admin/users?role=student'),
-        fetch('/api/admin/groups?type=class')
+        fetch('/api/admin/users?role=student', { cache: 'no-store' }),
+        fetch('/api/admin/groups?type=class', { cache: 'no-store' })
       ]);
       if (usersRes.ok) setStudents(await usersRes.json());
       if (classesRes.ok) setClasses(await classesRes.json());

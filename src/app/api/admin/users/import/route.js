@@ -32,9 +32,11 @@ export async function POST(request) {
 
     // Cache classes by name to avoid duplicate DB queries/creations
     const classCache = new Map();
+    const errors = [];
 
     for (const rawUser of users) {
-      // Find expected keys (heb or eng)
+      try {
+        // Find expected keys (heb or eng)
       const rawNationalId = rawUser['תז'] || rawUser['ת.ז.'] || rawUser['nationalId'];
       const rawFirstName = rawUser['שם פרטי'] || rawUser['firstName'];
       const rawLastName = rawUser['שם משפחה'] || rawUser['lastName'];
@@ -150,9 +152,13 @@ export async function POST(request) {
         });
         importedCount++;
       }
+      } catch (err) {
+        console.error('Error importing row:', rawUser, err.message);
+        errors.push(`שגיאה בייבוא שורה (${rawUser['שם מלא'] || rawUser['שם פרטי'] || 'ללא שם'}): ${err.message}`);
+      }
     }
 
-    return NextResponse.json({ success: true, count: importedCount });
+    return NextResponse.json({ success: true, count: importedCount, errors: errors.length > 0 ? errors : undefined });
   } catch (error) {
     console.error('Failed to import users:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

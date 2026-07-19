@@ -19,7 +19,7 @@ export default function GroupsTab() {
 
   const fetchGroups = async () => {
     try {
-      const res = await fetch('/api/admin/groups?type=group');
+      const res = await fetch('/api/admin/groups?type=group', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) setGroups(data);
     } catch (err) {
