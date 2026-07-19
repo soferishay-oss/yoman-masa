@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const ToastContext = createContext();
 
@@ -37,6 +37,14 @@ export function ToastProvider({ children }) {
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.alert = (message) => {
+        show(message, message.includes('שגיאה') || message.includes('תקלה') ? 'error' : 'success', 3000);
+      };
+    }
+  }, [show]);
 
   return (
     <ToastContext.Provider value={{ show, confirm }}>

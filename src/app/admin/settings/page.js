@@ -16,7 +16,9 @@ export default function AdminDashboard() {
   const [dateMode, setDateMode] = useState('hebrew');
   const [institutionType, setInstitutionType] = useState('highschool');
   const [studyYears, setStudyYears] = useState(1);
+  const [moderationLevel, setModerationLevel] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState('');
 
   useEffect(() => {
     fetchTenant();
@@ -34,6 +36,7 @@ export default function AdminDashboard() {
         if (data.dominantDateMode) setDateMode(data.dominantDateMode);
         if (data.institutionType) setInstitutionType(data.institutionType);
         if (data.studyYears) setStudyYears(data.studyYears);
+        if (data.moderationLevel) setModerationLevel(data.moderationLevel);
       }
     } catch (error) {
       console.error('Failed to fetch tenant:', error);
@@ -43,20 +46,23 @@ export default function AdminDashboard() {
   };
 
   const handleSave = async () => {
+    setSaveStatus('שומר...');
     try {
       const res = await fetch('/api/admin/tenant', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears }) 
+        body: JSON.stringify({ name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel }) 
       });
       if (res.ok) {
-        alert('הגדרות נשמרו בהצלחה!');
+        setSaveStatus('ההגדרות נשמרו בהצלחה!');
+        setTimeout(() => setSaveStatus(''), 3000);
       } else {
         const errData = await res.json().catch(() => ({}));
-        alert('שגיאה בשמירת הגדרות: ' + (errData.error || res.statusText));
+        setSaveStatus('שגיאה בשמירה: ' + (errData.error || res.statusText));
       }
     } catch (error) {
       console.error(error);
+      setSaveStatus('שגיאה בתקשורת');
     }
   };
 
@@ -194,10 +200,28 @@ export default function AdminDashboard() {
             </select>
           </div>
 
-          <button className={styles.saveBtn} onClick={handleSave}>
-            <Save size={18} style={{display:'inline', verticalAlign:'middle', marginRight:'5px'}} />
-            שמור שינויים
-          </button>
+          <div style={{marginBottom:'15px'}}>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>רמת סינון לתוכן ה-AI (הודעות/מכתבים)</label>
+            <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={moderationLevel} onChange={(e) => setModerationLevel(Number(e.target.value))}>
+              <option value={1}>רמה 1 - מקל מאוד (חוסם רק אלימות קיצונית)</option>
+              <option value={2}>רמה 2 - מקל (מתירני לגבי סלנג שגרתי)</option>
+              <option value={3}>רמה 3 - מאוזן (ברירת מחדל: חוסם הטרדות וקללות, מאפשר סלנג חיובי)</option>
+              <option value={4}>רמה 4 - שמרני (חוסם סלנג גס גם בצחוק)</option>
+              <option value={5}>רמה 5 - מחמיר מאוד (אפס סובלנות לכל מילה שלילית או מרומזת)</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <button className={styles.saveBtn} onClick={handleSave}>
+              <Save size={18} style={{display:'inline', verticalAlign:'middle', marginRight:'5px'}} />
+              שמור שינויים
+            </button>
+            {saveStatus && (
+              <span style={{ color: saveStatus.includes('שגיאה') ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>
+                {saveStatus}
+              </span>
+            )}
+          </div>
         </div>
       </section>
     </div>

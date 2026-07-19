@@ -19,6 +19,7 @@ export default function EventBuilder() {
   const [scheduledDate, setScheduledDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [location, setLocation] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
   
   useEffect(() => {
     fetchEvents();
@@ -64,11 +65,14 @@ export default function EventBuilder() {
         setScheduledDate('');
         setEndDate('');
         fetchEvents();
-        alert('אירוע נוסף בהצלחה');
+        setStatusMsg('האירוע נשמר בהצלחה!');
+        setTimeout(() => setStatusMsg(''), 3000);
+      } else {
+        setStatusMsg('שגיאה בשמירת אירוע');
       }
     } catch (err) {
       console.error(err);
-      alert('שגיאה ביצירת אירוע');
+      setStatusMsg('שגיאה בתקשורת');
     }
   };
 
@@ -138,6 +142,11 @@ export default function EventBuilder() {
         <button type="submit" style={{ padding: '12px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
           <Plus size={20} /> שמור אירוע
         </button>
+        {statusMsg && (
+          <div style={{ color: statusMsg.includes('שגיאה') ? '#ef4444' : '#10b981', textAlign: 'center', fontWeight: 'bold' }}>
+            {statusMsg}
+          </div>
+        )}
       </form>
 
       <div style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>

@@ -18,6 +18,7 @@ model Tenant {
   dominantDateMode String   @default("gregorian")
   studyYears       Int      @default(1)
   institutionType  String?  // e.g. "elementary", "highschool", "college"
+  moderationLevel  Int      @default(3) // 1 to 5 (1=very permissive, 5=very strict)
   enabledModules   Json?
   retentionPolicy  String?
   createdAt        DateTime @default(now())

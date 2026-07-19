@@ -7,8 +7,9 @@ import styles from './duty.module.css';
 export default function DutyStudentDashboard() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [motivationMessage, setMotivationMessage] = useState('חבר\'ה, לא לשכוח להירשם לאירוע!');
   const [isSending, setIsSending] = useState(false);
-  const [motivationMessage, setMotivationMessage] = useState('היי! אל תשכחו להירשם לאירוע הקרוב, מחכים לכם! 🙌');
+  const [statusMsg, setStatusMsg] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -37,13 +38,15 @@ export default function DutyStudentDashboard() {
     });
 
     if (missingMembers.length === 0) {
-      alert('כולם כבר נרשמו!');
+      setStatusMsg('כולם בקבוצה כבר נרשמו!');
+      setTimeout(() => setStatusMsg(''), 3000);
       return;
     }
 
     const targetUserIds = missingMembers.map(m => m.id);
 
     setIsSending(true);
+    setStatusMsg('שולח...');
     try {
       const res = await fetch('/api/duty/motivate', {
         method: 'POST',
@@ -52,13 +55,14 @@ export default function DutyStudentDashboard() {
       });
 
       if (res.ok) {
-        alert('הודעת מוטיבציה נשלחה בהצלחה!');
+        setStatusMsg('הודעות המוטיבציה נשלחו בהצלחה!');
+        setTimeout(() => setStatusMsg(''), 3000);
       } else {
-        alert('שגיאה בשליחת ההודעה');
+        setStatusMsg('שגיאה בשליחת הודעות');
       }
     } catch (err) {
       console.error(err);
-      alert('שגיאה בתקשורת השרת');
+      setStatusMsg('שגיאה בתקשורת');
     } finally {
       setIsSending(false);
     }
@@ -138,13 +142,18 @@ export default function DutyStudentDashboard() {
                 rows={3}
               />
               <button 
-                className={styles.sendBtn}
+                className={styles.actionBtn} 
                 onClick={handleSendMotivation}
-                disabled={isSending}
+                disabled={isSending || missingCount === 0}
               >
                 <Send size={18} />
-                {isSending ? 'שולח...' : `שלח תזכורת ל-${missingCount} חניכים`}
+                {isSending ? 'שולח...' : 'שלח תזכורת עכשיו'}
               </button>
+              {statusMsg && (
+                <div style={{ marginTop: '10px', color: statusMsg.includes('שגיאה') ? '#ef4444' : '#10b981', textAlign: 'center', fontWeight: 'bold' }}>
+                  {statusMsg}
+                </div>
+              )}
             </div>
           )}
         </div>

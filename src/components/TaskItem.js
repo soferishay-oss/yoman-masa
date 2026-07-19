@@ -10,6 +10,7 @@ export default function TaskItem({ assignment, onComplete, onProgress }) {
   
   // checklistState is an object mapping item index (or value) to boolean
   const [checklistState, setChecklistState] = useState(assignment.checklistState || {});
+  const [errorMsg, setErrorMsg] = useState('');
 
   const toggleChecklist = (index) => {
     const newState = { ...checklistState, [index]: !checklistState[index] };
@@ -25,13 +26,10 @@ export default function TaskItem({ assignment, onComplete, onProgress }) {
   const hasSomeChecked = isChecklist && Object.values(checklistState).some(v => v);
 
   const handleComplete = () => {
+    setErrorMsg('');
     if (isChecklist && !allChecked) {
-      alert('המשימה לא הושלמה במלואה. יש לסמן לפחות את כל פריטי החובה כדי לשלוח דיווח ביצוע.');
+      setErrorMsg('יש לסמן את כל פריטי החובה (*) כדי לשלוח דיווח ביצוע.');
       return;
-    } else {
-      if (!window.confirm('האם סיימת את המשימה?')) {
-        return;
-      }
     }
     onComplete(assignment.id, checklistState);
   };
@@ -98,7 +96,7 @@ export default function TaskItem({ assignment, onComplete, onProgress }) {
                       {checklistState[idx] && <Check size={16} color="white" />}
                     </div>
                     <span style={{ textDecoration: checklistState[idx] ? 'line-through' : 'none', color: checklistState[idx] ? '#94a3b8' : 'inherit' }}>
-                      {text} {!isRequired && <span style={{ fontSize: '12px', color: '#94a3b8', marginRight: '5px' }}>(לא חובה)</span>}
+                      {text} {isRequired && <span style={{ color: '#ef4444', marginRight: '3px' }}>*</span>}
                     </span>
                   </label>
                 );
@@ -106,18 +104,31 @@ export default function TaskItem({ assignment, onComplete, onProgress }) {
             </div>
           )}
 
+          {isChecklist && task.checklistItems && (
+            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '-10px', marginBottom: '15px' }}>
+              * כל פריט המסומן בכוכבית הוא פריט חובה
+            </div>
+          )}
+
           {task.requireCompletion && (
-            <button 
-              onClick={handleComplete}
-              style={{
-                width: '100%', padding: '12px', borderRadius: '8px', border: 'none',
-                background: (isChecklist && !allChecked) ? '#cbd5e1' : 'var(--primary-color)',
-                color: (isChecklist && !allChecked) ? '#475569' : 'white',
-                fontWeight: 'bold', cursor: 'pointer'
-              }}
-            >
-              בוצע
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button 
+                onClick={handleComplete}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '8px', border: 'none',
+                  background: (isChecklist && !allChecked) ? '#cbd5e1' : 'var(--primary-color)',
+                  color: (isChecklist && !allChecked) ? '#475569' : 'white',
+                  fontWeight: 'bold', cursor: 'pointer'
+                }}
+              >
+                בוצע
+              </button>
+              {errorMsg && (
+                <div style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center' }}>
+                  {errorMsg}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

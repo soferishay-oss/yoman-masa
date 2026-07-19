@@ -63,10 +63,22 @@ export async function POST(request) {
 
     if (content && process.env.GEMINI_API_KEY) {
       try {
+        const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+        const modLevel = tenant?.moderationLevel || 3;
+        
+        let modRules = "";
+        switch(modLevel) {
+          case 1: modRules = "If it contains extreme violence or explicitly illegal content, reject it. Otherwise, approve it. Slang, cursing, and insults are allowed."; break;
+          case 2: modRules = "If it contains severe cursing, direct threats, or severe bullying, reject it. Otherwise, approve it. Routine slang and mild teasing are allowed."; break;
+          case 3: modRules = "If it contains violence, severe cursing, sexual harassment, bullying, or highly toxic speech, reject it. Otherwise, approve it. Positive or routine slang (like 'מטורף') is allowed."; break;
+          case 4: modRules = "If it contains any bad words, insults, crude language, or offensive slang, reject it. Otherwise, approve it. Slang that could be interpreted negatively should be rejected."; break;
+          case 5: modRules = "Zero tolerance. If it contains any negative word, hint of violence, impolite language, or any slang with a negative origin (even used positively like 'מטורף' or 'פצצה'), reject it. Must be completely clean and polite."; break;
+          default: modRules = "If it contains violence, severe cursing, sexual harassment, bullying, or highly toxic speech, reject it.";
+        }
+
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const prompt = `You are a content moderation AI for a youth educational platform in Hebrew.
-Analyze the following message. If it contains violence, severe cursing, sexual harassment, bullying, or highly toxic speech, reject it.
-Otherwise, approve it.
+Analyze the following message. ${modRules}
 Respond ONLY with a valid JSON object containing:
 - "isApproved": boolean (true if the message is okay, false if it should be rejected)
 - "reason": string (if rejected, explain why briefly in Hebrew. If approved, empty string).

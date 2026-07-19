@@ -17,6 +17,7 @@ export default function TaskBuilder({ onTaskCreated }) {
   const [relativeDaysToEvent, setRelativeDaysToEvent] = useState(0);
   const [events, setEvents] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
 
   useEffect(() => {
     fetch('/api/staff/events').then(r => r.json()).then(data => setEvents(Array.isArray(data) ? data : [])).catch(console.error);
@@ -24,7 +25,9 @@ export default function TaskBuilder({ onTaskCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!title) return;
     setIsSubmitting(true);
+    setStatusMsg('שומר...');
     
     const taskData = {
       title,
@@ -55,7 +58,8 @@ export default function TaskBuilder({ onTaskCreated }) {
         body: JSON.stringify(taskData)
       });
       if (res.ok) {
-        alert('המשימה נוצרה בהצלחה!');
+        setStatusMsg('המשימה נוצרה בהצלחה!');
+        setTimeout(() => setStatusMsg(''), 3000);
         if (onTaskCreated) onTaskCreated();
         setTitle('');
         setContent('');
@@ -64,11 +68,11 @@ export default function TaskBuilder({ onTaskCreated }) {
         setTimerDeadline('');
       } else {
         const data = await res.json();
-        alert('שגיאה: ' + (data.error || 'לא ידועה'));
+        setStatusMsg('שגיאה: ' + (data.error || 'תקלה לא ידועה'));
       }
     } catch (error) {
       console.error(error);
-      alert('שגיאה ביצירת המשימה');
+      setStatusMsg('שגיאה בשמירת המשימה');
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +80,12 @@ export default function TaskBuilder({ onTaskCreated }) {
 
   return (
     <div className={styles.card} style={{ padding: '20px' }}>
-      <h3 style={{ marginBottom: '20px' }}>צור משימה חדשה</h3>
+      <h3 style={{ marginBottom: '20px' }}>יצירת משימה חדשה</h3>
+      {statusMsg && (
+        <div style={{ marginBottom: '15px', padding: '10px', background: statusMsg.includes('שגיאה') ? '#fee2e2' : '#d1fae5', color: statusMsg.includes('שגיאה') ? '#ef4444' : '#059669', borderRadius: '8px', textAlign: 'center' }}>
+          {statusMsg}
+        </div>
+      )}
       
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button 
