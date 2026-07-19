@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { Users, Plus, Trash2, Copy } from 'lucide-react';
+import { Users, Plus, Trash2, Copy, Edit2 } from 'lucide-react';
 import styles from '@/app/page.module.css';
 import ManageGroupModal from './ManageGroupModal';
 
@@ -65,6 +65,25 @@ export default function GroupsTab() {
         show('שגיאה בתקשורת', 'error');
       }
     }
+  const handleEditName = async (group) => {
+    const newName = window.prompt('ערוך שם קבוצה:', group.name);
+    if (!newName || newName.trim() === group.name) return;
+
+    try {
+      const res = await fetch(`/api/admin/groups/${group.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (res.ok) {
+        show('שם הקבוצה עודכן!');
+        fetchGroups();
+      } else {
+        show('שגיאה בעדכון השם', 'error');
+      }
+    } catch (err) {
+      show('שגיאה בתקשורת', 'error');
+    }
   };
 
   const handleCloneGroup = async (group) => {
@@ -124,6 +143,13 @@ export default function GroupsTab() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', color: '#1e293b' }}>{group.name}</h3>
               <div style={{ display: 'flex', gap: '5px' }}>
+                <button 
+                  onClick={() => handleEditName(group)}
+                  style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                  title="ערוך שם קבוצה"
+                >
+                  <Edit2 size={16} />
+                </button>
                 <button 
                   onClick={() => handleCloneGroup(group)}
                   style={{ background: '#e0f2fe', color: '#0284c7', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}

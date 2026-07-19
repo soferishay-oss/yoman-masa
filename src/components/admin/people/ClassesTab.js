@@ -65,6 +65,25 @@ export default function ClassesTab() {
         show('שגיאה בתקשורת', 'error');
       }
     }
+  const handleEditName = async (cls) => {
+    const newName = window.prompt('ערוך שם כיתה:', cls.name);
+    if (!newName || newName.trim() === cls.name) return;
+
+    try {
+      const res = await fetch(`/api/admin/groups/${cls.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (res.ok) {
+        show('שם הכיתה עודכן!');
+        fetchClasses();
+      } else {
+        show('שגיאה בעדכון השם', 'error');
+      }
+    } catch (err) {
+      show('שגיאה בתקשורת', 'error');
+    }
   };
 
   if (isLoading) return <div>טוען כיתות...</div>;
@@ -103,6 +122,13 @@ export default function ClassesTab() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', color: '#1e293b' }}>{cls.name}</h3>
               <div style={{ display: 'flex', gap: '5px' }}>
+                <button 
+                  onClick={() => handleEditName(cls)}
+                  style={{ background: '#f1f5f9', color: '#64748b', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                  title="ערוך שם כיתה"
+                >
+                  <Edit2 size={16} />
+                </button>
                 <button 
                   onClick={() => handleDeleteClass(cls.id)}
                   style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
