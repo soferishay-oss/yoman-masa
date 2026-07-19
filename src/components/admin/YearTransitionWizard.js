@@ -8,7 +8,7 @@ export default function YearTransitionWizard({ onComplete }) {
   const [classes, setClasses] = useState([]);
   const [staff, setStaff] = useState([]);
   
-  const [newYearName, setNewYearName] = useState('תשפ״ו');
+  const [newYearName, setNewYearName] = useState('תשפ״ז');
   
   const toast = useToast();
 
@@ -17,7 +17,7 @@ export default function YearTransitionWizard({ onComplete }) {
       try {
         const [groupsRes, staffRes] = await Promise.all([
           fetch('/api/admin/groups?type=class'),
-          fetch('/api/admin/users?role=staff')
+          fetch('/api/admin/users?role=non_student')
         ]);
         if (groupsRes.ok && staffRes.ok) {
           const groupsData = await groupsRes.json();
@@ -32,7 +32,8 @@ export default function YearTransitionWizard({ onComplete }) {
             // This is a naive bump, the admin can edit it.
             const bumpMap = {
               'א': 'ב', 'ב': 'ג', 'ג': 'ד', 'ד': 'ה', 'ה': 'ו', 'ו': 'ז',
-              'ז': 'ח', 'ח': 'ט', 'ט': 'י', 'י': 'יא', 'יא': 'יב', 'יב': 'בוגרים'
+              'ז': 'ח', 'ח': 'ט', 'ט': 'י', 'י': 'יא', 'יא': 'יב', 'יב': 'יג',
+              'יג': 'יד', 'יד': 'בוגרים'
             };
             const match = c.name.match(/^([א-ת]+)(.*)/);
             if (match && bumpMap[match[1]]) {
@@ -79,7 +80,8 @@ export default function YearTransitionWizard({ onComplete }) {
         if (toast?.show) toast.show('מעבר השנה בוצע בהצלחה!', 'success');
         onComplete();
       } else {
-        if (toast?.show) toast.show('שגיאה במעבר שנה', 'error');
+        const errorData = await res.json();
+        if (toast?.show) toast.show(errorData.error || 'שגיאה במעבר שנה', 'error');
       }
     } catch (err) {
       if (toast?.show) toast.show('שגיאה בתקשורת', 'error');
@@ -117,7 +119,7 @@ export default function YearTransitionWizard({ onComplete }) {
               <th style={{ padding: '12px' }}>שם נוכחי</th>
               <th style={{ padding: '12px' }}>שם חדש לשנה הבאה</th>
               <th style={{ padding: '12px' }}>מחנכים לשנה הבאה</th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>ארכיון / סיום</th>
+              <th style={{ padding: '12px', textAlign: 'center' }} title="כיתה שמסיימת תועבר לארכיון ולא תופיע ברשימת הכיתות הפעילות">ארכיון (סיום)</th>
             </tr>
           </thead>
           <tbody>
@@ -165,7 +167,7 @@ export default function YearTransitionWizard({ onComplete }) {
                       newClasses[index].archive = e.target.checked;
                       setClasses(newClasses);
                     }}
-                    style={{ width: '20px', height: '20px' }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                   />
                 </td>
               </tr>

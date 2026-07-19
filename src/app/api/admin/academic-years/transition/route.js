@@ -21,6 +21,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const existingYear = await prisma.academicYear.findFirst({
+      where: { tenantId, name: newYearName }
+    });
+
+    if (existingYear) {
+      return NextResponse.json({ error: `שנת הלימודים "${newYearName}" כבר קיימת במערכת. אנא בחר שם אחר או שהמעבר כבר בוצע.` }, { status: 400 });
+    }
+
     // Use a transaction to ensure atomic transition
     await prisma.$transaction(async (tx) => {
       // 1. Get the current academic year
@@ -107,6 +115,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to transition year:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // Return the actual error message so the client can display it
+    return NextResponse.json({ error: error.message || 'שגיאה בביצוע הפעולה' }, { status: 500 });
   }
 }
