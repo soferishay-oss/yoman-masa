@@ -20,7 +20,10 @@ export async function POST(request) {
     // Look up the user by phone number
     const user = await prisma.user.findFirst({
       where: { phoneNumber: cleanPhone },
-      include: { tenant: true } // Need tenant info too
+      include: { 
+        tenant: true,
+        groupMemberships: true
+      } // Need tenant info too
     });
 
     if (!user) {
@@ -73,12 +76,14 @@ export async function POST(request) {
     }
 
     // Generate real JWT
+    const isDutyStudent = user.groupMemberships?.some(m => m.isDutyStudent) || false;
+    
     const token = await new SignJWT({
       userId: user.id,
       tenantId: user.tenantId,
       role: user.role,
-      groupId: user.groupId,
-      isDutyStudent: user.isDutyStudent || false
+      classId: user.classId,
+      isDutyStudent: isDutyStudent
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()

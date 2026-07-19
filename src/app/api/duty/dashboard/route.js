@@ -10,12 +10,19 @@ export async function GET(request) {
     const auth = token ? await verifyToken(token) : null;
     const userId = auth?.userId;
     const tenantId = auth?.tenantId;
-    const groupId = auth?.groupId;
     const isDutyStudent = auth?.isDutyStudent;
 
-    if (!userId || !tenantId || !isDutyStudent || !groupId) {
+    if (!userId || !tenantId || !isDutyStudent) {
       return NextResponse.json({ error: 'Unauthorized or not a duty student' }, { status: 401 });
     }
+
+    // Find the groups this user is a duty student in
+    const dutyMemberships = await prisma.groupMember.findMany({
+      where: { userId, isDutyStudent: true },
+      select: { groupId: true }
+    });
+    
+    const dutyGroupIds = dutyMemberships.map(m => m.groupId);
 
     // Find the nearest upcoming event or active event today
     const startOfDay = new Date();
@@ -29,11 +36,13 @@ export async function GET(request) {
       orderBy: { date: 'asc' }
     });
 
-    // Fetch all students in the same group
+    // Fetch all students in the duty groups
     const groupMembers = await prisma.user.findMany({
       where: { 
         tenantId,
-        groupId,
+        groupMemberships: {
+          some: { groupId: { in: dutyGroupIds } }
+        },
         role: 'student',
         status: { not: 'deleted' }
       },

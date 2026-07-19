@@ -15,9 +15,9 @@ export default function AdminLayout({ children }) {
             <Home size={20} />
             <span>קוקפיט (ראשי)</span>
           </Link>
-          <Link href="/admin/users" className={styles.navLink}>
+          <Link href="/admin/people" className={styles.navLink}>
             <Users size={20} />
-            <span>משתמשים וקבוצות</span>
+            <span>קהילה (כיתות, קבוצות, אנשים)</span>
           </Link>
           <Link href="/admin/reports" className={styles.navLink}>
             <BarChart2 size={20} />

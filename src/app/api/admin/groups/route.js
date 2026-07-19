@@ -15,12 +15,20 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const typeFilter = searchParams.get('type');
+
+    const whereClause = { tenantId };
+    if (typeFilter) {
+      whereClause.type = typeFilter;
+    }
+
     const groups = await prisma.group.findMany({
-      where: { tenantId },
+      where: whereClause,
       include: {
         managers: { select: { id: true, fullName: true } },
         _count: {
-          select: { users: true }
+          select: { classUsers: true, groupMembers: true }
         }
       },
       orderBy: { name: 'asc' }
