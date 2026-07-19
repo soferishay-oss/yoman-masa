@@ -1,12 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { UserCheck, Search, ExternalLink } from 'lucide-react';
+import { UserCheck, Search, Edit2 } from 'lucide-react';
+import StudentEditModal from './StudentEditModal';
 
 export default function DutyStudentsTab() {
   const [dutyStudents, setDutyStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [classes, setClasses] = useState([]);
   const { show } = useToast();
 
   useEffect(() => {
@@ -15,14 +18,18 @@ export default function DutyStudentsTab() {
 
   const fetchDutyStudents = async () => {
     try {
-      const [resGroups, resRoles] = await Promise.all([
+      const [resGroups, resRoles, classesRes] = await Promise.all([
         fetch('/api/admin/groups?includeMembers=true', { cache: 'no-store' }),
-        fetch('/api/admin/roles', { cache: 'no-store' })
+        fetch('/api/admin/roles', { cache: 'no-store' }),
+        fetch('/api/admin/groups?type=class', { cache: 'no-store' })
       ]);
       
       if (resGroups.ok && resRoles.ok) {
         const groups = await resGroups.json();
         const roles = await resRoles.json();
+        const classesData = await classesRes.json();
+        setClasses(classesData);
+        
         const roleMap = {};
         roles.forEach(r => roleMap[r.id] = r.name);
         
@@ -101,10 +108,10 @@ export default function DutyStudentsTab() {
                     </td>
                     <td style={{ padding: '12px' }}>
                       <button 
-                        onClick={() => alert('יש לחזור ללשונית "תלמידים" ולחפש תלמיד זה כדי לערוך את פרטיו')}
+                        onClick={() => setEditingStudent(item.student)}
                         style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 12px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                       >
-                        <ExternalLink size={14} /> צפה בפרטים
+                        <Edit2 size={14} /> צפה בפרטים / ערוך
                       </button>
                     </td>
                   </tr>
@@ -119,6 +126,18 @@ export default function DutyStudentsTab() {
           </div>
         )}
       </div>
+
+      {editingStudent && (
+        <StudentEditModal
+          student={editingStudent}
+          classes={classes}
+          onClose={() => setEditingStudent(null)}
+          onSaved={() => {
+            setEditingStudent(null);
+            fetchDutyStudents();
+          }}
+        />
+      )}
     </div>
   );
 }
