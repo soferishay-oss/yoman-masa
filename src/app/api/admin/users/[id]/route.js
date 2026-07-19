@@ -26,7 +26,6 @@ export async function PUT(request, { params }) {
     if (data.role !== undefined) updateData.role = data.role;
     if (data.subRole !== undefined) updateData.subRole = data.subRole || null;
     if (data.classId !== undefined) updateData.classId = data.classId || null;
-    if (data.groupId !== undefined) updateData.groupId = data.groupId || null;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.password !== undefined) updateData.password = data.password;
     if (data.username !== undefined) updateData.username = data.username;
@@ -46,7 +45,7 @@ export async function PUT(request, { params }) {
         tenantId // ensure they only update users in their tenant
       },
       data: updateData,
-      include: { group: true, managedGroups: true }
+      include: { class: true, managedGroups: true }
     });
 
     return NextResponse.json(updatedUser);

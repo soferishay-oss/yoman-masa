@@ -18,7 +18,7 @@ export async function GET(request) {
 
     const users = await prisma.user.findMany({
       where: { tenantId },
-      include: { group: true },
+      include: { class: true },
       orderBy: { fullName: 'asc' }
     });
 

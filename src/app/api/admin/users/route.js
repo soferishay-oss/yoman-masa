@@ -16,12 +16,21 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized missing headers' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const roleFilter = searchParams.get('role');
+
+    const whereClause = { 
+      tenantId,
+      status: { not: 'deleted' }
+    };
+    
+    if (roleFilter) {
+      whereClause.role = roleFilter;
+    }
+
     const users = await prisma.user.findMany({
-      where: { 
-        tenantId,
-        status: { not: 'deleted' }
-      },
-      include: { group: true, managedGroups: true },
+      where: whereClause,
+      include: { class: true, managedGroups: true },
       orderBy: { fullName: 'asc' }
     });
 
@@ -63,7 +72,6 @@ export async function POST(request) {
               role: item.role || 'student',
               subRole: item.subRole || null,
               classId: item.classId || null,
-              groupId: item.groupId || null,
               passwordHash: defaultPassword
             }
           });
@@ -77,7 +85,7 @@ export async function POST(request) {
     }
 
     // Handle Single User Creation
-    const { fullName, phoneNumber, email, userRole, subRole, classId, groupId, managedGroupIds } = data;
+    const { fullName, phoneNumber, email, role: userRole, subRole, classId, managedGroupIds } = data;
     const defaultPassword = await bcrypt.hash('123456', 10);
 
     const userData = {
@@ -88,7 +96,6 @@ export async function POST(request) {
       role: userRole || 'student',
       subRole: subRole || null,
       classId: classId || null,
-      groupId: groupId || null,
       passwordHash: defaultPassword
     };
 
@@ -100,7 +107,7 @@ export async function POST(request) {
 
     const newUser = await prisma.user.create({
       data: userData,
-      include: { group: true, managedGroups: true }
+      include: { class: true, managedGroups: true }
     });
 
     return NextResponse.json(newUser, { status: 201 });

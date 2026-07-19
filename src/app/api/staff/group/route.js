@@ -20,18 +20,23 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get staff's group
+    // Get staff's managed groups and memberships
     const staff = await prisma.user.findUnique({
       where: { id: userId },
-      select: { groupId: true, managedGroups: { select: { id: true } } }
+      select: { 
+        classId: true, 
+        managedGroups: { select: { id: true } },
+        groupMemberships: { select: { groupId: true } }
+      }
     });
 
     const groupIds = [];
-    if (staff?.groupId) groupIds.push(staff.groupId);
-    if (staff?.managedGroups) groupIds.push(...(staff.managedGroups || []).map(g => g.id));
+    if (staff?.classId) groupIds.push(staff.classId);
+    if (staff?.managedGroups) groupIds.push(...staff.managedGroups.map(g => g.id));
+    if (staff?.groupMemberships) groupIds.push(...staff.groupMemberships.map(m => m.groupId));
 
     if (role !== 'admin' && groupIds.length === 0) {
-      return NextResponse.json({ error: 'Staff is not assigned to a group' }, { status: 400 });
+      return NextResponse.json({ error: 'Staff is not assigned to any group' }, { status: 400 });
     }
 
     // Fetch students: all for admin, filtered for staff
@@ -39,14 +44,18 @@ export async function GET(request) {
       tenantId,
       role: 'student'
     };
+    
     if (role !== 'admin') {
-      whereClause.groupId = { in: groupIds };
+      whereClause.OR = [
+        { classId: { in: groupIds } },
+        { groupMemberships: { some: { groupId: { in: groupIds } } } }
+      ];
     }
 
     const students = await prisma.user.findMany({
       where: whereClause,
       include: {
-        group: true,
+        class: true,
         moodChecks: {
           orderBy: { createdAt: 'desc' },
           take: 1

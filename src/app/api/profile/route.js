@@ -18,7 +18,7 @@ export async function GET(request) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        group: true,
+        class: true,
         tenant: true,
         _count: {
           select: { contentEntries: true }
