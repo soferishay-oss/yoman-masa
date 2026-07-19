@@ -65,6 +65,8 @@ export default function ClassesTab() {
         show('שגיאה בתקשורת', 'error');
       }
     }
+  };
+
   const handleEditName = async (cls) => {
     const newName = window.prompt('ערוך שם כיתה:', cls.name);
     if (!newName || newName.trim() === cls.name) return;

@@ -65,6 +65,8 @@ export default function GroupsTab() {
         show('שגיאה בתקשורת', 'error');
       }
     }
+  };
+
   const handleEditName = async (group) => {
     const newName = window.prompt('ערוך שם קבוצה:', group.name);
     if (!newName || newName.trim() === group.name) return;

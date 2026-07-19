@@ -120,6 +120,43 @@ export default function StaffTab() {
     }
   };
 
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(staff.map(s => s.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!await confirm(`האם אתה בטוח שברצונך למחוק ${selectedIds.length} אנשי צוות?`)) return;
+    setIsBulkLoading(true);
+    try {
+      const res = await fetch('/api/admin/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', userIds: selectedIds })
+      });
+      if (res.ok) {
+        show(`נמחקו ${selectedIds.length} אנשי צוות בהצלחה!`);
+        setSelectedIds([]);
+        fetchData();
+      } else {
+        show('שגיאה במחיקה', 'error');
+      }
+    } catch (err) {
+      show('שגיאה בתקשורת', 'error');
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
   const handleImportComplete = () => {
     setShowExcelImport(false);
     fetchData();
