@@ -8,6 +8,8 @@ import ClassesTab from '@/components/admin/people/ClassesTab';
 import GroupsTab from '@/components/admin/people/GroupsTab';
 import StudentsTab from '@/components/admin/people/StudentsTab';
 import StaffTab from '@/components/admin/people/StaffTab';
+import RolesTab from '@/components/admin/people/RolesTab';
+import DutyStudentsTab from '@/components/admin/people/DutyStudentsTab';
 
 export default function PeopleManagementPage() {
   const [activeTab, setActiveTab] = useState('classes');
@@ -47,13 +49,27 @@ export default function PeopleManagementPage() {
         >
           <Shield size={18} /> אנשי צוות
         </button>
+        <button 
+          onClick={() => setActiveTab('roles')}
+          style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '30px', border: 'none', background: activeTab === 'roles' ? 'var(--primary-color)' : '#f1f5f9', color: activeTab === 'roles' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+        >
+          תפקידים והרשאות
+        </button>
+        <button 
+          onClick={() => setActiveTab('duty')}
+          style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '30px', border: 'none', background: activeTab === 'duty' ? 'var(--primary-color)' : '#f1f5f9', color: activeTab === 'duty' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
+        >
+          תורנים
+        </button>
       </div>
 
-      <div className={styles.grid}>
+      <div style={{ marginTop: '20px' }}>
         {activeTab === 'classes' && <ClassesTab />}
         {activeTab === 'groups' && <GroupsTab />}
         {activeTab === 'students' && <StudentsTab />}
         {activeTab === 'staff' && <StaffTab />}
+        {activeTab === 'roles' && <RolesTab />}
+        {activeTab === 'duty' && <DutyStudentsTab />}
       </div>
     </div>
   );

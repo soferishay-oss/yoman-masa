@@ -30,7 +30,12 @@ export async function GET(request) {
 
     const users = await prisma.user.findMany({
       where: whereClause,
-      include: { class: true, managedGroups: true },
+      include: { 
+        class: true, 
+        managedGroups: true,
+        customRole: true,
+        groupMemberships: { include: { group: true } }
+      },
       orderBy: { fullName: 'asc' }
     });
 
@@ -72,6 +77,8 @@ export async function POST(request) {
               role: item.role || 'student',
               subRole: item.subRole || null,
               classId: item.classId || null,
+              nationalId: item.nationalId || null,
+              customRoleId: item.customRoleId || null,
               passwordHash: defaultPassword
             }
           });
@@ -85,7 +92,7 @@ export async function POST(request) {
     }
 
     // Handle Single User Creation
-    const { fullName, phoneNumber, email, role: userRole, subRole, classId, managedGroupIds } = data;
+    const { fullName, phoneNumber, email, role: userRole, subRole, classId, managedGroupIds, nationalId, customRoleId } = data;
     const defaultPassword = await bcrypt.hash('123456', 10);
 
     const userData = {
@@ -96,6 +103,8 @@ export async function POST(request) {
       role: userRole || 'student',
       subRole: subRole || null,
       classId: classId || null,
+      nationalId: nationalId || null,
+      customRoleId: customRoleId || null,
       passwordHash: defaultPassword
     };
 

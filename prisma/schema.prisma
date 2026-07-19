@@ -30,6 +30,7 @@ model Tenant {
   tasks            Task[]
   stations         Station[]
   contentEntries   ContentEntry[]
+  customRoles      CustomRole[]
   moodChecks       MoodCheck[]
   staffAlerts      StaffAlert[]
 }
@@ -39,11 +40,14 @@ model User {
   tenantId         String
   tenant           Tenant   @relation(fields: [tenantId], references: [id])
   fullName         String
+  nationalId       String?  @unique
   phoneNumber      String?  @unique
   email            String?  @unique
   passwordHash     String
   role             String   // e.g. "student", "staff", "admin"
   subRole          String?
+  customRoleId     String?
+  customRole       CustomRole? @relation(fields: [customRoleId], references: [id])
   classId          String?
   class            Group?   @relation("UserClass", fields: [classId], references: [id])
   groupMemberships GroupMember[]
@@ -244,4 +248,14 @@ model StaffAlert {
   metadata         Json?
   isRead           Boolean  @default(false)
   createdAt        DateTime @default(now())
+}
+model CustomRole {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  permissions String   // Stored as JSON array string, e.g. '["manage_events", "manage_settings"]'
+  users       User[]
+
+  @@unique([tenantId, name])
 }

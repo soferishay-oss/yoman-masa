@@ -29,6 +29,8 @@ export async function PUT(request, { params }) {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.password !== undefined) updateData.password = data.password;
     if (data.username !== undefined) updateData.username = data.username;
+    if (data.nationalId !== undefined) updateData.nationalId = data.nationalId || null;
+    if (data.customRoleId !== undefined) updateData.customRoleId = data.customRoleId || null;
     
     // Determine the role for checking if managedGroups should be updated
     const finalRole = updateData.role || (await prisma.user.findUnique({ where: { id } }))?.role;
