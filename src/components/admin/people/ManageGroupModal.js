@@ -224,39 +224,43 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                        <button 
-                          onClick={() => {
-                            if (member.isDutyStudent) {
-                              handleToggleDuty(member.id, true);
-                            } else {
-                              if (dutyRoles.length > 0) {
-                                // Default to first role if not selected
-                                handleToggleDuty(member.id, false, dutyRoles[0].id);
-                              } else {
-                                handleToggleDuty(member.id, false, null);
-                              }
-                            }
-                          }}
-                          style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', border: member.isDutyStudent ? '1px solid #d97706' : '1px solid #cbd5e1', background: member.isDutyStudent ? '#f59e0b' : 'white', color: member.isDutyStudent ? 'white' : '#64748b', fontWeight: 'bold', fontSize: '12px' }}
-                        >
-                          <Shield size={14} />
-                          {member.isDutyStudent ? 'חניך תורן' : 'סמן כתורן'}
-                        </button>
-                        
-                        {member.isDutyStudent && dutyRoles.length > 0 && (
+                        {dutyRoles.length > 0 ? (
                           <select 
-                            value={member.dutyRoleId || ''} 
-                            onChange={(e) => handleToggleDuty(member.id, false, e.target.value)} // passing false removes it and re-adds with new role due to how the toggle logic is written. Wait, no!
-                            // Toggle logic says if (!isCurrentlyDuty) it adds it. So we must pass isCurrentlyDuty=false to "add" it again. 
-                            // But actually we should just call a separate update or adjust toggle to handle role changes.
-                            // Let's just use the toggle trick: isCurrentlyDuty=false acts as an 'upsert' in our updated toggle logic if we pass the role!
-                            style={{ padding: '2px 5px', fontSize: '11px', borderRadius: '4px', border: '1px solid #d97706', background: '#fef3c7', color: '#92400e' }}
+                            value={member.isDutyStudent ? (member.dutyRoleId || 'duty') : ''} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === 'remove') {
+                                handleToggleDuty(member.id, true);
+                              } else {
+                                handleToggleDuty(member.id, false, val);
+                              }
+                            }}
+                            style={{ 
+                              padding: '6px 10px', 
+                              borderRadius: '6px', 
+                              border: member.isDutyStudent ? '1px solid #d97706' : '1px solid #cbd5e1', 
+                              background: member.isDutyStudent ? '#fef3c7' : 'white', 
+                              color: member.isDutyStudent ? '#92400e' : '#64748b', 
+                              fontWeight: 'bold', 
+                              fontSize: '12px',
+                              cursor: 'pointer'
+                            }}
                           >
-                            <option value="" disabled>בחר סוג תורן...</option>
+                            {!member.isDutyStudent && <option value="" disabled>סמן כתורן...</option>}
+                            {member.isDutyStudent && <option value="remove">-- ביטול תורנות --</option>}
                             {dutyRoles.map(r => (
                               <option key={r.id} value={r.id}>{r.name}</option>
                             ))}
+                            {member.isDutyStudent && !member.dutyRoleId && <option value="duty" disabled>תורן (ללא הגדרת סוג)</option>}
                           </select>
+                        ) : (
+                          <button 
+                            onClick={() => handleToggleDuty(member.id, member.isDutyStudent)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', border: member.isDutyStudent ? '1px solid #d97706' : '1px solid #cbd5e1', background: member.isDutyStudent ? '#f59e0b' : 'white', color: member.isDutyStudent ? 'white' : '#64748b', fontWeight: 'bold', fontSize: '12px' }}
+                          >
+                            <Shield size={14} />
+                            {member.isDutyStudent ? 'ביטול תורנות' : 'סמן כתורן'}
+                          </button>
                         )}
                       </div>
                       

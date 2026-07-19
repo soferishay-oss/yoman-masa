@@ -16,7 +16,7 @@ export default function DutyStudentsTab() {
   const fetchDutyStudents = async () => {
     try {
       const [resGroups, resRoles] = await Promise.all([
-        fetch('/api/admin/groups', { cache: 'no-store' }),
+        fetch('/api/admin/groups?includeMembers=true', { cache: 'no-store' }),
         fetch('/api/admin/roles', { cache: 'no-store' })
       ]);
       

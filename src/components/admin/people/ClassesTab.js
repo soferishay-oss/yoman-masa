@@ -19,7 +19,7 @@ export default function ClassesTab() {
 
   const fetchClasses = async () => {
     try {
-      const res = await fetch('/api/admin/groups?type=class', { cache: 'no-store' });
+      const res = await fetch('/api/admin/groups?type=class&includeMembers=true', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) setClasses(data);
     } catch (err) {
@@ -113,17 +113,31 @@ export default function ClassesTab() {
               </div>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '14px', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '14px', marginBottom: '10px' }}>
               <Users size={16} />
               <span>{cls._count?.classUsers || 0} תלמידים משובצים</span>
             </div>
 
-            <button 
-              onClick={() => setManagingClass(cls)}
-              style={{ width: '100%', padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              נהל משתתפים וצוות
-            </button>
+            {cls.managers && cls.managers.length > 0 && (
+              <div style={{ fontSize: '13px', color: '#334155', marginBottom: '5px' }}>
+                <strong style={{ color: '#475569' }}>צוות מנהל:</strong> {cls.managers.map(m => m.fullName).join(', ')}
+              </div>
+            )}
+
+            {cls.groupMembers && cls.groupMembers.some(gm => gm.isDutyStudent) && (
+              <div style={{ fontSize: '12px', color: '#b45309', marginBottom: '15px', fontWeight: 'bold' }}>
+                תורנים: {cls.groupMembers.filter(gm => gm.isDutyStudent).map(gm => gm.user?.fullName).filter(Boolean).join(', ')}
+              </div>
+            )}
+            
+            <div style={{ marginTop: 'auto', paddingTop: '15px' }}>
+              <button 
+                onClick={() => setManagingClass(cls)}
+                style={{ width: '100%', padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                נהל משתתפים וצוות
+              </button>
+            </div>
           </div>
         ))}
         {classes.length === 0 && !isLoading && (

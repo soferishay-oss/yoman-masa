@@ -19,7 +19,7 @@ export default function GroupsTab() {
 
   const fetchGroups = async () => {
     try {
-      const res = await fetch('/api/admin/groups?type=group', { cache: 'no-store' });
+      const res = await fetch('/api/admin/groups?type=group&includeMembers=true', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) setGroups(data);
     } catch (err) {
@@ -67,12 +67,15 @@ export default function GroupsTab() {
     }
   };
 
-  const handleCloneGroup = async (id) => {
+  const handleCloneGroup = async (group) => {
+    const newName = window.prompt('בחר שם לקבוצה המשוכפלת:', `${group.name} (עותק)`);
+    if (!newName) return; // User cancelled
+
     try {
       const res = await fetch('/api/admin/groups/clone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: id })
+        body: JSON.stringify({ groupId: group.id, newName })
       });
       if (res.ok) {
         show('הקבוצה שוכפלה בהצלחה!');
@@ -122,7 +125,7 @@ export default function GroupsTab() {
               <h3 style={{ margin: 0, fontSize: '20px', color: '#1e293b' }}>{group.name}</h3>
               <div style={{ display: 'flex', gap: '5px' }}>
                 <button 
-                  onClick={() => handleCloneGroup(group.id)}
+                  onClick={() => handleCloneGroup(group)}
                   style={{ background: '#e0f2fe', color: '#0284c7', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
                   title="שכפל קבוצה"
                 >
@@ -138,17 +141,31 @@ export default function GroupsTab() {
               </div>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '14px', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '14px', marginBottom: '10px' }}>
               <Users size={16} />
               <span>{group._count?.groupMembers || 0} משתתפים משובצים</span>
             </div>
 
-            <button 
-              onClick={() => setManagingGroup(group)}
-              style={{ width: '100%', padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              נהל משתתפים וצוות
-            </button>
+            {group.managers && group.managers.length > 0 && (
+              <div style={{ fontSize: '13px', color: '#334155', marginBottom: '5px' }}>
+                <strong style={{ color: '#475569' }}>צוות מנהל:</strong> {group.managers.map(m => m.fullName).join(', ')}
+              </div>
+            )}
+
+            {group.groupMembers && group.groupMembers.some(gm => gm.isDutyStudent) && (
+              <div style={{ fontSize: '12px', color: '#b45309', marginBottom: '15px', fontWeight: 'bold' }}>
+                תורנים: {group.groupMembers.filter(gm => gm.isDutyStudent).map(gm => gm.user?.fullName).filter(Boolean).join(', ')}
+              </div>
+            )}
+            
+            <div style={{ marginTop: 'auto', paddingTop: '15px' }}>
+              <button 
+                onClick={() => setManagingGroup(group)}
+                style={{ width: '100%', padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                נהל משתתפים וצוות
+              </button>
+            </div>
           </div>
         ))}
         {groups.length === 0 && !isLoading && (

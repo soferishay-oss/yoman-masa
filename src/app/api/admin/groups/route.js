@@ -17,20 +17,31 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const typeFilter = searchParams.get('type');
+    const includeMembers = searchParams.get('includeMembers') === 'true';
 
     const whereClause = { tenantId };
     if (typeFilter) {
       whereClause.type = typeFilter;
     }
 
+    const includeClause = {
+      managers: { select: { id: true, fullName: true } },
+      _count: {
+        select: { classUsers: true, groupMembers: true }
+      }
+    };
+
+    if (includeMembers) {
+      includeClause.groupMembers = {
+        include: {
+          user: { select: { id: true, fullName: true, phoneNumber: true } }
+        }
+      };
+    }
+
     const groups = await prisma.group.findMany({
       where: whereClause,
-      include: {
-        managers: { select: { id: true, fullName: true } },
-        _count: {
-          select: { classUsers: true, groupMembers: true }
-        }
-      },
+      include: includeClause,
       orderBy: { name: 'asc' }
     });
 

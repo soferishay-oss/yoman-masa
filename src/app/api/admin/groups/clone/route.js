@@ -15,10 +15,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { groupId } = await request.json();
+    const { groupId, newName } = await request.json();
 
-    if (!groupId) {
-      return NextResponse.json({ error: 'Group ID is required' }, { status: 400 });
+    if (!groupId || !newName) {
+      return NextResponse.json({ error: 'Group ID and New Name are required' }, { status: 400 });
     }
 
     const groupToClone = await prisma.group.findUnique({
@@ -36,7 +36,7 @@ export async function POST(request) {
     // Create a new group
     const newGroup = await prisma.group.create({
       data: {
-        name: `${groupToClone.name} (עותק)`,
+        name: newName,
         type: groupToClone.type,
         description: groupToClone.description,
         tenantId: tenantId,
