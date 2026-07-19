@@ -34,7 +34,7 @@ export async function GET(request) {
     if (includeMembers) {
       includeClause.groupMembers = {
         include: {
-          user: { select: { id: true, fullName: true, phoneNumber: true } }
+          user: { select: { id: true, fullName: true, phoneNumber: true, email: true, nationalId: true, classId: true } }
         }
       };
     }
