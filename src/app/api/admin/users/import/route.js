@@ -90,8 +90,8 @@ export async function POST(request) {
       let classId = null;
 
       let className = null;
-      if (rawClass) className = rawClass.trim();
-      if (rawParallel) className = className ? `${className} ${rawParallel.trim()}` : rawParallel.trim();
+      if (rawClass) className = String(rawClass).trim();
+      if (rawParallel) className = className ? `${className} ${String(rawParallel).trim()}` : String(rawParallel).trim();
 
       if (className && role === 'student') {
         if (classCache.has(className)) {
