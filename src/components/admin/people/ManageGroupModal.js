@@ -9,6 +9,7 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
   const [managers, setManagers] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [allStaff, setAllStaff] = useState([]);
+  const [dutyRoles, setDutyRoles] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('students'); // 'students' | 'staff'
@@ -20,10 +21,11 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
 
   const fetchData = async () => {
     try {
-      const [groupRes, studentsRes, staffRes] = await Promise.all([
+      const [groupRes, studentsRes, staffRes, rolesRes] = await Promise.all([
         fetch(`/api/admin/groups/${groupId}`, { cache: 'no-store' }),
         fetch('/api/admin/users?role=student', { cache: 'no-store' }),
-        fetch('/api/admin/users?role=non_student', { cache: 'no-store' })
+        fetch('/api/admin/users?role=non_student', { cache: 'no-store' }),
+        fetch('/api/admin/roles', { cache: 'no-store' })
       ]);
       
       if (groupRes.ok) {
@@ -37,6 +39,10 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
       if (staffRes.ok) {
         setAllStaff(await staffRes.json());
       }
+      if (rolesRes.ok) {
+        const allRoles = await rolesRes.json();
+        setDutyRoles(allRoles.filter(r => r.type === 'duty_student'));
+      }
     } catch (err) {
       console.error(err);
       show('שגיאה בטעינת הנתונים', 'error');
@@ -45,13 +51,19 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
     }
   };
 
-  const handleToggleDuty = async (userId, isCurrentlyDuty) => {
+  const handleToggleDuty = async (userId, isCurrentlyDuty, roleId = null) => {
     try {
-      // In the new schema, duty student is determined by a GroupMember record.
-      // For both classes and groups, we need to send the updated duty students list.
-      const updatedDutyStudentIds = isCurrentlyDuty
-        ? members.filter(m => m.isDutyStudent && m.id !== userId).map(m => m.id)
-        : [...members.filter(m => m.isDutyStudent).map(m => m.id), userId];
+      let updatedDutyStudentIds = members.filter(m => m.isDutyStudent && m.id !== userId).map(m => ({
+        userId: m.id,
+        dutyRoleId: m.dutyRoleId || null
+      }));
+
+      if (!isCurrentlyDuty) {
+        updatedDutyStudentIds.push({
+          userId: userId,
+          dutyRoleId: roleId
+        });
+      }
 
       const res = await fetch(`/api/admin/groups/${groupId}`, {
         method: 'PUT',
@@ -60,8 +72,8 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
       });
       
       if (res.ok) {
-        setMembers(members.map(m => m.id === userId ? { ...m, isDutyStudent: !isCurrentlyDuty } : m));
-        show('סטטוס חניך תורן עודכן!');
+        setMembers(members.map(m => m.id === userId ? { ...m, isDutyStudent: !isCurrentlyDuty, dutyRoleId: !isCurrentlyDuty ? roleId : null } : m));
+        show(!isCurrentlyDuty ? 'החניך סומן כתורן!' : 'החניך הוסר מתורנות!');
       } else {
         show('שגיאה בעדכון', 'error');
       }
@@ -211,16 +223,46 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
                       <div style={{ fontWeight: 'bold', color: '#1e293b' }}>{member.fullName}</div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button 
-                        onClick={() => handleToggleDuty(member.id, member.isDutyStudent)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', border: member.isDutyStudent ? '1px solid #d97706' : '1px solid #cbd5e1', background: member.isDutyStudent ? '#f59e0b' : 'white', color: member.isDutyStudent ? 'white' : '#64748b', fontWeight: 'bold', fontSize: '12px' }}
-                      >
-                        <Shield size={14} />
-                        {member.isDutyStudent ? 'חניך תורן' : 'סמן כתורן'}
-                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <button 
+                          onClick={() => {
+                            if (member.isDutyStudent) {
+                              handleToggleDuty(member.id, true);
+                            } else {
+                              if (dutyRoles.length > 0) {
+                                // Default to first role if not selected
+                                handleToggleDuty(member.id, false, dutyRoles[0].id);
+                              } else {
+                                handleToggleDuty(member.id, false, null);
+                              }
+                            }
+                          }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', border: member.isDutyStudent ? '1px solid #d97706' : '1px solid #cbd5e1', background: member.isDutyStudent ? '#f59e0b' : 'white', color: member.isDutyStudent ? 'white' : '#64748b', fontWeight: 'bold', fontSize: '12px' }}
+                        >
+                          <Shield size={14} />
+                          {member.isDutyStudent ? 'חניך תורן' : 'סמן כתורן'}
+                        </button>
+                        
+                        {member.isDutyStudent && dutyRoles.length > 0 && (
+                          <select 
+                            value={member.dutyRoleId || ''} 
+                            onChange={(e) => handleToggleDuty(member.id, false, e.target.value)} // passing false removes it and re-adds with new role due to how the toggle logic is written. Wait, no!
+                            // Toggle logic says if (!isCurrentlyDuty) it adds it. So we must pass isCurrentlyDuty=false to "add" it again. 
+                            // But actually we should just call a separate update or adjust toggle to handle role changes.
+                            // Let's just use the toggle trick: isCurrentlyDuty=false acts as an 'upsert' in our updated toggle logic if we pass the role!
+                            style={{ padding: '2px 5px', fontSize: '11px', borderRadius: '4px', border: '1px solid #d97706', background: '#fef3c7', color: '#92400e' }}
+                          >
+                            <option value="" disabled>בחר סוג תורן...</option>
+                            {dutyRoles.map(r => (
+                              <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                      
                       <button 
                         onClick={() => handleRemoveMember(member.id)}
-                        style={{ display: 'flex', alignItems: 'center', padding: '6px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: '#fee2e2', color: '#ef4444' }}
+                        style={{ display: 'flex', alignItems: 'center', padding: '6px', borderRadius: '6px', cursor: 'pointer', border: 'none', background: '#fee2e2', color: '#ef4444', height: 'fit-content' }}
                         title="הסר מהקבוצה"
                       >
                         <UserMinus size={16} />

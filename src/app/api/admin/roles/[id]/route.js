@@ -16,14 +16,17 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, permissions } = await request.json();
+    const { name, permissions, type } = await request.json();
+
+    const dataToUpdate = {
+      name,
+      permissions: JSON.stringify(permissions || [])
+    };
+    if (type) dataToUpdate.type = type;
 
     const updatedRole = await prisma.customRole.update({
       where: { id, tenantId },
-      data: {
-        name,
-        permissions: JSON.stringify(permissions || [])
-      }
+      data: dataToUpdate
     });
 
     return NextResponse.json(updatedRole);

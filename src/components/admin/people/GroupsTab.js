@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { Users, Plus, Trash2 } from 'lucide-react';
+import { Users, Plus, Trash2, Copy } from 'lucide-react';
 import styles from '@/app/page.module.css';
 import ManageGroupModal from './ManageGroupModal';
 
@@ -67,6 +67,24 @@ export default function GroupsTab() {
     }
   };
 
+  const handleCloneGroup = async (id) => {
+    try {
+      const res = await fetch('/api/admin/groups/clone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupId: id })
+      });
+      if (res.ok) {
+        show('הקבוצה שוכפלה בהצלחה!');
+        fetchGroups();
+      } else {
+        show('שגיאה בשכפול הקבוצה', 'error');
+      }
+    } catch (err) {
+      show('שגיאה בתקשורת', 'error');
+    }
+  };
+
   if (isLoading) return <div>טוען קבוצות...</div>;
 
   return (
@@ -103,6 +121,13 @@ export default function GroupsTab() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
               <h3 style={{ margin: 0, fontSize: '20px', color: '#1e293b' }}>{group.name}</h3>
               <div style={{ display: 'flex', gap: '5px' }}>
+                <button 
+                  onClick={() => handleCloneGroup(group.id)}
+                  style={{ background: '#e0f2fe', color: '#0284c7', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                  title="שכפל קבוצה"
+                >
+                  <Copy size={16} />
+                </button>
                 <button 
                   onClick={() => handleDeleteGroup(group.id)}
                   style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}

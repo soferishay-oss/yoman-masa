@@ -70,6 +70,10 @@ export async function POST(request) {
         }
       }
 
+      if (!finalFullName && (rawFirstName || rawLastName)) {
+        finalFullName = [rawFirstName, rawLastName].filter(Boolean).join(' ');
+      }
+
       if (!finalFullName || (!rawPhone && !rawNationalId)) {
         continue; // Skip invalid rows
       }
@@ -134,6 +138,7 @@ export async function POST(request) {
             phoneNumber: cleanPhone || existingUser.phoneNumber
           }
         });
+        importedCount++;
       } else {
         // Create new user
         await prisma.user.create({

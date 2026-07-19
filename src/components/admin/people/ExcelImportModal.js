@@ -96,7 +96,14 @@ export default function ExcelImportModal({ role, onImportComplete, onClose }) {
 
       if (res.ok) {
         const result = await res.json();
-        show(`יובאו בהצלחה ${result.count} משתמשים!`);
+        if (result.errors && result.errors.length > 0) {
+          show(`יובאו ${result.count} רשומות, אך היו שגיאות ב-${result.errors.length} שורות`, 'error');
+          // We can log them or show them in a custom alert, for now show the first error in toast
+          console.error("Import errors:", result.errors);
+          show(result.errors[0], 'error');
+        } else {
+          show(`יובאו בהצלחה ${result.count} משתמשים!`);
+        }
         onImportComplete();
       } else {
         const err = await res.json();

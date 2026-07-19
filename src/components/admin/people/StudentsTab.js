@@ -12,6 +12,10 @@ export default function StudentsTab() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [showBulkClassModal, setShowBulkClassModal] = useState(false);
+  const [bulkTargetClass, setBulkTargetClass] = useState('');
   const { show, confirm } = useToast();
 
   const [formData, setFormData] = useState({
@@ -80,6 +84,70 @@ export default function StudentsTab() {
       }
     } catch (err) {
       show('שגיאה בתקשורת', 'error');
+    }
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(students.map(s => s.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!await confirm(`האם אתה בטוח שברצונך למחוק ${selectedIds.length} תלמידים?`)) return;
+    setIsBulkLoading(true);
+    try {
+      const res = await fetch('/api/admin/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', userIds: selectedIds })
+      });
+      if (res.ok) {
+        show(`נמחקו ${selectedIds.length} תלמידים בהצלחה!`);
+        setSelectedIds([]);
+        fetchData();
+      } else {
+        show('שגיאה במחיקה', 'error');
+      }
+    } catch (err) {
+      show('שגיאה בתקשורת', 'error');
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
+  const handleBulkChangeClass = async () => {
+    if (!bulkTargetClass) {
+      show('אנא בחר כיתת יעד', 'error');
+      return;
+    }
+    setIsBulkLoading(true);
+    try {
+      const res = await fetch('/api/admin/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'change_class', userIds: selectedIds, classId: bulkTargetClass === 'none' ? null : bulkTargetClass })
+      });
+      if (res.ok) {
+        show(`הועברו ${selectedIds.length} תלמידים בהצלחה!`);
+        setShowBulkClassModal(false);
+        setSelectedIds([]);
+        fetchData();
+      } else {
+        show('שגיאה בהעברת כיתה', 'error');
+      }
+    } catch (err) {
+      show('שגיאה בתקשורת', 'error');
+    } finally {
+      setIsBulkLoading(false);
     }
   };
 
@@ -158,6 +226,16 @@ export default function StudentsTab() {
         </form>
       )}
 
+      {selectedIds.length > 0 && (
+        <div style={{ background: '#e0f2fe', padding: '10px 20px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #bae6fd' }}>
+          <div style={{ fontWeight: 'bold', color: '#0284c7' }}>{selectedIds.length} תלמידים נבחרו</div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => setShowBulkClassModal(true)} disabled={isBulkLoading} style={{ background: '#38bdf8', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>העבר כיתה</button>
+            <button onClick={handleBulkDelete} disabled={isBulkLoading} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>מחק נבחרים</button>
+          </div>
+        </div>
+      )}
+
       {editingStudent && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
           <form onSubmit={handleEditStudent} style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '500px', padding: '25px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -219,6 +297,7 @@ export default function StudentsTab() {
         <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>
+              <th style={{ padding: '15px', width: '40px' }}><input type="checkbox" checked={selectedIds.length === students.length && students.length > 0} onChange={handleSelectAll} /></th>
               <th style={{ padding: '15px' }}>שם מלא</th>
               <th style={{ padding: '15px' }}>כיתת אם</th>
               <th style={{ padding: '15px' }}>קבוצות ותורנויות</th>
@@ -229,6 +308,7 @@ export default function StudentsTab() {
           <tbody>
             {students.map(student => (
               <tr key={student.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <td style={{ padding: '15px' }}><input type="checkbox" checked={selectedIds.includes(student.id)} onChange={() => handleSelectOne(student.id)} /></td>
                 <td style={{ padding: '15px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '50%' }}><GraduationCap size={16} /></div>
@@ -267,7 +347,7 @@ export default function StudentsTab() {
               </tr>
             ))}
             {students.length === 0 && (
-              <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>לא נמצאו תלמידים. הוסף ידנית או ייבא מקובץ.</td></tr>
+              <tr><td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>לא נמצאו תלמידים. הוסף ידנית או ייבא מקובץ.</td></tr>
             )}
           </tbody>
         </table>
@@ -279,6 +359,29 @@ export default function StudentsTab() {
           onImportComplete={handleImportComplete} 
           onClose={() => setShowExcelImport(false)} 
         />
+      )}
+
+      {showBulkClassModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '25px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>העברת כיתה ל-{selectedIds.length} תלמידים</h2>
+              <button onClick={() => setShowBulkClassModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={24} /></button>
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#334155' }}>בחר כיתה חדשה:</label>
+              <select value={bulkTargetClass} onChange={e => setBulkTargetClass(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <option value="">-- בחר כיתה --</option>
+                <option value="none">הסר שיוך לכיתה</option>
+                {classes.map(cls => <option key={cls.id} value={cls.id}>{cls.name}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button onClick={() => setShowBulkClassModal(false)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer' }}>ביטול</button>
+              <button onClick={handleBulkChangeClass} disabled={isBulkLoading || !bulkTargetClass} className={styles.primaryButton}>העבר</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

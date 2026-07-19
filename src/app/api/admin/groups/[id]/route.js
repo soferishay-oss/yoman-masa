@@ -35,15 +35,14 @@ export async function GET(request, { params }) {
 
     if (!group) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    // Format the response so UI has an easy time
     let members = [];
     if (group.type === 'class') {
       members = group.classUsers.map(u => {
         const dutyRecord = group.groupMembers.find(gm => gm.userId === u.id && gm.isDutyStudent);
-        return { ...u, isDutyStudent: !!dutyRecord };
+        return { ...u, isDutyStudent: !!dutyRecord, dutyRoleId: dutyRecord?.dutyRoleId || null };
       });
     } else {
-      members = group.groupMembers.map(gm => ({ ...gm.user, isDutyStudent: gm.isDutyStudent }));
+      members = group.groupMembers.map(gm => ({ ...gm.user, isDutyStudent: gm.isDutyStudent, dutyRoleId: gm.dutyRoleId }));
     }
 
     return NextResponse.json({ ...group, members });
@@ -134,14 +133,16 @@ export async function PUT(request, { params }) {
       }
     }
 
-    // Handle duty students
+    // Handle duty students (array of objects: { userId, dutyRoleId? })
     if (dutyStudentIds && Array.isArray(dutyStudentIds)) {
       await prisma.groupMember.updateMany({
         where: { groupId: id },
-        data: { isDutyStudent: false }
+        data: { isDutyStudent: false, dutyRoleId: null }
       });
       if (dutyStudentIds.length > 0) {
-        for (const uid of dutyStudentIds) {
+        for (const item of dutyStudentIds) {
+          const uid = typeof item === 'string' ? item : item.userId;
+          const roleId = typeof item === 'object' ? item.dutyRoleId : null;
           await prisma.groupMember.upsert({
             where: {
               userId_groupId: {
@@ -149,11 +150,12 @@ export async function PUT(request, { params }) {
                 groupId: id
               }
             },
-            update: { isDutyStudent: true },
+            update: { isDutyStudent: true, dutyRoleId: roleId },
             create: {
               userId: uid,
               groupId: id,
-              isDutyStudent: true
+              isDutyStudent: true,
+              dutyRoleId: roleId
             }
           });
         }

@@ -15,9 +15,16 @@ export default function DutyStudentsTab() {
 
   const fetchDutyStudents = async () => {
     try {
-      const res = await fetch('/api/admin/groups');
-      if (res.ok) {
-        const groups = await res.json();
+      const [resGroups, resRoles] = await Promise.all([
+        fetch('/api/admin/groups', { cache: 'no-store' }),
+        fetch('/api/admin/roles', { cache: 'no-store' })
+      ]);
+      
+      if (resGroups.ok && resRoles.ok) {
+        const groups = await resGroups.json();
+        const roles = await resRoles.json();
+        const roleMap = {};
+        roles.forEach(r => roleMap[r.id] = r.name);
         
         let allDuty = [];
         groups.forEach(group => {
@@ -27,7 +34,8 @@ export default function DutyStudentsTab() {
                 allDuty.push({
                   id: `${gm.userId}-${group.id}`,
                   student: gm.user,
-                  group: group
+                  group: group,
+                  roleName: gm.dutyRoleId ? roleMap[gm.dutyRoleId] : 'תורן (ללא הגדרת סוג)'
                 });
               }
             });
@@ -76,6 +84,7 @@ export default function DutyStudentsTab() {
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
                   <th style={{ padding: '12px', textAlign: 'right', color: '#64748b' }}>שם החניך התורן</th>
+                  <th style={{ padding: '12px', textAlign: 'right', color: '#64748b' }}>סוג תורן</th>
                   <th style={{ padding: '12px', textAlign: 'right', color: '#64748b' }}>מסגרת (כיתה/קבוצה)</th>
                   <th style={{ padding: '12px', textAlign: 'right', color: '#64748b' }}>פעולות</th>
                 </tr>
@@ -84,6 +93,7 @@ export default function DutyStudentsTab() {
                 {filtered.map(item => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px', fontWeight: 'bold', color: '#1e293b' }}>{item.student.fullName}</td>
+                    <td style={{ padding: '12px', color: '#475569', fontSize: '14px' }}>{item.roleName}</td>
                     <td style={{ padding: '12px' }}>
                       <span style={{ padding: '4px 8px', background: item.group.type === 'class' ? '#dbeafe' : '#fef3c7', color: item.group.type === 'class' ? '#1e3a8a' : '#92400e', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold' }}>
                         {item.group.name} ({item.group.type === 'class' ? 'כיתה' : 'קבוצה'})

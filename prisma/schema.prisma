@@ -90,6 +90,7 @@ model GroupMember {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   group            Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   isDutyStudent    Boolean  @default(false)
+  dutyRoleId       String?
   joinedAt         DateTime @default(now())
 
   @@unique([userId, groupId])
@@ -258,6 +259,7 @@ model CustomRole {
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name        String
   permissions String   // Stored as JSON array string, e.g. '["manage_events", "manage_settings"]'
+  type        String   @default("staff") // "staff" or "duty_student"
   users       User[]
 
   @@unique([tenantId, name])

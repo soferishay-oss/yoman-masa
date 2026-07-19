@@ -44,7 +44,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, permissions } = await request.json();
+    const { name, permissions, type } = await request.json();
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -54,7 +54,8 @@ export async function POST(request) {
       data: {
         tenantId,
         name,
-        permissions: JSON.stringify(permissions || [])
+        permissions: JSON.stringify(permissions || []),
+        type: type || 'staff'
       }
     });
 

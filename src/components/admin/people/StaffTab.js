@@ -12,6 +12,8 @@ export default function StaffTab() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
   const { show, confirm } = useToast();
 
   const [formData, setFormData] = useState({
@@ -165,6 +167,23 @@ export default function StaffTab() {
         </form>
       )}
 
+      {selectedIds.length > 0 && (
+        <div style={{ background: '#e0f2fe', padding: '10px 20px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #bae6fd' }}>
+          <div style={{ fontWeight: 'bold', color: '#0284c7' }}>
+            {selectedIds.length} אנשי צוות נבחרו
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={handleBulkDelete}
+              disabled={isBulkLoading}
+              style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              מחק נבחרים
+            </button>
+          </div>
+        </div>
+      )}
+
       {editingStaff && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
           <form onSubmit={handleEditStaff} style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px', padding: '25px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -223,6 +242,13 @@ export default function StaffTab() {
         <table className={styles.table} style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>
+              <th style={{ padding: '15px', width: '40px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.length === staff.length && staff.length > 0} 
+                  onChange={handleSelectAll} 
+                />
+              </th>
               <th style={{ padding: '15px' }}>שם מלא</th>
               <th style={{ padding: '15px' }}>תפקיד והרשאות</th>
               <th style={{ padding: '15px' }}>התקשרות</th>
@@ -233,6 +259,13 @@ export default function StaffTab() {
           <tbody>
             {staff.map(user => (
               <tr key={user.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <td style={{ padding: '15px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.includes(user.id)} 
+                    onChange={() => handleSelectOne(user.id)} 
+                  />
+                </td>
                 <td style={{ padding: '15px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '50%' }}><Shield size={16} /></div>
@@ -270,7 +303,7 @@ export default function StaffTab() {
               </tr>
             ))}
             {staff.length === 0 && (
-              <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>לא נמצאו אנשי צוות.</td></tr>
+              <tr><td colSpan="6" style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>לא נמצאו אנשי צוות.</td></tr>
             )}
           </tbody>
         </table>

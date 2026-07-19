@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { Shield, Plus, Trash2, Edit2, X, Check } from 'lucide-react';
+import { Shield, Plus, Trash2, Edit2, X, Check, Users, UserCheck } from 'lucide-react';
 import styles from '@/app/page.module.css';
 
-const AVAILABLE_PERMISSIONS = [
+const AVAILABLE_PERMISSIONS_STAFF = [
   { id: 'manage_settings', label: 'ניהול הגדרות מערכת' },
   { id: 'manage_moderation', label: 'ניהול סינון תכנים' },
   { id: 'create_events', label: 'יצירת אירועים ואישורים' },
@@ -13,11 +13,18 @@ const AVAILABLE_PERMISSIONS = [
   { id: 'view_reports', label: 'צפייה בדוחות אנליטיקה' },
 ];
 
+const AVAILABLE_PERMISSIONS_DUTY = [
+  { id: 'duty_send_messages', label: 'שליחת הודעות לקבוצה/כיתה' },
+  { id: 'duty_view_trips', label: 'צפייה בהרשמה לטיול' },
+  { id: 'duty_bus_boarding', label: 'ניהול עלייה לאוטובוס' },
+];
+
 export default function RolesTab() {
   const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  const [activeView, setActiveView] = useState('staff'); // 'staff' or 'duty_student'
   
   const [roleName, setRoleName] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState([]);
@@ -82,7 +89,11 @@ export default function RolesTab() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: roleName, permissions: selectedPermissions })
+        body: JSON.stringify({ 
+          name: roleName, 
+          permissions: selectedPermissions,
+          type: activeView 
+        })
       });
 
       if (res.ok) {
@@ -99,7 +110,7 @@ export default function RolesTab() {
   };
 
   const handleDelete = async (role) => {
-    if (role._count?.users > 0) {
+    if (role.type === 'staff' && role._count?.users > 0) {
       show('לא ניתן למחוק תפקיד שמשויך לאנשי צוות', 'error');
       return;
     }
@@ -120,6 +131,9 @@ export default function RolesTab() {
     }
   };
 
+  const currentRoles = roles.filter(r => (r.type || 'staff') === activeView);
+  const currentAvailablePermissions = activeView === 'staff' ? AVAILABLE_PERMISSIONS_STAFF : AVAILABLE_PERMISSIONS_DUTY;
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -128,20 +142,46 @@ export default function RolesTab() {
           תפקידים והרשאות
         </h2>
         <button className={styles.primaryButton} onClick={openCreateModal}>
-          <Plus size={18} /> תפקיד חדש
+          <Plus size={18} /> תפקיד {activeView === 'staff' ? 'צוות' : 'תורן'} חדש
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button 
+          onClick={() => setActiveView('staff')}
+          style={{ 
+            padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px',
+            background: activeView === 'staff' ? '#e0f2fe' : '#f1f5f9',
+            color: activeView === 'staff' ? '#0284c7' : '#64748b'
+          }}
+        >
+          <Users size={18} /> תפקידי צוות
+        </button>
+        <button 
+          onClick={() => setActiveView('duty_student')}
+          style={{ 
+            padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px',
+            background: activeView === 'duty_student' ? '#e0f2fe' : '#f1f5f9',
+            color: activeView === 'duty_student' ? '#0284c7' : '#64748b'
+          }}
+        >
+          <UserCheck size={18} /> תפקידי תורנים
         </button>
       </div>
 
       <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
         <p style={{ color: '#64748b', marginBottom: '20px' }}>
-          כאן תוכלו להגדיר תפקידים (כמו "מחנך", "מדריך", "מנהל"), ולשייך לכל תפקיד הרשאות ספציפיות במערכת. כשאיש צוות ישויך לתפקיד, הוא יקבל אוטומטית את ההרשאות שלו.
+          {activeView === 'staff' 
+            ? 'כאן תוכלו להגדיר תפקידים (כמו "מחנך", "מדריך", "מנהל"), ולשייך לכל תפקיד הרשאות ספציפיות במערכת.'
+            : 'כאן תוכלו להגדיר תפקידים לתורנים (כמו "תורן קבוע", "תורן זמני"), ולשייך לכל תפקיד תורן הרשאות ספציפיות.'
+          }
         </p>
 
         {isLoading ? (
           <p>טוען תפקידים...</p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-            {roles.map(role => {
+            {currentRoles.map(role => {
               const perms = JSON.parse(role.permissions || '[]');
               return (
                 <div key={role.id} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', position: 'relative' }}>
@@ -151,18 +191,20 @@ export default function RolesTab() {
                       <button onClick={() => openEditModal(role)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(role)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: role._count?.users > 0 ? '#cbd5e1' : '#ef4444' }} title={role._count?.users > 0 ? "תפקיד בשימוש" : "מחק תפקיד"}>
+                      <button onClick={() => handleDelete(role)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: (role.type === 'staff' && role._count?.users > 0) ? '#cbd5e1' : '#ef4444' }} title={(role.type === 'staff' && role._count?.users > 0) ? "תפקיד בשימוש" : "מחק תפקיד"}>
                         <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
                   
-                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px' }}>
-                    {role._count?.users} אנשי צוות משויכים
-                  </div>
+                  {role.type === 'staff' && (
+                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px' }}>
+                      {role._count?.users} אנשי צוות משויכים
+                    </div>
+                  )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    {AVAILABLE_PERMISSIONS.map(ap => {
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: role.type === 'staff' ? 0 : '10px' }}>
+                    {currentAvailablePermissions.map(ap => {
                       const hasPerm = perms.includes(ap.id);
                       if (!hasPerm) return null;
                       return (
@@ -177,8 +219,8 @@ export default function RolesTab() {
               );
             })}
             
-            {roles.length === 0 && (
-              <p style={{ color: '#64748b', gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>לא הוגדרו תפקידים. הוסף תפקיד ראשון כדי להתחיל.</p>
+            {currentRoles.length === 0 && (
+              <p style={{ color: '#64748b', gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>לא הוגדרו תפקידים מסוג זה. הוסף תפקיד ראשון כדי להתחיל.</p>
             )}
           </div>
         )}
@@ -189,7 +231,7 @@ export default function RolesTab() {
           <div style={{ background: 'white', borderRadius: '16px', width: '100%', maxWidth: '500px', padding: '25px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>{editingRole ? 'עריכת תפקיד' : 'תפקיד חדש'}</h2>
+              <h2 style={{ margin: 0 }}>{editingRole ? 'עריכת תפקיד' : `תפקיד ${activeView === 'staff' ? 'צוות' : 'תורן'} חדש`}</h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
                 <X size={24} />
               </button>
@@ -198,7 +240,9 @@ export default function RolesTab() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#334155' }}>שם התפקיד (למשל: 'מחנך י"א')</label>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#334155' }}>
+                  שם התפקיד (למשל: {activeView === 'staff' ? "'מחנך י\"א'" : "'תורן זמני'"})
+                </label>
                 <input 
                   type="text" 
                   value={roleName}
@@ -210,8 +254,8 @@ export default function RolesTab() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: '#334155' }}>הרשאות מערכת:</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  {AVAILABLE_PERMISSIONS.map(perm => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', maxHeight: '200px', overflowY: 'auto' }}>
+                  {currentAvailablePermissions.map(perm => (
                     <label key={perm.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                       <input 
                         type="checkbox" 
