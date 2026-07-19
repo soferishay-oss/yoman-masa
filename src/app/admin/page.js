@@ -5,10 +5,15 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, L
 import { Users, AlertTriangle, Activity, CalendarCheck, BookOpen } from 'lucide-react';
 import styles from './dashboard.module.css';
 import Link from 'next/link';
+import YearTransitionWizard from '@/components/admin/YearTransitionWizard';
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showTransitionWizard, setShowTransitionWizard] = useState(false);
+
+  const currentMonth = new Date().getMonth() + 1; // 1-12
+  const showTransitionBanner = currentMonth === 7 || currentMonth === 8;
 
   useEffect(() => {
     async function fetchData() {
@@ -42,6 +47,27 @@ export default function AdminDashboard() {
         <h1>קוקפיט ניהול</h1>
         <p>מבט על לכל הפעילות במוסד</p>
       </header>
+
+      {showTransitionBanner && !showTransitionWizard && (
+        <div style={{ backgroundColor: '#ebf8ff', border: '1px solid #3b82f6', borderRadius: '12px', padding: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: 0, color: '#1e3a8a' }}>שנת הלימודים הבאה מתקרבת!</h3>
+            <p style={{ margin: 0, color: '#3b82f6', fontSize: '14px' }}>הגיע הזמן לעדכן את הכיתות והמחנכים לשנה החדשה ולשמור את היסטוריית המסע.</p>
+          </div>
+          <button 
+            onClick={() => setShowTransitionWizard(true)}
+            style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            התחל מעבר שנה
+          </button>
+        </div>
+      )}
+
+      {showTransitionWizard && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <YearTransitionWizard onComplete={() => setShowTransitionWizard(false)} />
+        </div>
+      )}
 
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>

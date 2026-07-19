@@ -12,7 +12,8 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
   const [dutyRoles, setDutyRoles] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('students'); // 'students' | 'staff'
+  const [activeTab, setActiveTab] = useState('students'); // 'students' | 'staff' | 'history'
+  const [historyData, setHistoryData] = useState([]);
   const { show, confirm } = useToast();
 
   useEffect(() => {
@@ -21,11 +22,12 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
 
   const fetchData = async () => {
     try {
-      const [groupRes, studentsRes, staffRes, rolesRes] = await Promise.all([
+      const [groupRes, studentsRes, staffRes, rolesRes, historyRes] = await Promise.all([
         fetch(`/api/admin/groups/${groupId}`, { cache: 'no-store' }),
         fetch('/api/admin/users?role=student', { cache: 'no-store' }),
         fetch('/api/admin/users?role=non_student', { cache: 'no-store' }),
-        fetch('/api/admin/roles', { cache: 'no-store' })
+        fetch('/api/admin/roles', { cache: 'no-store' }),
+        fetch(`/api/admin/groups/${groupId}/history`, { cache: 'no-store' })
       ]);
       
       if (groupRes.ok) {
@@ -42,6 +44,9 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
       if (rolesRes.ok) {
         const allRoles = await rolesRes.json();
         setDutyRoles(allRoles.filter(r => r.type === 'duty_student'));
+      }
+      if (historyRes && historyRes.ok) {
+        setHistoryData(await historyRes.json());
       }
     } catch (err) {
       console.error(err);
@@ -199,6 +204,12 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
               >
                 שיוך אנשי צוות ({managers.length})
               </button>
+              <button 
+                onClick={() => setActiveTab('history')}
+                style={{ background: 'none', border: 'none', padding: '5px 0', borderBottom: activeTab === 'history' ? '2px solid var(--primary-color)' : '2px solid transparent', color: activeTab === 'history' ? 'var(--primary-color)' : '#64748b', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}
+              >
+                היסטוריה ({historyData.length})
+              </button>
             </div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', alignSelf: 'flex-start' }}>
@@ -212,7 +223,9 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
           {/* List (Right Side) */}
           <div style={{ flex: 1, padding: '20px', overflowY: 'auto', borderLeft: '1px solid #e2e8f0' }}>
             <h3 style={{ marginTop: 0, color: '#1e293b' }}>
-              {activeTab === 'students' ? `תלמידים בפנים (${members.length})` : `אנשי צוות משוייכים (${managers.length})`}
+              {activeTab === 'students' && `תלמידים בפנים (${members.length})`}
+              {activeTab === 'staff' && `אנשי צוות משוייכים (${managers.length})`}
+              {activeTab === 'history' && 'היסטוריית הכיתה'}
             </h3>
             
             {isLoading ? <p>טוען...</p> : (
@@ -294,6 +307,15 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
 
                 {activeTab === 'students' && members.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>אין תלמידים משובצים כרגע.</p>}
                 {activeTab === 'staff' && managers.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>אין אנשי צוות משוייכים לקבוצה זו.</p>}
+
+                {activeTab === 'history' && historyData.map(h => (
+                  <div key={h.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '16px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#f8fafc' }}>
+                    <div style={{ fontWeight: 'bold', color: '#1e3a8a', fontSize: '16px' }}>שנת הלימודים: {h.academicYear.name}</div>
+                    <div style={{ color: '#334155' }}><strong>שם הכיתה אז:</strong> {h.groupName}</div>
+                    <div style={{ color: '#334155' }}><strong>צוות משויך אז:</strong> {h.managerNames}</div>
+                  </div>
+                ))}
+                {activeTab === 'history' && historyData.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>אין עדיין היסטוריה שמורה לכיתה זו.</p>}
               </div>
             )}
           </div>
@@ -301,7 +323,9 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
           {/* Add Members (Left Side) */}
           <div style={{ width: '300px', padding: '20px', background: '#f8fafc', overflowY: 'auto' }}>
             <h3 style={{ marginTop: 0, color: '#1e293b' }}>
-              {activeTab === 'students' ? 'הוסף תלמידים' : 'הוסף אנשי צוות'}
+              {activeTab === 'students' && 'הוסף תלמידים'}
+              {activeTab === 'staff' && 'הוסף אנשי צוות'}
+              {activeTab === 'history' && 'מידע נוסף'}
             </h3>
             
             <div style={{ position: 'relative', marginBottom: '15px' }}>
@@ -311,11 +335,18 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
                 placeholder="חפש לפי שם..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '10px 30px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                disabled={activeTab === 'history'}
+                style={{ width: '100%', padding: '10px 30px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: activeTab === 'history' ? '#f1f5f9' : '#fff' }}
               />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {activeTab === 'history' && (
+                <div style={{ padding: '10px', color: '#64748b', fontSize: '13px', lineHeight: '1.5' }}>
+                  לשונית ההיסטוריה מציגה את מסע הכיתה לאורך שנות הלימודים הקודמות כפי שנשמרו בעת מעבר השנה. <br/><br/>
+                  אם תרצה לראות את אירועי העבר של הכיתה, היכנס ללשונית היומן או המשימות וחפש לפי תאריכים מוקדמים.
+                </div>
+              )}
               {activeTab === 'students' && searchResultsStudents.slice(0, 50).map(student => (
                 <div key={student.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <span style={{ fontSize: '14px', color: '#334155' }}>{student.fullName}</span>
