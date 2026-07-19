@@ -1,40 +1,36 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth';
-import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const bcrypt = require('bcryptjs');
 
-export async function POST(request) {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth_token')?.value;
-    const auth = token ? await verifyToken(token) : null;
-    const tenantId = auth?.tenantId;
-    const adminRole = auth?.role?.toLowerCase();
-
-    if (!tenantId || adminRole !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+async function testImport() {
+  const users = [
+    {
+      "שם משפחה": "כהן",
+      "שם פרטי": "יוסי",
+      "תז": "012345678",
+      "כיתה": "ט",
+      "מקבילה": "1",
+      "טלפון נייד": "0501234567"
+    },
+    {
+      "שם משפחה": "לוי",
+      "שם פרטי": "משה",
+      "תז": "012345679",
+      "כיתה": "ט",
+      "מקבילה": "2",
+      "טלפון נייד": "0501234568"
     }
+  ];
+  const role = "student";
+  const tenantId = "1"; // Assuming tenant 1 exists
+  const nameFormat = "last_first";
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: { nameFormat: true }
-    });
-    const nameFormat = tenant?.nameFormat || 'last_first';
+  const defaultPasswordHash = await bcrypt.hash('1234', 10);
+  const classCache = new Map();
+  let importedCount = 0;
 
-    const { users, role } = await request.json();
-    if (!users || !Array.isArray(users)) {
-      return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
-    }
-
-    let importedCount = 0;
-    const defaultPasswordHash = await bcrypt.hash('1234', 10);
-
-    // Cache classes by name to avoid duplicate DB queries/creations
-    const classCache = new Map();
-
-    for (const rawUser of users) {
-      // Find expected keys (heb or eng)
+  for (const rawUser of users) {
+    try {
       const rawNationalId = rawUser['תז'] || rawUser['ת.ז.'] || rawUser['nationalId'];
       const rawFirstName = rawUser['שם פרטי'] || rawUser['firstName'];
       const rawLastName = rawUser['שם משפחה'] || rawUser['lastName'];
@@ -44,7 +40,6 @@ export async function POST(request) {
       const rawClass = rawUser['כיתה'] || rawUser['class'] || rawUser['שכבה'];
       const rawParallel = rawUser['מקבילה'];
 
-      // Build full name if separate parts provided
       let finalFirstName = rawFirstName || null;
       let finalLastName = rawLastName || null;
       let finalFullName = rawFullName || null;
@@ -69,7 +64,7 @@ export async function POST(request) {
       }
 
       if (!finalFullName || (!rawPhone && !rawNationalId)) {
-        continue; // Skip invalid rows
+        continue;
       }
 
       let cleanPhone = null;
@@ -78,11 +73,9 @@ export async function POST(request) {
         if (cleanPhone.length < 9) cleanPhone = null;
       }
       
-      let nationalIdStr = rawNationalId ? String(rawNationalId).trim() : null;
-      if (nationalIdStr === '') nationalIdStr = null;
+      const nationalIdStr = rawNationalId ? String(rawNationalId).trim() : null;
 
       let classId = null;
-
       let className = null;
       if (rawClass) className = rawClass.trim();
       if (rawParallel) className = className ? `${className} ${rawParallel.trim()}` : rawParallel.trim();
@@ -91,7 +84,6 @@ export async function POST(request) {
         if (classCache.has(className)) {
           classId = classCache.get(className);
         } else {
-          // Find or create class
           let cls = await prisma.group.findFirst({
             where: { tenantId, type: 'class', name: className }
           });
@@ -109,7 +101,6 @@ export async function POST(request) {
         }
       }
 
-      // Check if user already exists
       let existingUser = null;
       if (nationalIdStr) {
         existingUser = await prisma.user.findFirst({ where: { tenantId, nationalId: nationalIdStr } });
@@ -119,7 +110,6 @@ export async function POST(request) {
       }
 
       if (existingUser) {
-        // Update existing user with new data if provided
         await prisma.user.update({
           where: { id: existingUser.id },
           data: {
@@ -133,7 +123,6 @@ export async function POST(request) {
           }
         });
       } else {
-        // Create new user
         await prisma.user.create({
           data: {
             tenantId,
@@ -150,11 +139,12 @@ export async function POST(request) {
         });
         importedCount++;
       }
+    } catch (e) {
+      console.error("Error inserting row:", rawUser);
+      console.error(e);
     }
-
-    return NextResponse.json({ success: true, count: importedCount });
-  } catch (error) {
-    console.error('Failed to import users:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
+  console.log("Imported", importedCount);
 }
+
+testImport().finally(() => prisma.$disconnect());

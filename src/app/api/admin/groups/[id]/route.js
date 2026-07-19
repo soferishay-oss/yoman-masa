@@ -26,6 +26,9 @@ export async function GET(request, { params }) {
           include: {
             user: { select: { id: true, fullName: true, phoneNumber: true } }
           }
+        },
+        managers: {
+          select: { id: true, fullName: true, phoneNumber: true }
         }
       }
     });

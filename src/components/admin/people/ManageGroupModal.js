@@ -185,7 +185,7 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
                 onClick={() => setActiveTab('staff')}
                 style={{ background: 'none', border: 'none', padding: '5px 0', borderBottom: activeTab === 'staff' ? '2px solid var(--primary-color)' : '2px solid transparent', color: activeTab === 'staff' ? 'var(--primary-color)' : '#64748b', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}
               >
-                אנשי צוות מנהלים ({managers.length})
+                שיוך אנשי צוות ({managers.length})
               </button>
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
           {/* List (Right Side) */}
           <div style={{ flex: 1, padding: '20px', overflowY: 'auto', borderLeft: '1px solid #e2e8f0' }}>
             <h3 style={{ marginTop: 0, color: '#1e293b' }}>
-              {activeTab === 'students' ? `תלמידים בפנים (${members.length})` : `מנהלים בפנים (${managers.length})`}
+              {activeTab === 'students' ? `תלמידים בפנים (${members.length})` : `אנשי צוות משוייכים (${managers.length})`}
             </h3>
             
             {isLoading ? <p>טוען...</p> : (
@@ -247,7 +247,7 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
                 ))}
 
                 {activeTab === 'students' && members.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>אין תלמידים משובצים כרגע.</p>}
-                {activeTab === 'staff' && managers.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>אין אנשי צוות המנהלים קבוצה זו.</p>}
+                {activeTab === 'staff' && managers.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', padding: '20px' }}>אין אנשי צוות משוייכים לקבוצה זו.</p>}
               </div>
             )}
           </div>
