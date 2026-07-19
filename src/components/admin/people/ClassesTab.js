@@ -122,7 +122,7 @@ export default function ClassesTab() {
               onClick={() => setManagingClass(cls)}
               style={{ width: '100%', padding: '10px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
             >
-              נהל תלמידים בכיתה
+              נהל משתתפים וצוות
             </button>
           </div>
         ))}

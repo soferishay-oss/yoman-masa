@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const [institutionType, setInstitutionType] = useState('highschool');
   const [studyYears, setStudyYears] = useState(1);
   const [moderationLevel, setModerationLevel] = useState(3);
+  const [nameFormat, setNameFormat] = useState('last_first');
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
         if (data.institutionType) setInstitutionType(data.institutionType);
         if (data.studyYears) setStudyYears(data.studyYears);
         if (data.moderationLevel) setModerationLevel(data.moderationLevel);
+        if (data.nameFormat) setNameFormat(data.nameFormat);
       }
     } catch (error) {
       console.error('Failed to fetch tenant:', error);
@@ -51,7 +53,7 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/tenant', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel }) 
+        body: JSON.stringify({ name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat }) 
       });
       if (res.ok) {
         setSaveStatus('ההגדרות נשמרו בהצלחה!');
@@ -197,6 +199,14 @@ export default function AdminDashboard() {
             <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={dateMode} onChange={(e) => setDateMode(e.target.value)}>
               <option value="hebrew">לוח שנה עברי</option>
               <option value="gregorian">לוח שנה לועזי</option>
+            </select>
+          </div>
+
+          <div style={{marginBottom:'15px'}}>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>תצוגת שמות תלמידים (ברירת מחדל)</label>
+            <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={nameFormat} onChange={(e) => setNameFormat(e.target.value)}>
+              <option value="last_first">שם משפחה קודם (לדוגמה: ישראלי ישראל)</option>
+              <option value="first_last">שם פרטי קודם (לדוגמה: ישראל ישראלי)</option>
             </select>
           </div>
 

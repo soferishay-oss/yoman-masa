@@ -34,7 +34,7 @@ export default function Home() {
       const res = await fetch('/api/profile');
       if(res.ok) {
         const data = await res.json();
-        setUserName(data.fullName);
+        setUserName(data.firstName || data.fullName);
       }
     }
     fetchTasks();

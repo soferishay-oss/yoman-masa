@@ -49,6 +49,7 @@ export async function GET(request) {
     return NextResponse.json({
       id: user.id,
       fullName: user.fullName,
+      firstName: user.firstName,
       phoneNumber: user.phoneNumber,
       email: user.email,
       role: user.role,

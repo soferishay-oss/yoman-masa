@@ -49,6 +49,7 @@ export async function PUT(request) {
     if (data.institutionType !== undefined) updateData.institutionType = data.institutionType;
     if (data.studyYears !== undefined) updateData.studyYears = parseInt(data.studyYears, 10);
     if (data.moderationLevel !== undefined) updateData.moderationLevel = parseInt(data.moderationLevel, 10);
+    if (data.nameFormat !== undefined) updateData.nameFormat = data.nameFormat;
     if (data.primaryColor !== undefined) {
       updateData.themeConfig = { primaryColor: data.primaryColor };
     }

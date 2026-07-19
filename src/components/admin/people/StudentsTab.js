@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { GraduationCap, Plus, Upload, Trash2, Edit2, X, Star } from 'lucide-react';
+import ExcelImportModal from './ExcelImportModal';
 import styles from '@/app/page.module.css';
 
 export default function StudentsTab() {
@@ -9,8 +10,8 @@ export default function StudentsTab() {
   const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showExcelImport, setShowExcelImport] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
-  const fileInputRef = useRef(null);
   const { show, confirm } = useToast();
 
   const [formData, setFormData] = useState({
@@ -109,52 +110,9 @@ export default function StudentsTab() {
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target.result;
-      const rows = text.split('\n').map(row => row.trim()).filter(row => row);
-      if (rows.length < 2) {
-        show('קובץ לא חוקי או ריק', 'error');
-        return;
-      }
-      
-      const headers = rows[0].split(',');
-      const studentsToImport = rows.slice(1).map(row => {
-        const values = row.split(',');
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header.trim()] = values[i]?.trim() || '';
-        });
-        return obj;
-      });
-
-      show('מייבא נתונים, אנא המתן...', 'info');
-      
-      try {
-        const res = await fetch('/api/admin/users/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ users: studentsToImport, role: 'student' })
-        });
-        
-        if (res.ok) {
-          const result = await res.json();
-          show(`יובאו בהצלחה ${result.count} תלמידים חדשים!`);
-          fetchData();
-        } else {
-          const err = await res.json();
-          show('שגיאה בייבוא: ' + (err.error || ''), 'error');
-        }
-      } catch (error) {
-        show('שגיאה בתקשורת', 'error');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+  const handleImportComplete = () => {
+    setShowExcelImport(false);
+    fetchData();
   };
 
   if (isLoading) return <div>טוען תלמידים...</div>;
@@ -164,19 +122,12 @@ export default function StudentsTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>מאגר תלמידים</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <input 
-            type="file" 
-            accept=".csv" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            style={{ display: 'none' }} 
-          />
           <button 
-            onClick={() => fileInputRef.current.click()}
+            onClick={() => setShowExcelImport(true)}
             style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '10px 15px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-            title="ייבוא תלמידים מקובץ CSV"
+            title="ייבוא תלמידים מקובץ אקסל"
           >
-            <Upload size={18} /> ייבוא מ-CSV
+            <Upload size={18} /> ייבוא מאקסל
           </button>
           <button 
             onClick={() => {
@@ -321,6 +272,14 @@ export default function StudentsTab() {
           </tbody>
         </table>
       </div>
+
+      {showExcelImport && (
+        <ExcelImportModal 
+          role="student" 
+          onImportComplete={handleImportComplete} 
+          onClose={() => setShowExcelImport(false)} 
+        />
+      )}
     </div>
   );
 }

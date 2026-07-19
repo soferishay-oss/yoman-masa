@@ -19,6 +19,7 @@ model Tenant {
   studyYears       Int      @default(1)
   institutionType  String?  // e.g. "elementary", "highschool", "college"
   moderationLevel  Int      @default(3) // 1 to 5 (1=very permissive, 5=very strict)
+  nameFormat       String   @default("last_first") // "last_first" or "first_last"
   enabledModules   Json?
   retentionPolicy  String?
   createdAt        DateTime @default(now())
@@ -40,6 +41,8 @@ model User {
   tenantId         String
   tenant           Tenant   @relation(fields: [tenantId], references: [id])
   fullName         String
+  firstName        String?
+  lastName         String?
   nationalId       String?  @unique
   phoneNumber      String?  @unique
   email            String?  @unique

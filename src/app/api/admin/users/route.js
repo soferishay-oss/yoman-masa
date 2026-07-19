@@ -24,7 +24,9 @@ export async function GET(request) {
       status: { not: 'deleted' }
     };
     
-    if (roleFilter) {
+    if (roleFilter === 'non_student') {
+      whereClause.role = { not: 'student' };
+    } else if (roleFilter) {
       whereClause.role = roleFilter;
     }
 

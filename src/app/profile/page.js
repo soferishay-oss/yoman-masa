@@ -86,7 +86,7 @@ export default function ProfilePage() {
         <div className={styles.avatar}>
           <User size={40} />
         </div>
-        <h1 className={styles.name}>{profile.fullName}</h1>
+        <h1 className={styles.name}>{profile.firstName || profile.fullName}</h1>
         <span className={styles.group}>{profile.groupName}</span>
       </header>
 

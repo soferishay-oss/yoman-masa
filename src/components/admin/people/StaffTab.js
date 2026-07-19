@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { Shield, Plus, Upload, Trash2, Edit2, X } from 'lucide-react';
+import ExcelImportModal from './ExcelImportModal';
 import styles from '@/app/page.module.css';
 
 export default function StaffTab() {
@@ -9,8 +10,8 @@ export default function StaffTab() {
   const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showExcelImport, setShowExcelImport] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
-  const fileInputRef = useRef(null);
   const { show, confirm } = useToast();
 
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export default function StaffTab() {
   const fetchData = async () => {
     try {
       const [usersRes, rolesRes] = await Promise.all([
-        fetch('/api/admin/users?role=staff'),
+        fetch('/api/admin/users?role=non_student'),
         fetch('/api/admin/roles')
       ]);
       
@@ -117,52 +118,9 @@ export default function StaffTab() {
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target.result;
-      const rows = text.split('\n').map(row => row.trim()).filter(row => row);
-      if (rows.length < 2) {
-        show('קובץ לא חוקי או ריק', 'error');
-        return;
-      }
-      
-      const headers = rows[0].split(',');
-      const staffToImport = rows.slice(1).map(row => {
-        const values = row.split(',');
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header.trim()] = values[i]?.trim() || '';
-        });
-        return obj;
-      });
-
-      show('מייבא נתונים, אנא המתן...', 'info');
-      
-      try {
-        const res = await fetch('/api/admin/users/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ users: staffToImport, role: 'staff' })
-        });
-        
-        if (res.ok) {
-          const result = await res.json();
-          show(`יובאו בהצלחה ${result.count} אנשי צוות חדשים!`);
-          fetchData();
-        } else {
-          const err = await res.json();
-          show('שגיאה בייבוא: ' + (err.error || ''), 'error');
-        }
-      } catch (error) {
-        show('שגיאה בתקשורת', 'error');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+  const handleImportComplete = () => {
+    setShowExcelImport(false);
+    fetchData();
   };
 
   if (isLoading) return <div>טוען אנשי צוות...</div>;
@@ -172,18 +130,11 @@ export default function StaffTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>מאגר אנשי צוות</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <input 
-            type="file" 
-            accept=".csv" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            style={{ display: 'none' }} 
-          />
           <button 
-            onClick={() => fileInputRef.current.click()}
+            onClick={() => setShowExcelImport(true)}
             style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '10px 15px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
           >
-            <Upload size={18} /> ייבוא מ-CSV
+            <Upload size={18} /> ייבוא מאקסל
           </button>
           <button 
             onClick={() => {
@@ -205,15 +156,9 @@ export default function StaffTab() {
             <input type="text" placeholder="תעודת זהות (אופציונלי)" value={formData.nationalId} onChange={e => setFormData({...formData, nationalId: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
             <input type="tel" placeholder="מספר טלפון *" value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})} required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
             <input type="email" placeholder="אימייל (אופציונלי)" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
-            
             <select value={formData.customRoleId} onChange={e => setFormData({...formData, customRoleId: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
               <option value="">-- בחר הגדרת תפקיד --</option>
               {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-            
-            <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-              <option value="staff">סוג גישה: מורה / מדריך</option>
-              <option value="admin">סוג גישה: מנהל ראשי</option>
             </select>
           </div>
           <button type="submit" style={{ padding: '12px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>שמור איש צוות</button>
@@ -250,13 +195,6 @@ export default function StaffTab() {
                 <select value={formData.customRoleId} onChange={e => setFormData({...formData, customRoleId: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                   <option value="">-- ללא תפקיד מוגדר --</option>
                   {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>סוג גישה בסיסי</label>
-                <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                  <option value="staff">מורה / מדריך</option>
-                  <option value="admin">מנהל ראשי</option>
                 </select>
               </div>
             </div>
@@ -337,6 +275,14 @@ export default function StaffTab() {
           </tbody>
         </table>
       </div>
+
+      {showExcelImport && (
+        <ExcelImportModal 
+          role="staff" 
+          onImportComplete={handleImportComplete} 
+          onClose={() => setShowExcelImport(false)} 
+        />
+      )}
     </div>
   );
 }
