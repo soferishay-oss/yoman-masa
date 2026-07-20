@@ -31,9 +31,9 @@ export async function GET(request) {
     const activeEvent = await prisma.event.findFirst({
       where: {
         tenantId,
-        date: { gte: startOfDay }
+        scheduledDate: { gte: startOfDay }
       },
-      orderBy: { date: 'asc' }
+      orderBy: { scheduledDate: 'asc' }
     });
 
     // Fetch all students in the duty groups

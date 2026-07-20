@@ -13,6 +13,7 @@ export default function CalendarPage() {
   const [userPrefs, setUserPrefs] = useState({});
   const [personalDominantMode, setPersonalDominantMode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDayEvents, setSelectedDayEvents] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -162,6 +163,11 @@ export default function CalendarPage() {
             <div 
               key={i} 
               className={`${styles.dayCell} ${!dayObj.isCurrentMonth ? styles.notCurrentMonth : ''} ${isToday ? styles.today : ''}`}
+              onClick={() => {
+                if (dayEvents.length > 0 || dayObj.holidays?.length > 0 || dayObj.omer || dayObj.parasha) {
+                  setSelectedDayEvents({ dayObj, events: dayEvents });
+                }
+              }}
             >
               <div className={styles.dateLabels}>
                 {dominantMode === 'hebrew' ? (
@@ -210,6 +216,58 @@ export default function CalendarPage() {
           );
         })}
       </div>
+
+      {selectedDayEvents && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }} onClick={() => setSelectedDayEvents(null)}>
+          <div style={{
+            background: 'white', borderRadius: '12px', padding: '20px', width: '100%', maxWidth: '400px',
+            maxHeight: '80vh', overflowY: 'auto'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0, color: 'var(--primary-color)' }}>
+                {dominantMode === 'hebrew' ? selectedDayEvents.dayObj.hebrew : selectedDayEvents.dayObj.gregorian}
+              </h3>
+              <button onClick={() => setSelectedDayEvents(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#666' }}>&times;</button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {theme.themeConfig?.showParasha !== false && selectedDayEvents.dayObj.parasha && (
+                <div style={{ padding: '10px', background: 'var(--primary-light)', color: 'white', borderRadius: '8px' }}>
+                  <strong>{selectedDayEvents.dayObj.parasha}</strong>
+                </div>
+              )}
+              
+              {selectedDayEvents.dayObj.holidays?.map((h, idx) => (
+                <div key={`h-${idx}`} style={{ padding: '10px', border: '1px solid var(--primary-light)', color: 'var(--primary-color)', borderRadius: '8px' }}>
+                  <strong>{h}</strong>
+                </div>
+              ))}
+              
+              {selectedDayEvents.dayObj.omer && (
+                <div style={{ padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', textAlign: 'center' }}>
+                  {selectedDayEvents.dayObj.omer}
+                </div>
+              )}
+
+              {selectedDayEvents.events.map((ev, idx) => (
+                <div key={idx} style={{ 
+                  padding: '10px', 
+                  backgroundColor: ev.color || 'var(--primary-color)', 
+                  color: 'white', 
+                  borderRadius: '8px' 
+                }}>
+                  <div style={{ fontWeight: 'bold' }}>{ev.title}</div>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{ev.type !== 'station' && ev.type !== 'אחר' ? ev.type : ''}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

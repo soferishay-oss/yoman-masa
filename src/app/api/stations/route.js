@@ -15,23 +15,15 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the user to find their group
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { groupId: true }
-    });
+    // Stations are tenant-wide now, no need to filter by user's group
 
-    if (!user?.groupId) {
-      return NextResponse.json([]); // No group = no stations
-    }
-
-    // Get stations for this group
+    // Get stations for this tenant
     const stations = await prisma.station.findMany({
       where: {
-        groupId: user.groupId
+        tenantId
       },
       orderBy: {
-        date: 'asc'
+        orderIndex: 'asc'
       }
     });
 
