@@ -45,38 +45,40 @@ export default async function RootLayout({ children }) {
         
         {/* Bottom Navigation for Mobile-First App Shell */}
         {isStudent ? (
-          <nav className={styles.bottomNav}>
-            <Link href="/profile" className={styles.navItem}>
-              <div className={styles.icon}><User size={24} /></div>
-              <span>פרופיל אישי</span>
-            </Link>
-            <Link href="/letters" className={styles.navItem}>
-              <div className={styles.icon}><Heart size={24} /></div>
-              <span>מה כתבו לי</span>
-            </Link>
-            
-            <div className={styles.fabContainer}>
-              <Link href="/journal" className={styles.fab}>
-                <Plus size={32} />
+          <>
+            <div className={styles.fabWrapper}>
+              <Link href="/journal" className={styles.fabBtn}>
+                <Plus size={36} />
               </Link>
             </div>
             
-            <Link href="/calendar" className={styles.navItem}>
-              <div className={styles.icon}><Calendar size={24} /></div>
-              <span>לוח מסע</span>
-            </Link>
-            
-            {isDutyStudent && (
-              <Link href="/duty" className={`${styles.navItem} ${styles.dutyItem}`}>
-                <div className={styles.icon}><Shield size={24} /></div>
-                <span>תורן</span>
+            <nav className={styles.bottomNav}>
+              <Link href="/profile" className={styles.navItem}>
+                <div className={styles.icon}><User size={24} /></div>
+                <span>פרופיל אישי</span>
               </Link>
-            )}
-            <Link href="/" className={styles.navItem}>
-              <div className={styles.icon}><Home size={24} /></div>
-              <span>בית</span>
-            </Link>
-          </nav>
+              <Link href="/letters" className={styles.navItem}>
+                <div className={styles.icon}><Heart size={24} /></div>
+                <span>מה כתבו לי</span>
+              </Link>
+              
+              <Link href="/calendar" className={styles.navItem}>
+                <div className={styles.icon}><Calendar size={24} /></div>
+                <span>לוח מסע</span>
+              </Link>
+              
+              {isDutyStudent && (
+                <Link href="/duty" className={`${styles.navItem} ${styles.dutyItem}`}>
+                  <div className={styles.icon}><Shield size={24} /></div>
+                  <span>תורן</span>
+                </Link>
+              )}
+              <Link href="/" className={styles.navItem}>
+                <div className={styles.icon}><Home size={24} /></div>
+                <span>בית</span>
+              </Link>
+            </nav>
+          </>
         ) : (
           <nav className={styles.bottomNav}>
             <Link href="/profile" className={styles.navItem}>

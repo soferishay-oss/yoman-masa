@@ -41,38 +41,34 @@
   font-size: 24px;
 }
 
-.fabContainer {
+.fabWrapper {
+  position: fixed;
+  bottom: 45px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
-  top: -20px;
-  gap: 4px;
+  z-index: 1010;
+  pointer-events: none; /* Let clicks pass through if they miss the button */
 }
 
 .fabBtn {
-  width: 60px;
-  height: 60px;
+  width: 65px;
+  height: 65px;
   border-radius: 50%;
   background-color: var(--accent-color);
   color: var(--primary-color);
-  border: none;
-  font-size: 32px;
+  border: 4px solid white; /* Adds contrast against the background */
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(214, 158, 46, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.2s ease;
+  pointer-events: auto; /* Re-enable clicks for the button itself */
 }
 
 .fabBtn:hover {
   transform: scale(1.05);
-}
-
-.fabLabel {
-  color: white;
-  font-size: 12px;
-  position: relative;
-  top: -5px;
 }
