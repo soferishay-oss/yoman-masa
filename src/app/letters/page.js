@@ -87,7 +87,8 @@ export default function LettersPage() {
         setAiTranscription('');
         fetchLetters();
       } else {
-        toast.show('שגיאה בשליחת המכתב', 'error');
+        const errData = await res.json().catch(() => ({}));
+        toast.show(errData.error || 'שגיאה בשליחת המכתב', 'error');
       }
     } catch (error) {
       console.error(error);

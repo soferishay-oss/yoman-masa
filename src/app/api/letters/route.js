@@ -119,8 +119,10 @@ Message to check: "${content}"`;
             }
           });
           
+          const customModMsg = tenant?.themeConfig?.moderationMessage || 'ההודעה נפסלה לשליחה, מפני שאיננה עומדת בכללי האתיקה שלנו';
+          
           return NextResponse.json({ 
-            error: 'ההודעה נפסלה לשליחה. נסח אותה מחדש ושלח שוב', 
+            error: customModMsg, 
             details: result.reason 
           }, { status: 400 });
         }

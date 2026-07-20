@@ -24,6 +24,14 @@ export default function AdminDashboard() {
   const [showSchoolEvents, setShowSchoolEvents] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
+  
+  const presets = [
+    'ההודעה נפסלה לשליחה, מפני שאיננה עומדת בכללי האתיקה שלנו',
+    'שומר פיו ולשונו שומר מצרות נפשו',
+    'מוות וחיים ביד הלשון'
+  ];
+  const [moderationMessageSelect, setModerationMessageSelect] = useState(presets[0]);
+  const [customModerationMessage, setCustomModerationMessage] = useState('');
 
   useEffect(() => {
     fetchTenant();
@@ -47,6 +55,14 @@ export default function AdminDashboard() {
         if (data.studyYears) setStudyYears(data.studyYears);
         if (data.moderationLevel) setModerationLevel(data.moderationLevel);
         if (data.nameFormat) setNameFormat(data.nameFormat);
+        if (data.themeConfig?.moderationMessage) {
+          if (presets.includes(data.themeConfig.moderationMessage)) {
+            setModerationMessageSelect(data.themeConfig.moderationMessage);
+          } else {
+            setModerationMessageSelect('custom');
+            setCustomModerationMessage(data.themeConfig.moderationMessage);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to fetch tenant:', error);
@@ -63,7 +79,8 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
-          showHolidays, showParasha, showOmer, showSchoolEvents
+          showHolidays, showParasha, showOmer, showSchoolEvents,
+          moderationMessage: moderationMessageSelect === 'custom' ? customModerationMessage : moderationMessageSelect
         }) 
       });
       if (res.ok) {
@@ -230,6 +247,29 @@ export default function AdminDashboard() {
               <option value={4}>רמה 4 - שמרני (חוסם סלנג גס גם בצחוק)</option>
               <option value={5}>רמה 5 - מחמיר מאוד (אפס סובלנות לכל מילה שלילית או מרומזת)</option>
             </select>
+          </div>
+
+          <div style={{marginBottom:'15px'}}>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>הודעה לתלמיד על תוכן שנפסל</label>
+            <select 
+              style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1', marginBottom: moderationMessageSelect === 'custom' ? '10px' : '0'}} 
+              value={moderationMessageSelect} 
+              onChange={(e) => setModerationMessageSelect(e.target.value)}
+            >
+              {presets.map((p, i) => (
+                <option key={i} value={p}>{p}</option>
+              ))}
+              <option value="custom">אחר (הכנס טקסט חופשי)</option>
+            </select>
+            {moderationMessageSelect === 'custom' && (
+              <input 
+                type="text" 
+                className={styles.input} 
+                placeholder="הקלד כאן את ההודעה הרצויה..."
+                value={customModerationMessage}
+                onChange={(e) => setCustomModerationMessage(e.target.value)}
+              />
+            )}
           </div>
         </div>
       </section>
