@@ -75,25 +75,32 @@ export async function POST(request) {
           // Create history snapshot for the outgoing year
           const managerNamesStr = currentGroup.managers.map(m => m.fullName).join(', ') || 'ללא מחנך';
           
-          // Upsert history in case transition was run multiple times or overlapping
-          await tx.groupYearHistory.upsert({
+          // Manual upsert to avoid index issues
+          const existingHistory = await tx.groupYearHistory.findFirst({
             where: {
-              groupId_academicYearId: {
-                groupId: id,
-                academicYearId: currentYear.id
-              }
-            },
-            create: {
               groupId: id,
-              academicYearId: currentYear.id,
-              groupName: originalName,
-              managerNames: managerNamesStr
-            },
-            update: {
-              groupName: originalName,
-              managerNames: managerNamesStr
+              academicYearId: currentYear.id
             }
           });
+
+          if (existingHistory) {
+            await tx.groupYearHistory.update({
+              where: { id: existingHistory.id },
+              data: {
+                groupName: originalName,
+                managerNames: managerNamesStr
+              }
+            });
+          } else {
+            await tx.groupYearHistory.create({
+              data: {
+                groupId: id,
+                academicYearId: currentYear.id,
+                groupName: originalName,
+                managerNames: managerNamesStr
+              }
+            });
+          }
         }
 
         // Update the group for the new year

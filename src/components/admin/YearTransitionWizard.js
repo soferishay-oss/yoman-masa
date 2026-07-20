@@ -7,23 +7,37 @@ export default function YearTransitionWizard({ onComplete }) {
   const [saving, setSaving] = useState(false);
   const [classes, setClasses] = useState([]);
   const [staff, setStaff] = useState([]);
+  const [currentYearName, setCurrentYearName] = useState('');
   
-  const [newYearName, setNewYearName] = useState('תשפ״ז');
+  const [newYearName, setNewYearName] = useState('');
   
   const toast = useToast();
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [groupsRes, staffRes] = await Promise.all([
+        const [groupsRes, staffRes, yearsRes] = await Promise.all([
           fetch('/api/admin/groups?type=class'),
-          fetch('/api/admin/users?role=non_student')
+          fetch('/api/admin/users?role=non_student'),
+          fetch('/api/admin/academic-years')
         ]);
-        if (groupsRes.ok && staffRes.ok) {
+        if (groupsRes.ok && staffRes.ok && yearsRes.ok) {
           const groupsData = await groupsRes.json();
           const staffData = await staffRes.json();
+          const yearsData = await yearsRes.json();
           
           setStaff(staffData);
+          
+          let currentYr = '';
+          const currentObj = yearsData.find(y => y.isCurrent);
+          if (currentObj) currentYr = currentObj.name;
+          setCurrentYearName(currentYr);
+
+          // Suggest next year
+          if (currentYr === 'תשפ״ה' || currentYr === 'תשפה') setNewYearName('תשפ״ו');
+          else if (currentYr === 'תשפ״ו' || currentYr === 'תשפו') setNewYearName('תשפ״ז');
+          else if (currentYr === 'תשפ״ז' || currentYr === 'תשפז') setNewYearName('תשפ״ח');
+          else setNewYearName('תשפ״_');
           
           // Pre-fill suggestions
           const mappedClasses = groupsData.map(c => {
@@ -103,6 +117,7 @@ export default function YearTransitionWizard({ onComplete }) {
       </div>
 
       <div style={{ marginBottom: '24px' }}>
+        <p style={{ margin: '0 0 10px 0', color: '#64748b' }}>שנת הלימודים הנוכחית: <strong>{currentYearName || 'לא מוגדרת'}</strong></p>
         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>שם השנה החדשה:</label>
         <input 
           type="text" 
@@ -140,23 +155,28 @@ export default function YearTransitionWizard({ onComplete }) {
                   />
                 </td>
                 <td style={{ padding: '12px' }}>
-                  <select 
-                    multiple
-                    size={2}
-                    value={c.managers}
-                    onChange={e => {
-                      const selected = Array.from(e.target.selectedOptions, option => option.value);
-                      const newClasses = [...classes];
-                      newClasses[index].managers = selected;
-                      setClasses(newClasses);
-                    }}
-                    disabled={c.archive}
-                    style={{ padding: '4px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '200px', backgroundColor: c.archive ? '#f1f5f9' : '#fff' }}
-                  >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '100px', overflowY: 'auto', background: c.archive ? '#f1f5f9' : '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', width: '200px' }}>
                     {staff.map(s => (
-                      <option key={s.id} value={s.id}>{s.fullName}</option>
+                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: c.archive ? '#94a3b8' : '#334155', cursor: c.archive ? 'not-allowed' : 'pointer' }}>
+                        <input 
+                          type="checkbox"
+                          checked={c.managers.includes(s.id)}
+                          onChange={e => {
+                            const newClasses = [...classes];
+                            if (e.target.checked) {
+                              newClasses[index].managers.push(s.id);
+                            } else {
+                              newClasses[index].managers = newClasses[index].managers.filter(id => id !== s.id);
+                            }
+                            setClasses(newClasses);
+                          }}
+                          disabled={c.archive}
+                        />
+                        {s.fullName}
+                      </label>
                     ))}
-                  </select>
+                    {staff.length === 0 && <span style={{ fontSize: '12px', color: '#94a3b8', padding: '4px' }}>אין אנשי צוות</span>}
+                  </div>
                 </td>
                 <td style={{ padding: '12px', textAlign: 'center' }}>
                   <input 
