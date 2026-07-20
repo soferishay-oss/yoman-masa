@@ -3,7 +3,8 @@
 import { useState, useContext, useEffect, useMemo } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import styles from './calendar.module.css';
-import { getCalendarGrid, getHebrewDate, getGregorianDate } from '@/lib/dateUtils';
+import { getCalendarGrid, getHebrewCalendarGrid, getHebrewDate, getGregorianDate } from '@/lib/dateUtils';
+import { HDate } from '@hebcal/core';
 import { ThemeContext } from '@/components/ThemeProvider';
 
 export default function CalendarPage() {
@@ -93,23 +94,41 @@ export default function CalendarPage() {
     }
   };
 
+  const dominantMode = personalDominantMode || theme.defaultDateMode || 'hebrew';
+
   const handlePrevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    if (dominantMode === 'hebrew') {
+      const h = new HDate(currentDate);
+      const prevMonthLastDay = new HDate(1, h.getMonth(), h.getFullYear()).abs() - 1;
+      setCurrentDate(new HDate(prevMonthLastDay).greg());
+    } else {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    }
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    if (dominantMode === 'hebrew') {
+      const h = new HDate(currentDate);
+      const nextMonthFirstDay = new HDate(1, h.getMonth(), h.getFullYear()).abs() + h.daysInMonth();
+      setCurrentDate(new HDate(nextMonthFirstDay).greg());
+    } else {
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    }
   };
 
   const grid = useMemo(() => {
+    if (dominantMode === 'hebrew') {
+      const h = new HDate(currentDate);
+      return getHebrewCalendarGrid(h.getFullYear(), h.getMonth(), theme.themeConfig || {});
+    }
     return getCalendarGrid(currentDate.getFullYear(), currentDate.getMonth(), theme.themeConfig || {});
-  }, [currentDate, theme.themeConfig]);
+  }, [currentDate, theme.themeConfig, dominantMode]);
   
   const weekdays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   const today = new Date();
 
-  const dominantMode = personalDominantMode || theme.defaultDateMode || 'hebrew';
+  const today = new Date();
 
   // Gather unique Hebrew/Gregorian months spanning this grid
   const hebrewMonthsInView = [...new Set(grid.filter(d => d.isCurrentMonth).map(d => `${d.hebrewMonthStr} ${d.hebrewYearStr}`))];

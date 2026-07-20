@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [showParasha, setShowParasha] = useState(true);
   const [showOmer, setShowOmer] = useState(true);
   const [showSchoolEvents, setShowSchoolEvents] = useState(true);
+  const [hebrewCalendarNikud, setHebrewCalendarNikud] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
   
@@ -50,6 +51,7 @@ export default function AdminDashboard() {
         if (data.themeConfig?.showParasha !== undefined) setShowParasha(data.themeConfig.showParasha);
         if (data.themeConfig?.showOmer !== undefined) setShowOmer(data.themeConfig.showOmer);
         if (data.themeConfig?.showSchoolEvents !== undefined) setShowSchoolEvents(data.themeConfig.showSchoolEvents);
+        if (data.themeConfig?.hebrewCalendarNikud !== undefined) setHebrewCalendarNikud(data.themeConfig.hebrewCalendarNikud);
         if (data.dominantDateMode) setDateMode(data.dominantDateMode);
         if (data.institutionType) setInstitutionType(data.institutionType);
         if (data.studyYears) setStudyYears(data.studyYears);
@@ -79,7 +81,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
-          showHolidays, showParasha, showOmer, showSchoolEvents,
+          showHolidays, showParasha, showOmer, showSchoolEvents, hebrewCalendarNikud,
           moderationMessage: moderationMessageSelect === 'custom' ? customModerationMessage : moderationMessageSelect
         }) 
       });
@@ -285,6 +287,10 @@ export default function AdminDashboard() {
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
               <input type="checkbox" checked={showParasha} onChange={e => setShowParasha(e.target.checked)} style={{ width: '18px', height: '18px' }} />
               <span>הצג פרשות שבוע בשבתות</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', paddingRight: '25px' }}>
+              <input type="checkbox" checked={hebrewCalendarNikud} onChange={e => setHebrewCalendarNikud(e.target.checked)} style={{ width: '18px', height: '18px' }} disabled={!showParasha && !showHolidays} />
+              <span>הצג חגים ופרשות עם ניקוד</span>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
               <input type="checkbox" checked={showOmer} onChange={e => setShowOmer(e.target.checked)} style={{ width: '18px', height: '18px' }} />
