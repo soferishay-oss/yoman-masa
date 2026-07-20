@@ -128,8 +128,6 @@ export default function CalendarPage() {
 
   const today = new Date();
 
-  const today = new Date();
-
   // Gather unique Hebrew/Gregorian months spanning this grid
   const hebrewMonthsInView = [...new Set(grid.filter(d => d.isCurrentMonth).map(d => `${d.hebrewMonthStr} ${d.hebrewYearStr}`))];
   const gregorianMonthsInView = [...new Set(grid.filter(d => d.isCurrentMonth).map(d => d.date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })))];
