@@ -53,36 +53,31 @@ export default async function RootLayout({ children }) {
             </div>
             
             <nav className={styles.bottomNav}>
-              <div className={styles.navHalf}>
-                <Link href="/profile" className={styles.navItem}>
-                  <div className={styles.icon}><User size={24} /></div>
-                  <span>פרופיל אישי</span>
-                </Link>
-                <Link href="/letters" className={styles.navItem}>
-                  <div className={styles.icon}><Heart size={24} /></div>
-                  <span>מה כתבו לי</span>
-                </Link>
-              </div>
+              <Link href="/profile" className={styles.navItem}>
+                <div className={styles.icon}><User size={24} /></div>
+                <span>פרופיל אישי</span>
+              </Link>
+              <Link href="/letters" className={styles.navItem}>
+                <div className={styles.icon}><Heart size={24} /></div>
+                <span>מה כתבו לי</span>
+              </Link>
               
-              <div className={styles.navSpacer}></div>
-
-              <div className={styles.navHalf}>
-                <Link href="/calendar" className={styles.navItem}>
-                  <div className={styles.icon}><Calendar size={24} /></div>
-                  <span>לוח מסע</span>
+              <Link href="/calendar" className={styles.navItem}>
+                <div className={styles.icon}><Calendar size={24} /></div>
+                <span>לוח מסע</span>
+              </Link>
+              
+              {isDutyStudent && (
+                <Link href="/duty" className={`${styles.navItem} ${styles.dutyItem}`}>
+                  <div className={styles.icon}><Shield size={24} /></div>
+                  <span>תורן</span>
                 </Link>
-                
-                {isDutyStudent && (
-                  <Link href="/duty" className={`${styles.navItem} ${styles.dutyItem}`}>
-                    <div className={styles.icon}><Shield size={24} /></div>
-                    <span>תורן</span>
-                  </Link>
-                )}
-                <Link href="/" className={styles.navItem}>
-                  <div className={styles.icon}><Home size={24} /></div>
-                  <span>בית</span>
-                </Link>
-              </div>
+              )}
+              
+              <Link href="/" className={styles.navItem}>
+                <div className={styles.icon}><Home size={24} /></div>
+                <span>בית</span>
+              </Link>
             </nav>
           </>
         ) : (
