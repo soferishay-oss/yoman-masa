@@ -62,6 +62,11 @@ export async function PUT(request) {
       themeConfigChanged = true;
     }
     
+    if (data.accentColor !== undefined) {
+      newThemeConfig.accentColor = data.accentColor;
+      themeConfigChanged = true;
+    }
+    
     if (data.showHolidays !== undefined) {
       newThemeConfig.showHolidays = data.showHolidays;
       themeConfigChanged = true;

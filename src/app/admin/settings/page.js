@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [slogan, setSlogan] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState(theme.primaryColor);
+  const [accentColor, setAccentColor] = useState(theme.accentColor || '#4d7c0f');
   const [dateMode, setDateMode] = useState('hebrew');
   const [institutionType, setInstitutionType] = useState('highschool');
   const [studyYears, setStudyYears] = useState(1);
@@ -47,6 +48,7 @@ export default function AdminDashboard() {
         setLogoUrl(data.logoUrl || '');
         if (data.slogan) setSlogan(data.slogan);
         if (data.themeConfig?.primaryColor) setPrimaryColor(data.themeConfig.primaryColor);
+        if (data.themeConfig?.accentColor) setAccentColor(data.themeConfig.accentColor);
         if (data.themeConfig?.showHolidays !== undefined) setShowHolidays(data.themeConfig.showHolidays);
         if (data.themeConfig?.showParasha !== undefined) setShowParasha(data.themeConfig.showParasha);
         if (data.themeConfig?.showOmer !== undefined) setShowOmer(data.themeConfig.showOmer);
@@ -80,7 +82,7 @@ export default function AdminDashboard() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
+          name: schoolName, logoUrl, slogan, primaryColor, accentColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
           showHolidays, showParasha, showOmer, showSchoolEvents, hebrewCalendarNikud,
           moderationMessage: moderationMessageSelect === 'custom' ? customModerationMessage : moderationMessageSelect
         }) 
@@ -183,19 +185,38 @@ export default function AdminDashboard() {
             />
           </div>
 
-          <div className={styles.formGroup}>
-            <label>צבע ראשי למערכת</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', maxWidth: '200px' }}>
-              <HexColorPicker color={primaryColor} onChange={setPrimaryColor} style={{ width: '100%' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: primaryColor, border: '1px solid #cbd5e1' }}></div>
-                <input 
-                  type="text" 
-                  className={styles.input} 
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  style={{ fontFamily: 'monospace', flex: 1 }}
-                />
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div className={styles.formGroup} style={{ flex: 1, minWidth: '200px' }}>
+              <label>צבע ראשי למערכת</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', maxWidth: '200px' }}>
+                <HexColorPicker color={primaryColor} onChange={setPrimaryColor} style={{ width: '100%' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: primaryColor, border: '1px solid #cbd5e1' }}></div>
+                  <input 
+                    type="text" 
+                    className={styles.input} 
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    style={{ fontFamily: 'monospace', flex: 1 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.formGroup} style={{ flex: 1, minWidth: '200px' }}>
+              <label>צבע משני (לכפתור פלוס)</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', maxWidth: '200px' }}>
+                <HexColorPicker color={accentColor} onChange={setAccentColor} style={{ width: '100%' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '4px', backgroundColor: accentColor, border: '1px solid #cbd5e1' }}></div>
+                  <input 
+                    type="text" 
+                    className={styles.input} 
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    style={{ fontFamily: 'monospace', flex: 1 }}
+                  />
+                </div>
               </div>
             </div>
           </div>
