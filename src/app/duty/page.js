@@ -33,8 +33,8 @@ export default function DutyStudentDashboard() {
 
     // Filter members who haven't RSVP'd as 'attending'
     const missingMembers = data.groupMembers.filter(m => {
-      if (!m.eventRSVPs || m.eventRSVPs.length === 0) return true;
-      return m.eventRSVPs[0].status !== 'attending';
+      if (!m.eventRsvps || m.eventRsvps.length === 0) return true;
+      return m.eventRsvps[0].status !== 'attending';
     });
 
     if (missingMembers.length === 0) {
@@ -74,7 +74,7 @@ export default function DutyStudentDashboard() {
   const { activeEvent, groupMembers } = data;
 
   const totalMembers = groupMembers.length;
-  const attendingCount = groupMembers.filter(m => m.eventRSVPs && m.eventRSVPs[0]?.status === 'attending').length;
+  const attendingCount = groupMembers.filter(m => m.eventRsvps && m.eventRsvps[0]?.status === 'attending').length;
   const missingCount = totalMembers - attendingCount;
   
   const percentage = totalMembers > 0 ? Math.round((attendingCount / totalMembers) * 100) : 0;
@@ -95,7 +95,7 @@ export default function DutyStudentDashboard() {
             <h2>האירוע הקרוב: {activeEvent.title}</h2>
             <div className={styles.dateRow}>
               <Calendar size={18} />
-              <span>{new Date(activeEvent.date).toLocaleDateString('he-IL')}</span>
+              <span>{new Date(activeEvent.scheduledDate || activeEvent.date).toLocaleDateString('he-IL')}</span>
             </div>
           </div>
 
@@ -169,7 +169,7 @@ export default function DutyStudentDashboard() {
         <h3>פירוט סטטוס הרשמה לקבוצה</h3>
         <div className={styles.list}>
           {groupMembers.map(member => {
-            const rsvp = member.eventRSVPs && member.eventRSVPs[0];
+            const rsvp = member.eventRsvps && member.eventRsvps[0];
             const isAttending = rsvp?.status === 'attending';
             const isDeclined = rsvp?.status === 'not_attending';
             

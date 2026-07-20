@@ -49,7 +49,7 @@ export async function GET(request) {
       select: {
         id: true,
         fullName: true,
-        eventRSVPs: activeEvent ? {
+        eventRsvps: activeEvent ? {
           where: { eventId: activeEvent.id },
           select: { id: true, status: true, attendedAt: true }
         } : false
