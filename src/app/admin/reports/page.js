@@ -7,33 +7,45 @@ import styles from './reports.module.css';
 export default function AdminReports() {
   const [isExporting, setIsExporting] = useState(false);
 
-  const downloadCSV = (data, filename) => {
+  const downloadExcel = (data, filename) => {
     if (!data || !data.length) {
       alert('אין נתונים לייצוא');
       return;
     }
 
     const headers = Object.keys(data[0]);
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => 
-        headers.map(header => {
-          let cell = row[header] === null || row[header] === undefined ? '' : row[header];
-          // Escape quotes and commas
-          cell = String(cell).replace(/"/g, '""');
-          if (cell.search(/("|,|\n)/g) >= 0) {
-            cell = `"${cell}"`;
-          }
-          return cell;
-        }).join(',')
-      )
-    ].join('\n');
+    
+    // Create an HTML table that Excel can open natively
+    const htmlTable = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          table { border-collapse: collapse; direction: rtl; font-family: Arial, sans-serif; }
+          th { background-color: #f1f5f9; font-weight: bold; border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
+          td { border: 1px solid #cbd5e1; padding: 8px; text-align: right; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <thead>
+            <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+          </thead>
+          <tbody>
+            ${data.map(row => `<tr>${headers.map(h => {
+              const cell = row[h] === null || row[h] === undefined ? '' : row[h];
+              return `<td>${cell}</td>`;
+            }).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
 
-    // Add BOM for Hebrew Excel support
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -70,7 +82,7 @@ export default function AdminReports() {
       const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
-        downloadCSV(formatData(data), filename);
+        downloadExcel(formatData(data), filename);
       } else {
         alert('שגיאה בייצוא הנתונים');
       }
@@ -99,7 +111,7 @@ export default function AdminReports() {
             onClick={() => handleExport('users')}
             disabled={isExporting}
           >
-            <Download size={18} /> הורד CSV
+            <FileSpreadsheet size={18} /> הורד דוח מעוצב (אקסל)
           </button>
         </div>
 
@@ -112,7 +124,7 @@ export default function AdminReports() {
             onClick={() => handleExport('events')}
             disabled={isExporting}
           >
-            <Download size={18} /> הורד CSV
+            <FileSpreadsheet size={18} /> הורד דוח מעוצב (אקסל)
           </button>
         </div>
 
@@ -125,7 +137,7 @@ export default function AdminReports() {
             onClick={() => alert('פיתוח יתווסף בהמשך')}
             disabled={isExporting}
           >
-            <Download size={18} /> הורד CSV
+            <FileSpreadsheet size={18} /> הורד דוח מעוצב (אקסל)
           </button>
         </div>
       </div>

@@ -251,8 +251,8 @@ export default function AdminDashboard() {
             </select>
           </div>
 
-          <div style={{marginBottom:'15px'}}>
-            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>הודעה לתלמיד על תוכן שנפסל</label>
+          <div style={{marginBottom:'15px', paddingRight: '20px', borderRight: '4px solid var(--primary-light)', backgroundColor: 'var(--bg-color, #f8fafc)', padding: '15px 20px 15px 15px', borderRadius: '8px 0 0 8px', marginTop: '-5px'}}>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold', color: 'var(--primary-color)'}}>הודעה לתלמיד על תוכן שנפסל (קשור לרמת הסינון לעיל)</label>
             <select 
               style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1', marginBottom: moderationMessageSelect === 'custom' ? '10px' : '0'}} 
               value={moderationMessageSelect} 
@@ -264,12 +264,12 @@ export default function AdminDashboard() {
               <option value="custom">אחר (הכנס טקסט חופשי)</option>
             </select>
             {moderationMessageSelect === 'custom' && (
-              <input 
-                type="text" 
+              <textarea 
                 className={styles.input} 
-                placeholder="הקלד כאן את ההודעה הרצויה..."
+                placeholder="הקלד כאן את ההודעה הרצויה שתופיע לתלמיד..."
                 value={customModerationMessage}
                 onChange={(e) => setCustomModerationMessage(e.target.value)}
+                style={{ width: '100%', minHeight: '100px', resize: 'vertical', padding: '12px', marginTop: '10px', fontSize: '1rem', lineHeight: '1.5' }}
               />
             )}
           </div>
