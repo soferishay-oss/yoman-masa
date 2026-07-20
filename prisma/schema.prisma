@@ -298,6 +298,7 @@ model GroupYearHistory {
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
   groupName      String   // The name the group had in this year
   managerNames   String   // Snapshot string of manager names, e.g. "דוד הלוי, משה כהן"
+  studentList    Json?    // Snapshot of students in the class, e.g. [{id: "1", name: "ישראל ישראלי"}]
   
   createdAt      DateTime @default(now())
 

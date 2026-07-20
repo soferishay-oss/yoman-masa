@@ -1,6 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, Save, Trash2, Edit2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronRight, Save, Trash2, Edit2, AlertCircle, ChevronDown } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
+
+const MultiSelectDropdown = ({ options, value, onChange, disabled }) => {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOptions = options.filter(o => value.includes(o.id));
+  
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '200px' }}>
+      <div 
+        onClick={() => !disabled && setOpen(!open)}
+        style={{ 
+          padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '6px', 
+          backgroundColor: disabled ? '#f1f5f9' : '#fff', cursor: disabled ? 'not-allowed' : 'pointer',
+          minHeight: '38px', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center',
+          justifyContent: 'space-between'
+        }}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', flex: 1 }}>
+          {selectedOptions.length === 0 ? <span style={{color: '#94a3b8', fontSize: '13px'}}>בחר מחנכים...</span> : 
+            selectedOptions.map(o => (
+              <span key={o.id} style={{ background: '#e2e8f0', color: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>
+                {o.fullName}
+              </span>
+            ))
+          }
+        </div>
+        <ChevronDown size={16} color="#94a3b8" />
+      </div>
+      {open && !disabled && (
+        <div style={{ 
+          position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', 
+          border: '1px solid #cbd5e1', borderRadius: '6px', marginTop: '4px', zIndex: 50,
+          maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+        }}>
+          {options.length === 0 ? <div style={{padding: '8px', color: '#94a3b8', fontSize: '13px'}}>אין אנשי צוות</div> : null}
+          {options.map(o => (
+            <label key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '13px', margin: 0 }}>
+              <input 
+                type="checkbox" 
+                checked={value.includes(o.id)}
+                onChange={(e) => {
+                  if (e.target.checked) onChange([...value, o.id]);
+                  else onChange(value.filter(id => id !== o.id));
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+              {o.fullName}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function YearTransitionWizard({ onComplete }) {
   const [loading, setLoading] = useState(true);
@@ -155,28 +220,16 @@ export default function YearTransitionWizard({ onComplete }) {
                   />
                 </td>
                 <td style={{ padding: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '100px', overflowY: 'auto', background: c.archive ? '#f1f5f9' : '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px', width: '200px' }}>
-                    {staff.map(s => (
-                      <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: c.archive ? '#94a3b8' : '#334155', cursor: c.archive ? 'not-allowed' : 'pointer' }}>
-                        <input 
-                          type="checkbox"
-                          checked={c.managers.includes(s.id)}
-                          onChange={e => {
-                            const newClasses = [...classes];
-                            if (e.target.checked) {
-                              newClasses[index].managers.push(s.id);
-                            } else {
-                              newClasses[index].managers = newClasses[index].managers.filter(id => id !== s.id);
-                            }
-                            setClasses(newClasses);
-                          }}
-                          disabled={c.archive}
-                        />
-                        {s.fullName}
-                      </label>
-                    ))}
-                    {staff.length === 0 && <span style={{ fontSize: '12px', color: '#94a3b8', padding: '4px' }}>אין אנשי צוות</span>}
-                  </div>
+                  <MultiSelectDropdown 
+                    options={staff}
+                    value={c.managers}
+                    disabled={c.archive}
+                    onChange={(newManagers) => {
+                      const newClasses = [...classes];
+                      newClasses[index].managers = newManagers;
+                      setClasses(newClasses);
+                    }}
+                  />
                 </td>
                 <td style={{ padding: '12px', textAlign: 'center' }}>
                   <input 

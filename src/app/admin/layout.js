@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, Users, Settings, BarChart2, Shield } from 'lucide-react';
+import { Home, Users, Settings, BarChart2, Shield, Archive } from 'lucide-react';
 import styles from './layout.module.css';
 import prisma from '@/lib/prisma';
 import { cookies } from 'next/headers';
@@ -45,6 +45,10 @@ export default async function AdminLayout({ children }) {
           <Link href="/admin/reports" className={styles.navLink}>
             <BarChart2 size={20} />
             <span>דוחות ונתונים</span>
+          </Link>
+          <Link href="/admin/academic-years" className={styles.navLink}>
+            <Archive size={20} />
+            <span>ארכיון שנות לימוד</span>
           </Link>
           <Link href="/admin/settings" className={styles.navLink}>
             <Settings size={20} />

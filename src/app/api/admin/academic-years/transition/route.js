@@ -68,12 +68,21 @@ export async function POST(request) {
         // Fetch current managers to save in history
         const currentGroup = await tx.group.findUnique({
           where: { id },
-          include: { managers: true }
+          include: { 
+            managers: true,
+            groupMembers: {
+              include: { user: true }
+            }
+          }
         });
 
         if (currentGroup && currentYear) {
           // Create history snapshot for the outgoing year
           const managerNamesStr = currentGroup.managers.map(m => m.fullName).join(', ') || 'ללא מחנך';
+          
+          const studentList = currentGroup.groupMembers
+            .filter(gm => gm.user.role === 'student')
+            .map(gm => ({ id: gm.user.id, name: gm.user.fullName }));
           
           // Manual upsert to avoid index issues
           const existingHistory = await tx.groupYearHistory.findFirst({
@@ -88,7 +97,8 @@ export async function POST(request) {
               where: { id: existingHistory.id },
               data: {
                 groupName: originalName,
-                managerNames: managerNamesStr
+                managerNames: managerNamesStr,
+                studentList: studentList
               }
             });
           } else {
@@ -97,7 +107,8 @@ export async function POST(request) {
                 groupId: id,
                 academicYearId: currentYear.id,
                 groupName: originalName,
-                managerNames: managerNamesStr
+                managerNames: managerNamesStr,
+                studentList: studentList
               }
             });
           }
