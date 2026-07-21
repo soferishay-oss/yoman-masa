@@ -246,6 +246,7 @@ export default function StaffTab() {
                 <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>מייל</label>
                 <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
               </div>
+              <div>
                 <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>הרשאת בסיס</label>
                 <select value={formData.role || 'staff'} onChange={e => setFormData({...formData, role: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                   <option value="staff">איש צוות (רגיל)</option>
