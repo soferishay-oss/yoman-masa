@@ -56,6 +56,7 @@ export async function GET(request) {
       where: whereClause,
       include: {
         class: true,
+        groupMemberships: true,
         moodChecks: {
           orderBy: { createdAt: 'desc' },
           take: 1
@@ -83,7 +84,9 @@ export async function GET(request) {
         id: student.id,
         name: student.fullName,
         mood: moodStr,
-        trend: trend
+        trend: trend,
+        classId: student.classId,
+        groupMemberships: student.groupMemberships
       };
     });
 

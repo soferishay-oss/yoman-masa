@@ -89,7 +89,7 @@ export default async function RootLayout({ children }) {
               </Link>
               <Link href={userRole === 'admin' ? '/admin' : '/staff'} className={`${styles.navItem} ${styles.active}`}>
                 <div className={styles.icon}><Home size={24} /></div>
-                <span>ניהול</span>
+                <span>{userRole === 'admin' ? 'פאנל ניהול' : 'אזור צוות'}</span>
               </Link>
             </nav>
           )
