@@ -24,16 +24,21 @@ export default function MoodSurveyModal() {
     setWeekId(currentWeekId);
 
     async function checkStatus() {
-      // Check if user clicked "remind me later" during this session/week
-      const postponed = sessionStorage.getItem(`moodSurveyPostponed_${currentWeekId}`);
-      if (postponed) return;
-
       try {
         const res = await fetch('/api/student/mood/status');
         if (res.ok) {
           const data = await res.json();
           if (data.shouldShow) {
-            setIsOpen(true);
+            // If it's explicitly forced by staff, always show it.
+            if (data.reason === 'forced') {
+              setIsOpen(true);
+            } else {
+              // Otherwise check if the user clicked "remind me later" this week
+              const postponed = sessionStorage.getItem(`moodSurveyPostponed_${currentWeekId}`);
+              if (!postponed) {
+                setIsOpen(true);
+              }
+            }
           }
         }
       } catch (err) {
