@@ -247,14 +247,7 @@ export default function StaffTab() {
                 <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>הרשאת בסיס</label>
-                <select value={formData.role || 'staff'} onChange={e => setFormData({...formData, role: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
-                  <option value="staff">איש צוות (רגיל)</option>
-                  <option value="admin">מנהל מערכת (גישה מלאה)</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>תפקיד מותאם (תווית)</label>
+                <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '4px' }}>הגדרת תפקיד (שואב הרשאות)</label>
                 <select value={formData.customRoleId} onChange={e => setFormData({...formData, customRoleId: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                   <option value="">-- ללא תפקיד מוגדר --</option>
                   {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
