@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LogIn, Phone } from 'lucide-react';
+import { LogIn, Phone, Shield } from 'lucide-react';
 import styles from './login.module.css';
+import { ThemeContext } from '@/components/ThemeProvider';
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const theme = useContext(ThemeContext) || {};
 
   useEffect(() => {
     if (searchParams.get('error') === 'suspended') {
@@ -53,7 +55,17 @@ export default function LoginPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h2>יומן מסע אישי</h2>
+          {theme.logoUrl ? (
+            <img src={theme.logoUrl} alt="Institution Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '10px' }} />
+          ) : (
+            <Shield size={60} color="var(--primary-color)" style={{ marginBottom: '10px' }} />
+          )}
+          <h2 style={{ fontSize: '24px', color: 'var(--primary-color)' }}>{theme.schoolName || 'יומן מסע אישי'}</h2>
+          
+          <div style={{ margin: '20px 0', padding: '15px', border: '2px dashed #cbd5e1', borderRadius: '12px', color: '#94a3b8' }}>
+            <p style={{ margin: 0 }}>[לוגו אפליקציה עתידי]</p>
+          </div>
+          
           <p>התחברות למערכת</p>
         </div>
 
