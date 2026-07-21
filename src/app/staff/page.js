@@ -211,7 +211,7 @@ export default function StaffDashboard() {
                 </button>
               </div>
               <div style={{ fontSize: '13px', color: activeGroupId === group.id ? 'rgba(255,255,255,0.8)' : '#64748b' }}>
-                {students.filter(s => s.groupId === group.id || s.classId === group.id).length || students.length} תלמידים
+                {students.filter(s => s.groupId === group.id || s.classId === group.id || s.groupMemberships?.some(m => m.groupId === group.id)).length} תלמידים
               </div>
             </div>
           ))}

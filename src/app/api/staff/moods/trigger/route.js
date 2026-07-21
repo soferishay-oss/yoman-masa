@@ -9,6 +9,7 @@ export async function POST(request) {
     const token = cookieStore.get('auth_token')?.value;
     const auth = token ? await verifyToken(token) : null;
     const staffId = auth?.userId;
+    const tenantId = auth?.tenantId;
     const role = auth?.role?.toLowerCase();
 
     if (!staffId || (role !== 'staff' && role !== 'admin')) {
