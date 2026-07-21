@@ -247,6 +247,7 @@ model Letter {
   aiTranscription  String?
   aiThought        String?
   reactions        Json?
+  isVault          Boolean  @default(false)
   createdAt        DateTime @default(now())
 }
 

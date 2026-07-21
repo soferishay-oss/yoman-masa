@@ -27,18 +27,18 @@ export default function VaultPage() {
     fetchVaultItems();
   }, []);
 
-  const handleRemoveFromVault = async (id) => {
-    const confirmed = await toast.confirm('האם להסיר מכספת הזיכרונות? זה לא ימחק את הפוסט עצמו.');
+  const handleRemoveFromVault = async (id, type = 'journal') => {
+    const confirmed = await toast.confirm('האם להסיר מהדברים המיוחדים? זה לא ימחק את הפוסט עצמו.');
     if (!confirmed) return;
     try {
       const res = await fetch('/api/vault', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryId: id, isVault: false })
+        body: JSON.stringify({ entryId: id, isVault: false, type })
       });
       if (res.ok) {
         setItems(items.filter(item => item.id !== id));
-        toast.show('הוסר מהכספת בהצלחה', 'success');
+        toast.show('הוסר בהצלחה', 'success');
       } else {
         toast.show('שגיאה בהסרת הפריט', 'error');
       }
@@ -55,23 +55,23 @@ export default function VaultPage() {
       <header className={styles.header}>
         <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px'}}>
           <div style={{background:'var(--primary-color)', padding:'10px', borderRadius:'12px', color:'white'}}>
-            <Lock size={24} />
+            <Star size={24} />
           </div>
-          <h1>כספת הזיכרונות שלך</h1>
+          <h1>דברים מיוחדים</h1>
         </div>
-        <p>כאן שמורים הרגעים והתובנות החשובים ביותר שסימנת לאורך השנה, שייכנסו לספר המסע האישי שלך.</p>
+        <p>כאן שמורים הרגעים, המכתבים והתובנות החשובים ביותר שסימנת לאורך השנה, שייכנסו לספר המסע האישי שלך.</p>
       </header>
 
       <div className={styles.entriesList}>
         {items.map(item => (
           <div key={item.id} className={styles.entryCard} style={{position: 'relative'}}>
             <button 
-              onClick={() => handleRemoveFromVault(item.id)}
+              onClick={() => handleRemoveFromVault(item.id, item.type || 'journal')}
               style={{
                 position:'absolute', left:'15px', top:'15px', background:'none', border:'none', 
                 color:'#94a3b8', cursor:'pointer', padding:'5px'
               }}
-              title="הסר מהכספת"
+              title="הסר מהדברים המיוחדים"
             >
               <X size={20} />
             </button>
@@ -97,7 +97,7 @@ export default function VaultPage() {
             <div className={styles.entryFooter}>
               <div className={styles.tagList}>
                 <span className={styles.tag} style={{background: 'var(--primary-light)', color: 'var(--primary-color)'}}>
-                  <Star size={12} style={{display:'inline', verticalAlign:'middle', marginRight:'3px'}}/> נשמר לכספת
+                  <Star size={12} style={{display:'inline', verticalAlign:'middle', marginRight:'3px'}}/> נשמר בדברים המיוחדים
                 </span>
               </div>
             </div>
@@ -105,8 +105,8 @@ export default function VaultPage() {
         ))}
         {items.length === 0 && (
           <div className={styles.emptyState}>
-            <Lock size={48} className={styles.emptyIcon} style={{opacity: 0.2}} />
-            <p>הכספת ריקה. כשאתה קורא מכתב או כותב יומן, סמן אותם כ"שמור לכספת" והם יופיעו כאן.</p>
+            <Star size={48} className={styles.emptyIcon} style={{opacity: 0.2}} />
+            <p>רשימת הדברים המיוחדים ריקה. כשאתה קורא מכתב או כותב יומן, סמן אותם כ"שמור לדברים מיוחדים" והם יופיעו כאן.</p>
           </div>
         )}
       </div>

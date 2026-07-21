@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { Mic, Square, Trash2, Play, Pause } from 'lucide-react';
 
-export default function AudioRecorder({ onRecordingComplete }) {
+export default function AudioRecorder({ onRecordingComplete, customButton }) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef(null);
@@ -65,13 +65,19 @@ export default function AudioRecorder({ onRecordingComplete }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
       {!isRecording ? (
-        <button 
-          type="button" 
-          onClick={startRecording}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
-        >
-          <Mic size={18} /> התחל הקלטה
-        </button>
+        customButton ? (
+          <div onClick={startRecording} style={{ display: 'inline-flex', cursor: 'pointer' }}>
+            {customButton}
+          </div>
+        ) : (
+          <button 
+            type="button" 
+            onClick={startRecording}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
+          >
+            <Mic size={18} /> התחל הקלטה
+          </button>
+        )
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fee2e2', padding: '8px 12px', borderRadius: '8px', border: '1px solid #fca5a5' }}>
           <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }}></div>

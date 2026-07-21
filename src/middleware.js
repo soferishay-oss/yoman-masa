@@ -42,6 +42,8 @@ export async function middleware(request) {
         return NextResponse.redirect(new URL('/admin', request.url));
       } else if (payload.role === 'staff') {
         return NextResponse.redirect(new URL('/staff', request.url));
+      } else if (payload.role === 'student') {
+        return NextResponse.redirect(new URL('/journal', request.url));
       }
     }
 

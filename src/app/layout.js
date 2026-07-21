@@ -1,11 +1,12 @@
 import './globals.css';
 import Link from 'next/link';
-import { User, Heart, Calendar, Home, Plus, Shield } from 'lucide-react';
+import { User, Heart, Calendar, Home, BookOpen, Shield } from 'lucide-react';
 import { headers } from 'next/headers';
 import styles from './layout.module.css';
 import ThemeProvider from '@/components/ThemeProvider';
 import ErrorTracker from '@/components/ErrorTracker';
 import { ToastProvider } from '@/components/ToastProvider';
+import HamburgerMenu from '@/components/HamburgerMenu';
 
 export const metadata = {
   title: 'יומן מסע חינוכי',
@@ -47,35 +48,20 @@ export default async function RootLayout({ children }) {
         {userId && (
           isStudent ? (
             <>
-              <div className={styles.fabWrapper}>
-                <Link href="/journal" className={styles.fabBtn}>
-                  <Plus size={36} />
-                </Link>
-              </div>
+              <HamburgerMenu isDutyStudent={isDutyStudent} />
               
               <nav className={styles.bottomNav}>
-                <Link href="/profile" className={styles.navItem}>
-                  <div className={styles.icon}><User size={24} /></div>
-                  <span>פרופיל אישי</span>
-                </Link>
-                <Link href="/letters" className={styles.navItem}>
-                  <div className={styles.icon}><Heart size={24} /></div>
-                  <span>מה כתבו לי</span>
-                </Link>
-                
                 <Link href="/calendar" className={styles.navItem}>
                   <div className={styles.icon}><Calendar size={24} /></div>
                   <span>לוח מסע</span>
                 </Link>
                 
-                {isDutyStudent && (
-                  <Link href="/duty" className={`${styles.navItem} ${styles.dutyItem}`}>
-                    <div className={styles.icon}><Shield size={24} /></div>
-                    <span>תורן</span>
-                  </Link>
-                )}
+                <Link href="/journal" className={styles.navItem}>
+                  <div className={styles.icon}><BookOpen size={24} /></div>
+                  <span>היומן שלי</span>
+                </Link>
                 
-                <Link href="/" className={styles.navItem}>
+                <Link href="/home" className={styles.navItem}>
                   <div className={styles.icon}><Home size={24} /></div>
                   <span>בית</span>
                 </Link>

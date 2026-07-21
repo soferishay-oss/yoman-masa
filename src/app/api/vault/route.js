@@ -15,7 +15,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const vaultItems = await prisma.contentEntry.findMany({
+    const journalItems = await prisma.contentEntry.findMany({
       where: { 
         tenantId,
         ownerUserId: userId,
@@ -23,6 +23,32 @@ export async function GET(request) {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    const letterItems = await prisma.letter.findMany({
+      where: {
+        tenantId,
+        recipientId: userId,
+        isVault: true
+      },
+      include: {
+        author: { select: { fullName: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Map letters to match journal format roughly for UI
+    const formattedLetters = letterItems.map(letter => ({
+      id: letter.id,
+      title: `מכתב מ${letter.author?.fullName || 'איש צוות'}`,
+      bodyText: letter.content,
+      type: 'letter',
+      createdAt: letter.createdAt,
+      mediaUrls: letter.mediaUrls,
+      isVault: letter.isVault
+    }));
+
+    const vaultItems = [...journalItems, ...formattedLetters]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return NextResponse.json(vaultItems);
   } catch (error) {
@@ -41,22 +67,31 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { entryId, isVault } = await request.json();
+    const { entryId, isVault, type } = await request.json();
 
     if (!entryId || isVault === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Ensure the entry belongs to the user
-    const updatedEntry = await prisma.contentEntry.update({
-      where: { 
-        id: entryId,
-        ownerUserId: userId // security check
-      },
-      data: { isVault }
-    });
-
-    return NextResponse.json(updatedEntry);
+    if (type === 'letter') {
+      const updatedEntry = await prisma.letter.update({
+        where: { 
+          id: entryId,
+          recipientId: userId
+        },
+        data: { isVault }
+      });
+      return NextResponse.json(updatedEntry);
+    } else {
+      const updatedEntry = await prisma.contentEntry.update({
+        where: { 
+          id: entryId,
+          ownerUserId: userId
+        },
+        data: { isVault }
+      });
+      return NextResponse.json(updatedEntry);
+    }
   } catch (error) {
     console.error('Failed to update vault status:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

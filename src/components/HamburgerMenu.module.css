@@ -1,0 +1,118 @@
+.hamburgerBtn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1001;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  bottom: 0;
+  width: 280px;
+  background: white;
+  z-index: 1002;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer.open {
+  transform: translateX(280px);
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.drawerHeader h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawerNav {
+  padding: 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  color: #475569;
+  text-decoration: none;
+  margin-bottom: 5px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.navItem:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.navItem.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 15px 0;
+}
+
+.logoutItem {
+  color: #ef4444;
+}
+
+.logoutItem:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

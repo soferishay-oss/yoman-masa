@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, User, Image as ImageIcon, Video, Mic, Sparkles, Reply, Smile } from 'lucide-react';
+import { Heart, User, Image as ImageIcon, Mic, Sparkles, Reply, Smile, Star } from 'lucide-react';
 import styles from './letters.module.css';
 import { useToast } from '@/components/ToastProvider';
 import AudioRecorder from '@/components/AudioRecorder';
@@ -51,13 +51,9 @@ export default function LettersPage() {
     }
   };
 
-  const handleSimulateMediaUpload = (type) => {
     if (type === 'image') {
       setMediaUrls([...mediaUrls, { type: 'image', url: 'https://via.placeholder.com/400x300.png?text=Simulated+Letter+Image' }]);
-    } else {
-      setMediaUrls([...mediaUrls, { type: 'video', url: 'https://www.w3schools.com/html/mov_bbb.mp4' }]);
     }
-  };
 
 
 
@@ -168,6 +164,27 @@ export default function LettersPage() {
     }
   };
 
+  const handleSaveToVault = async (letter) => {
+    const newVaultStatus = !letter.isVault;
+    setLetters(letters.map(l => l.id === letter.id ? { ...l, isVault: newVaultStatus } : l));
+    try {
+      const res = await fetch('/api/vault', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: letter.id, isVault: newVaultStatus, type: 'letter' })
+      });
+      if (!res.ok) {
+        setLetters(letters.map(l => l.id === letter.id ? { ...l, isVault: letter.isVault } : l));
+        toast.show('שגיאה בשמירה לתיבה', 'error');
+      } else {
+        toast.show(newVaultStatus ? 'נשמר בדברים המיוחדים' : 'הוסר מהדברים המיוחדים', 'success');
+      }
+    } catch (error) {
+      console.error(error);
+      setLetters(letters.map(l => l.id === letter.id ? { ...l, isVault: letter.isVault } : l));
+    }
+  };
+
   const renderMediaPreview = () => {
     if (mediaUrls.length === 0) return null;
     const audioMedia = mediaUrls.find(m => m.type === 'audio');
@@ -178,7 +195,6 @@ export default function LettersPage() {
             return (
               <div key={idx} style={{position: 'relative', display: 'inline-block'}}>
                 {media.type === 'image' && <img src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />}
-                {media.type === 'video' && <video src={media.url} style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} muted />}
                 <button type="button" onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== idx))} style={{position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 24, height: 24, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>X</button>
               </div>
             );
@@ -267,21 +283,7 @@ export default function LettersPage() {
                 }
               }} />
             </label>
-            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-              <Video size={18} /> וידאו
-              <input type="file" accept="video/*" style={{display: 'none'}} onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  if (file.size > 4 * 1024 * 1024) {
-                    toast.show('הקובץ גדול מדי. מותר עד 4MB.', 'error');
-                    return;
-                  }
-                  const reader = new FileReader();
-                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'video', url: reader.result }]);
-                  reader.readAsDataURL(file);
-                }
-              }} />
-            </label>
+
             <AudioRecorder onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} />
           </div>
 
@@ -302,16 +304,23 @@ export default function LettersPage() {
                   <User size={18} className={styles.senderIcon} />
                   <span className={styles.senderName}>{letter.author?.fullName || 'חבר אנונימי'}</span>
                 </div>
-                <span className={styles.letterDate}>{new Date(letter.createdAt).toLocaleDateString('he-IL')}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <span className={styles.letterDate}>{new Date(letter.createdAt).toLocaleDateString('he-IL')}</span>
+                  <button 
+                    onClick={() => handleSaveToVault(letter)} 
+                    style={{ background: 'none', border: 'none', padding: '0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    title={letter.isVault ? "הסר מדברים מיוחדים" : "שמור בדברים מיוחדים"}
+                  >
+                    <Star size={20} fill={letter.isVault ? '#f59e0b' : 'none'} color={letter.isVault ? '#f59e0b' : '#94a3b8'} />
+                  </button>
+                </div>
               </div>
               <p className={styles.letterBody}>"{letter.content}"</p>
 
               {letter.mediaUrls && letter.mediaUrls.length > 0 && (
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
                   {letter.mediaUrls.map((media, idx) => (
-                    media.type === 'image' ? 
-                      <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} /> :
-                      <video key={idx} src={media.url} controls style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
+                    media.type === 'image' && <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
                   ))}
                 </div>
               )}
