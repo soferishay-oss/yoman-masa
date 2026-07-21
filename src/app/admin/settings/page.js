@@ -262,7 +262,7 @@ export default function AdminDashboard() {
           </div>
 
           <div style={{marginBottom:'15px'}}>
-            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>רמת סינון לתוכן ה-AI (הודעות/מכתבים)</label>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>רמת סינון תוכן פוגעני</label>
             <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={moderationLevel} onChange={(e) => setModerationLevel(Number(e.target.value))}>
               <option value={1}>רמה 1 - מקל מאוד (חוסם רק אלימות קיצונית)</option>
               <option value={2}>רמה 2 - מקל (מתירני לגבי סלנג שגרתי)</option>
