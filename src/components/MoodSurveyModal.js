@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './moodModal.module.css';
-import { X } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 
 export default function MoodSurveyModal() {
@@ -77,11 +77,8 @@ export default function MoodSurveyModal() {
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <div className={styles.header}>
+        <div className={styles.header} style={{ justifyContent: 'center' }}>
           <h2>איך המרגש היום?</h2>
-          <button className={styles.closeBtn} onClick={handlePostpone} title="סגור ותזכיר לי מאוחר יותר">
-            <X size={24} />
-          </button>
         </div>
 
         <div className={styles.content}>
@@ -138,7 +135,7 @@ export default function MoodSurveyModal() {
                   onClick={handleSubmit} 
                   disabled={isLoading}
                 >
-                  {isLoading ? 'שומר...' : 'שליחה'}
+                  {isLoading ? 'שומר...' : <Send size={20} />}
                 </button>
               </div>
             </div>

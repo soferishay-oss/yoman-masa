@@ -15,23 +15,47 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { studentId } = await request.json();
-    if (!studentId) {
-      return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
+    const { studentId, groupId } = await request.json();
+    if (!studentId && !groupId) {
+      return NextResponse.json({ error: 'studentId or groupId is required' }, { status: 400 });
     }
 
-    const student = await prisma.user.findUnique({ where: { id: studentId } });
-    if (!student) {
-      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    if (groupId) {
+      // Find all students in this group
+      const studentsInGroup = await prisma.user.findMany({
+        where: {
+          tenantId,
+          role: 'student',
+          OR: [
+            { classId: groupId },
+            { groupMemberships: { some: { groupId } } }
+          ]
+        }
+      });
+
+      // Update all students
+      for (const student of studentsInGroup) {
+        const prefs = student.preferences && typeof student.preferences === 'object' ? { ...student.preferences } : {};
+        prefs.forceMoodSurvey = true;
+        await prisma.user.update({
+          where: { id: student.id },
+          data: { preferences: prefs }
+        });
+      }
+    } else if (studentId) {
+      const student = await prisma.user.findUnique({ where: { id: studentId } });
+      if (!student) {
+        return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+      }
+
+      const prefs = student.preferences && typeof student.preferences === 'object' ? { ...student.preferences } : {};
+      prefs.forceMoodSurvey = true;
+
+      await prisma.user.update({
+        where: { id: studentId },
+        data: { preferences: prefs }
+      });
     }
-
-    const prefs = student.preferences && typeof student.preferences === 'object' ? { ...student.preferences } : {};
-    prefs.forceMoodSurvey = true;
-
-    await prisma.user.update({
-      where: { id: studentId },
-      data: { preferences: prefs }
-    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

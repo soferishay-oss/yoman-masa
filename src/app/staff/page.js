@@ -11,12 +11,15 @@ import { CalendarDays } from 'lucide-react';
 
 export default function StaffDashboard() {
   const [students, setStudents] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [activeGroupId, setActiveGroupId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [userName, setUserName] = useState('');
   const [greeting, setGreeting] = useState('שלום');
   const [alerts, setAlerts] = useState([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [triggeringGroupId, setTriggeringGroupId] = useState(null);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -27,8 +30,21 @@ export default function StaffDashboard() {
 
     fetchProfile();
     fetchStudents();
+    fetchGroups();
     fetchAlerts();
   }, []);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch('/api/staff/groups');
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchAlerts = async () => {
     try {
@@ -136,7 +152,121 @@ export default function StaffDashboard() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '10px' }}>
+      {/* Group Bar */}
+      {groups.length > 0 && (
+        <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', padding: '10px 0', marginBottom: '20px' }}>
+          {groups.map(group => (
+            <div 
+              key={group.id} 
+              style={{ 
+                background: activeGroupId === group.id ? 'var(--primary-color)' : 'white', 
+                border: `1px solid ${activeGroupId === group.id ? 'var(--primary-color)' : '#e2e8f0'}`,
+                borderRadius: '12px', 
+                padding: '15px', 
+                minWidth: '200px',
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '10px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onClick={() => setActiveGroupId(activeGroupId === group.id ? null : group.id)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, color: activeGroupId === group.id ? 'white' : '#1e293b', fontSize: '1.1rem' }}>{group.name}</h3>
+                <button 
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setTriggeringGroupId(group.id);
+                    try {
+                      const res = await fetch('/api/staff/moods/trigger', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ groupId: group.id })
+                      });
+                      if (res.ok) alert('שאלון נשלח לכל תלמידי הקבוצה!');
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setTriggeringGroupId(null);
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: activeGroupId === group.id ? '1px solid rgba(255,255,255,0.4)' : '1px solid #e2e8f0',
+                    color: activeGroupId === group.id ? 'white' : 'var(--primary-color)',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  title="הקפץ שאלון מצב רוח לכל חברי הקבוצה"
+                  disabled={triggeringGroupId === group.id}
+                >
+                  <Bell size={16} />
+                </button>
+              </div>
+              <div style={{ fontSize: '13px', color: activeGroupId === group.id ? 'rgba(255,255,255,0.8)' : '#64748b' }}>
+                {students.filter(s => s.groupId === group.id || s.classId === group.id).length || students.length} תלמידים
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeGroupId ? (
+        <section className={styles.section}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2 className={styles.sectionTitle} style={{ margin: 0 }}>
+              <Users size={20} style={{display:'inline', verticalAlign:'middle'}}/> רשימה שמית - {groups.find(g => g.id === activeGroupId)?.name}
+            </h2>
+          </div>
+          <div className={styles.card} style={{ padding: '0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {students.filter(s => s.classId === activeGroupId || s.groupId === activeGroupId || s.groupMemberships?.some(m => m.groupId === activeGroupId)).map(student => (
+                <div 
+                  key={student.id} 
+                  onClick={() => window.location.href = `/staff/student/${student.id}`}
+                  style={{ 
+                    padding: '15px 20px', 
+                    borderBottom: '1px solid #e2e8f0', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ background: '#e2e8f0', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <User size={20} color="#475569" />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: '#1e293b' }}>{student.name}</div>
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>{student.mood}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {student.trend === 'down' ? <Activity color="#ef4444" size={18} /> : student.trend === 'up' ? <Activity color="#10b981" size={18} /> : null}
+                    <span style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: 'bold' }}>פרופיל {'<'}</span>
+                  </div>
+                </div>
+              ))}
+              {students.filter(s => s.classId === activeGroupId || s.groupId === activeGroupId || s.groupMemberships?.some(m => m.groupId === activeGroupId)).length === 0 && (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>אין תלמידים בקבוצה זו.</div>
+              )}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '10px' }}>
         <button 
           onClick={() => setActiveTab('overview')} 
           style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'overview' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'overview' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
@@ -185,6 +315,8 @@ export default function StaffDashboard() {
         <section className={styles.section}>
           <EventBuilder />
         </section>
+      )}
+      </>
       )}
 
     </div>
