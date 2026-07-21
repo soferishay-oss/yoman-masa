@@ -44,7 +44,7 @@ export default function EventBuilder() {
     try {
       const [resEvents, resClasses] = await Promise.all([
         fetch('/api/staff/events'),
-        fetch('/api/staff/classes')
+        fetch('/api/staff/groups')
       ]);
       if (resEvents.ok) setEvents(await resEvents.json());
       if (resClasses.ok) setClasses(await resClasses.json());
