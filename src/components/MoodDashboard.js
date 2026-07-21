@@ -146,7 +146,7 @@ export default function MoodDashboard({ isAdmin = false }) {
                         body: JSON.stringify({ studentId: student.id })
                       });
                       if (res.ok) {
-                        if (toast?.show) toast.show('בקשה נשלחה. התלמיד יקבל שאלון בכניסה הבאה.', 'success');
+                        if (toast?.show) toast.show('בקשה נשלחה. השאלון יופיע כעת אצל התלמיד.', 'success');
                       } else {
                         if (toast?.show) toast.show('שגיאה בשליחת הבקשה', 'error');
                       }

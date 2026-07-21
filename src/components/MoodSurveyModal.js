@@ -47,6 +47,10 @@ export default function MoodSurveyModal() {
     }
 
     checkStatus();
+
+    // Poll every 30 seconds to allow the modal to pop up instantly when a staff member sends it
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handlePostpone = () => {
