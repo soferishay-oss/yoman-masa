@@ -27,11 +27,17 @@ export async function GET(request) {
     
     if (user.role === 'staff') {
       const groupIds = [];
-      if (user.groupId) groupIds.push(user.groupId);
+      if (user.classId) groupIds.push(user.classId);
       if (user.managedGroups) groupIds.push(...user.managedGroups.map(g => g.id));
       
       const studentsInGroups = await prisma.user.findMany({
-        where: { tenantId, groupId: { in: groupIds } },
+        where: { 
+          tenantId, 
+          OR: [
+            { classId: { in: groupIds } },
+            { groupMemberships: { some: { groupId: { in: groupIds } } } }
+          ]
+        },
         select: { id: true }
       });
       const studentIds = studentsInGroups.map(s => s.id);
