@@ -87,6 +87,10 @@ export async function PUT(request) {
       newThemeConfig.hebrewCalendarNikud = data.hebrewCalendarNikud;
       themeConfigChanged = true;
     }
+    if (data.moodSurveySchedule !== undefined) {
+      newThemeConfig.moodSurveySchedule = data.moodSurveySchedule;
+      themeConfigChanged = true;
+    }
     if (data.moderationMessage !== undefined) {
       newThemeConfig.moderationMessage = data.moderationMessage;
       themeConfigChanged = true;

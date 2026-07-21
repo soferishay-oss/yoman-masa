@@ -39,6 +39,17 @@ export async function POST(request) {
       }
     });
 
+    // Clear forceMoodSurvey flag if it exists
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (user && user.preferences && user.preferences.forceMoodSurvey) {
+      const updatedPrefs = { ...user.preferences };
+      delete updatedPrefs.forceMoodSurvey;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { preferences: updatedPrefs }
+      });
+    }
+
     return NextResponse.json(newMood, { status: 201 });
   } catch (error) {
     console.error('Failed to create mood:', error);

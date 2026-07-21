@@ -8,13 +8,11 @@ import Link from 'next/link';
 import TaskItem from '@/components/TaskItem';
 import StudentTimeline from '@/components/StudentTimeline';
 import { useToast } from '@/components/ToastProvider';
+import MoodSurveyModal from '@/components/MoodSurveyModal';
 
 export default function Home() {
   const theme = useContext(ThemeContext);
   const [tasks, setTasks] = useState([]);
-  const [selectedMood, setSelectedMood] = useState(null);
-  const [moodExplanation, setMoodExplanation] = useState('');
-  const [showMoodOptions, setShowMoodOptions] = useState(false);
   const [userName, setUserName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
   const [greeting, setGreeting] = useState('שלום');
@@ -66,91 +64,8 @@ export default function Home() {
         <p className={styles.subtitle} style={{ fontSize: '14px' }}>המסע שלך. הסיפור שלך.</p>
       </header>
 
-      {/* Mood Tracker */}
-      <section className={styles.section} style={{marginTop: '20px'}}>
-        <div className={styles.card} style={{padding: '20px', textAlign: 'center'}}>
-          <h3 style={{marginBottom: '15px'}}>איך המרגש היום?</h3>
-          {!showMoodOptions ? (
-            <div style={{display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '5px'}}>
-              {[
-                { val: 1, emoji: '😞' },
-                { val: 2, emoji: '😕' },
-                { val: 3, emoji: '😐' },
-                { val: 4, emoji: '🙂' },
-                { val: 5, emoji: '🤩' },
-              ].map(item => (
-                <div 
-                  key={item.val}
-                  onClick={() => {
-                    setSelectedMood(item.val);
-                    setShowMoodOptions(true);
-                  }}
-                  style={{
-                    cursor: 'pointer',
-                    fontSize: '30px',
-                    padding: '5px',
-                    borderRadius: '50%',
-                    background: selectedMood === item.val ? '#e2e8f0' : 'transparent',
-                    transform: selectedMood === item.val ? 'scale(1.2)' : 'scale(1)',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {item.emoji}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div>
-              <div style={{ fontSize: '40px', marginBottom: '10px' }}>
-                { [null, '😞', '😕', '😐', '🙂', '🤩'][selectedMood] }
-              </div>
-              <textarea
-                placeholder="רוצה לשתף קצת יותר? (לא חובה)"
-                value={moodExplanation}
-                onChange={e => setMoodExplanation(e.target.value)}
-                style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '15px', fontFamily: 'inherit', resize: 'vertical' }}
-              />
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    setShowMoodOptions(false);
-                    setSelectedMood(null);
-                    setMoodExplanation('');
-                  }} 
-                  style={{ background: '#e2e8f0', color: '#475569', padding: '8px 20px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  החלף
-                </button>
-                <button 
-                  type="button" 
-                  onClick={async () => {
-                    if(!selectedMood) return;
-                    const res = await fetch('/api/student/mood', {
-                      method: 'POST',
-                      headers: {'Content-Type': 'application/json'},
-                      body: JSON.stringify({ ratingValue: selectedMood, explanation: moodExplanation || 'דיווח מהאפליקציה' })
-                    });
-                    if (res.ok) {
-                      if (toast?.show) toast.show('נשמר בהצלחה, תודה על השיתוף!', 'success');
-                      else alert('נשמר בהצלחה, תודה על השיתוף!');
-                      setShowMoodOptions(false);
-                      setSelectedMood(null);
-                      setMoodExplanation('');
-                    } else {
-                      if (toast?.show) toast.show('שגיאה בעדכון מצב רוח', 'error');
-                      else alert('שגיאה בעדכון מצב רוח');
-                    }
-                  }} 
-                  style={{ background: 'var(--primary-color)', color: 'white', padding: '8px 20px', borderRadius: '20px', border: 'none', cursor: 'pointer', flex: 1, fontWeight: 'bold' }}
-                >
-                  שמור
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Mood Survey Popup */}
+      <MoodSurveyModal />
 
       {/* Open Activities Section */}
       <section className={styles.section}>

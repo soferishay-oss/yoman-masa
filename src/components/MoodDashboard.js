@@ -1,13 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Activity, User, AlertTriangle, TrendingDown } from 'lucide-react';
+import { Activity, User, AlertTriangle, TrendingDown, BellPlus } from 'lucide-react';
 import styles from '@/app/staff/staff.module.css';
+import { useToast } from '@/components/ToastProvider';
 
 export default function MoodDashboard({ isAdmin = false }) {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, attention, negative_trend
   const [selectedGroupId, setSelectedGroupId] = useState('all');
+  const toast = useToast();
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -135,6 +137,31 @@ export default function MoodDashboard({ isAdmin = false }) {
                     {latestMood.ratingValue}
                   </div>
                 )}
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/staff/moods/trigger', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ studentId: student.id })
+                      });
+                      if (res.ok) {
+                        if (toast?.show) toast.show('בקשה נשלחה. התלמיד יקבל שאלון בכניסה הבאה.', 'success');
+                      } else {
+                        if (toast?.show) toast.show('שגיאה בשליחת הבקשה', 'error');
+                      }
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  style={{
+                    background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '5px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '5px'
+                  }}
+                  title="בקש מענה על שאלון מצב רוח עכשיו"
+                >
+                  <BellPlus size={20} />
+                </button>
               </div>
             );
           })

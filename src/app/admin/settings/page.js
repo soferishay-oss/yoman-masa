@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [showOmer, setShowOmer] = useState(true);
   const [showSchoolEvents, setShowSchoolEvents] = useState(true);
   const [hebrewCalendarNikud, setHebrewCalendarNikud] = useState(false);
+  const [moodSurveySchedule, setMoodSurveySchedule] = useState('weekly_first_login');
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
   
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
         if (data.studyYears) setStudyYears(data.studyYears);
         if (data.moderationLevel) setModerationLevel(data.moderationLevel);
         if (data.nameFormat) setNameFormat(data.nameFormat);
+        if (data.themeConfig?.moodSurveySchedule) setMoodSurveySchedule(data.themeConfig.moodSurveySchedule);
         if (data.themeConfig?.moderationMessage) {
           if (presets.includes(data.themeConfig.moderationMessage)) {
             setModerationMessageSelect(data.themeConfig.moderationMessage);
@@ -84,6 +86,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ 
           name: schoolName, logoUrl, slogan, primaryColor, accentColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
           showHolidays, showParasha, showOmer, showSchoolEvents, hebrewCalendarNikud,
+          moodSurveySchedule,
           moderationMessage: moderationMessageSelect === 'custom' ? customModerationMessage : moderationMessageSelect
         }) 
       });
@@ -270,6 +273,16 @@ export default function AdminDashboard() {
               <option value={4}>רמה 4 - שמרני (חוסם סלנג גס גם בצחוק)</option>
               <option value={5}>רמה 5 - מחמיר מאוד (אפס סובלנות לכל מילה שלילית או מרומזת)</option>
             </select>
+          </div>
+
+          <div style={{marginBottom:'15px', paddingRight: '20px', borderRight: '4px solid var(--primary-light)', backgroundColor: 'var(--bg-color, #f8fafc)', padding: '15px 20px 15px 15px', borderRadius: '8px 0 0 8px'}}>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold', color: 'var(--primary-color)'}}>תזמון חלון שאלון מצב רוח לתלמיד</label>
+            <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={moodSurveySchedule} onChange={(e) => setMoodSurveySchedule(e.target.value)}>
+              <option value="weekly_first_login">פעם בשבוע (בכניסה הראשונה לאותו שבוע)</option>
+              <option value="daily">פעם ביום (בכניסה הראשונה לאותו יום)</option>
+              <option value="disabled">מופסק (יופעל רק לפי דרישה של איש צוות)</option>
+            </select>
+            <p style={{fontSize: '13px', color: '#64748b', marginTop: '5px'}}>* השבוע מתאפס במוצאי שבת בחצות. מנהל/מחנך תמיד יכול לדרוש מצב רוח מתלמיד ספציפי.</p>
           </div>
 
           <div style={{marginBottom:'15px', paddingRight: '20px', borderRight: '4px solid var(--primary-light)', backgroundColor: 'var(--bg-color, #f8fafc)', padding: '15px 20px 15px 15px', borderRadius: '8px 0 0 8px', marginTop: '-5px'}}>
