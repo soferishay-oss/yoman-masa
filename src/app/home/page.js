@@ -2,7 +2,7 @@
 
 import { useContext, useState, useEffect } from 'react';
 import { ThemeContext } from '@/components/ThemeProvider';
-import { BookOpen, Map, Home as HomeIcon, CheckCircle, Clock, Users, Star, Mail, Flag, User, ImageIcon, ChevronLeft, Shield } from 'lucide-react';
+import { BookOpen, Map, Home as HomeIcon, CheckCircle, Clock, Users, Star, Mail, Flag, User, ImageIcon, ChevronLeft, Shield, Vault, Lock } from 'lucide-react';
 import styles from '../page.module.css';
 import Link from 'next/link';
 import TaskItem from '@/components/TaskItem';
@@ -114,20 +114,31 @@ export default function Home() {
         <StudentTimeline />
       </section>
 
-      {/* Your Journal Section */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>היומן שלך</h2>
-        <Link href="/vault" style={{textDecoration: 'none', color: 'inherit'}}>
-          <div className={styles.journalCard}>
-            <div className={styles.journalImagePlaceholder}>
-              <ImageIcon size={32} color="var(--text-muted)" />
+      {/* Vault Section */}
+      <section className={styles.section} style={{ textAlign: 'center', marginTop: '40px', marginBottom: '40px' }}>
+        <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '22px', color: 'var(--primary-color)' }}>דברים שרציתי לשמור</h2>
+        <Link href="/vault" style={{textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'center', marginTop: '20px'}}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+            padding: '30px', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+            border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.3s ease',
+            width: '80%', maxWidth: '300px'
+          }}>
+            <div style={{ 
+              width: '120px', height: '120px', borderRadius: '30px', background: 'var(--primary-color)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 15px rgba(0,0,0,0.1)', marginBottom: '20px',
+              transform: 'rotate(-5deg)'
+            }}>
+              <div style={{ transform: 'rotate(5deg)' }}>
+                <Lock size={60} color="white" strokeWidth={1} />
+              </div>
             </div>
-            <div className={styles.journalContent}>
-              <h3>דברים שרציתי לשמור</h3>
-              <p className={styles.journalMeta}>הכספת האישית שלך</p>
-              <p className={styles.journalSnippet}>לחץ כאן כדי לצפות ברגעים המיוחדים ששמרת...</p>
-            </div>
-            <ChevronLeft className={styles.chevron} size={20} />
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#1e293b' }}>הכספת האישית שלך</h3>
+            <p style={{ color: '#64748b', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+              לחץ כאן כדי להיכנס ולצפות בכל הרגעים המיוחדים ששמרת במסע.
+            </p>
           </div>
         </Link>
       </section>
