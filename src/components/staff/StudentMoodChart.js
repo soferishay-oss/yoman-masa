@@ -6,6 +6,7 @@ import { formatAppDateString } from '@/components/AppDate';
 
 export default function StudentMoodChart({ moodChecks }) {
   const [timeframe, setTimeframe] = useState('month');
+  const [selectedNote, setSelectedNote] = useState(null);
 
   const filteredData = useMemo(() => {
     if (!moodChecks || moodChecks.length === 0) return [];
@@ -50,19 +51,7 @@ export default function StudentMoodChart({ moodChecks }) {
     return <p style={{ color: '#64748b' }}>טרם התקבלו דיווחים מתלמיד זה.</p>;
   }
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div style={{ background: 'white', padding: '10px', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>{data.fullDate} {data.timeStr}</p>
-          <p style={{ margin: 0, color: payload[0].color }}>ציון: {data.ratingValue} / 5</p>
-          {data.explanation && <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#64748b' }}>{data.explanation}</p>}
-        </div>
-      );
-    }
-    return null;
-  };
+  // Hover tooltips are removed per user request
 
   return (
     <div style={{ width: '100%' }}>
@@ -84,36 +73,57 @@ export default function StudentMoodChart({ moodChecks }) {
           אין דיווחים בטווח הזמן שנבחר.
         </div>
       ) : (
-        <div style={{ width: '100%', height: '300px' }} dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={filteredData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis 
-                dataKey="dateStr" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#64748b', fontSize: 12 }} 
-                dy={10}
-              />
-              <YAxis 
-                domain={[1, 5]} 
-                ticks={[1, 2, 3, 4, 5]} 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#64748b', fontSize: 12 }} 
-                dx={-10}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="ratingValue" 
-                stroke="#6366f1" 
-                strokeWidth={3} 
-                dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: 'white' }} 
-                activeDot={{ r: 6, fill: '#4f46e5' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div>
+          <div style={{ width: '100%', height: '180px' }} dir="ltr">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart 
+                data={filteredData} 
+                margin={{ top: 15, right: 30, left: 20, bottom: 5 }}
+                onClick={(state) => {
+                  if (state && state.activePayload && state.activePayload.length > 0) {
+                    setSelectedNote(state.activePayload[0].payload);
+                  }
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="dateStr" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#64748b', fontSize: 12 }} 
+                  dy={10}
+                />
+                <YAxis 
+                  domain={[1, 5]} 
+                  ticks={[1, 2, 3, 4, 5]} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#64748b', fontSize: 12 }} 
+                  dx={-10}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="ratingValue" 
+                  stroke="#6366f1" 
+                  strokeWidth={3} 
+                  dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: 'white' }} 
+                  activeDot={{ r: 6, fill: '#4f46e5' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          {selectedNote && (
+            <div style={{ marginTop: '15px', background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#0f172a' }}>
+                {selectedNote.fullDate} {selectedNote.timeStr} <span style={{ color: '#6366f1' }}>| ציון: {selectedNote.ratingValue}/5</span>
+              </p>
+              {selectedNote.explanation ? (
+                <p style={{ margin: 0, color: '#334155' }}>{selectedNote.explanation}</p>
+              ) : (
+                <p style={{ margin: 0, color: '#94a3b8', fontStyle: 'italic' }}>לא נכתבה הערה לדיווח זה</p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

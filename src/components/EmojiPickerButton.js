@@ -30,7 +30,7 @@ export default function EmojiPickerButton({ onEmojiClick }) {
       </button>
       
       {showPicker && (
-        <div style={{ position: 'absolute', bottom: '100%', right: 0, zIndex: 50, marginBottom: '5px' }}>
+        <div style={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 50, marginBottom: '5px' }}>
           <EmojiPicker 
             onEmojiClick={(emojiData) => {
               onEmojiClick(emojiData.emoji);

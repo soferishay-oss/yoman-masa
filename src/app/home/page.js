@@ -72,12 +72,16 @@ function HomeContent() {
 
   const handleMoodSelect = async (moodValue) => {
     try {
-      await fetch('/api/student/mood', {
+      const res = await fetch('/api/student/mood', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value: moodValue })
+        body: JSON.stringify({ ratingValue: moodValue, explanation: 'דיווח מהיר ממסך הבית' })
       });
-      toast.show('תודה על השיתוף!', 'success');
+      if (res.ok) {
+        toast.show('תודה על השיתוף!', 'success');
+      } else {
+        toast.show('שגיאה בשמירת מצב הרוח', 'error');
+      }
     } catch (e) {
       toast.show('שגיאה בשמירת מצב הרוח', 'error');
     }
@@ -101,13 +105,15 @@ function HomeContent() {
           <div style={{ flex: 1, textAlign: 'center', padding: '0 10px' }}>
             <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--primary-color)', fontWeight: 'bold' }}>{theme.schoolName}</h2>
             {theme.slogan && <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>{theme.slogan}</p>}
+            <div style={{ marginTop: '5px' }}>
+              <span style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
+                {academicYear}
+              </span>
+            </div>
           </div>
 
-          {/* Left: Academic Year */}
+          {/* Left: Empty for Hamburger Menu */}
           <div style={{ width: '60px', textAlign: 'left' }}>
-             <span style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', padding: '4px 8px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }}>
-               {academicYear}
-             </span>
           </div>
         </div>
 
@@ -135,12 +141,12 @@ function HomeContent() {
           boxShadow: '0 4px 10px rgba(0,0,0,0.05)', marginBottom: '30px', textAlign: 'center'
         }}>
           <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px' }}>איך המרגש היום?</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-            <button onClick={() => handleMoodSelect(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Frown size={40} color="#ef4444" /></button>
-            <button onClick={() => handleMoodSelect(3)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Meh size={40} color="#f59e0b" /></button>
-            <button onClick={() => handleMoodSelect(4)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Smile size={40} color="#84cc16" /></button>
-            <button onClick={() => handleMoodSelect(5)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Heart size={40} color="#3b82f6" /></button>
-            <button onClick={() => handleMoodSelect(6)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Star size={40} color="#d946ef" /></button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+            <button onClick={() => handleMoodSelect(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😞</button>
+            <button onClick={() => handleMoodSelect(2)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😕</button>
+            <button onClick={() => handleMoodSelect(3)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😐</button>
+            <button onClick={() => handleMoodSelect(4)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>🙂</button>
+            <button onClick={() => handleMoodSelect(5)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>🤩</button>
           </div>
         </div>
 
