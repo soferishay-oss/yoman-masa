@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User, Home, Heart, BookOpen, Calendar, Shield, Activity, LogOut } from 'lucide-react';
+import { Menu, X, User, Home, Heart, BookOpen, Calendar, Shield, Activity, LogOut, Star } from 'lucide-react';
 import styles from './HamburgerMenu.module.css';
 
 export default function HamburgerMenu({ isDutyStudent }) {
@@ -41,6 +41,7 @@ export default function HamburgerMenu({ isDutyStudent }) {
     { href: '/calendar', icon: Calendar, label: 'לוח מסע' },
     ...(isDutyStudent ? [{ href: '/duty', icon: Shield, label: 'תורן' }] : []),
     { href: '/student/mood-chart', icon: Activity, label: 'גרפים' },
+    { href: '/vault', icon: Star, label: 'דברים שרציתי לשמור' },
   ];
 
   return (

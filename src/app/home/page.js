@@ -123,9 +123,9 @@ export default function Home() {
               <ImageIcon size={32} color="var(--text-muted)" />
             </div>
             <div className={styles.journalContent}>
-              <h3>תיבת הזיכרונות</h3>
+              <h3>דברים שרציתי לשמור</h3>
               <p className={styles.journalMeta}>הכספת האישית שלך</p>
-              <p className={styles.journalSnippet}>לחץ כאן כדי לצפות ברגעים ששמרת...</p>
+              <p className={styles.journalSnippet}>לחץ כאן כדי לצפות ברגעים המיוחדים ששמרת...</p>
             </div>
             <ChevronLeft className={styles.chevron} size={20} />
           </div>

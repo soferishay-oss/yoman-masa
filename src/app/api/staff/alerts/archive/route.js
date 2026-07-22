@@ -14,14 +14,14 @@ export async function GET(request) {
     if (!userId || !tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const alerts = await prisma.staffAlert.findMany({
-      where: { tenantId, isArchived: false },
+      where: { tenantId, isArchived: true },
       orderBy: { createdAt: 'desc' },
-      take: 50 // Limit to recent alerts
+      take: 100
     });
     
     return NextResponse.json(alerts);
   } catch (error) {
-    console.error('Failed to fetch alerts:', error);
+    console.error('Failed to fetch archived alerts:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

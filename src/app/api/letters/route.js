@@ -132,6 +132,8 @@ Message to check: "${content}"`;
       }
     }
 
+    const recipientUser = await prisma.user.findUnique({ where: { id: recipientId } });
+    
     const newLetter = await prisma.letter.create({
       data: {
         content: content || '',
@@ -143,6 +145,22 @@ Message to check: "${content}"`;
         aiThought: aiThought || null
       }
     });
+
+    if (recipientUser && ['admin', 'staff', 'teacher', 'owner'].includes(recipientUser.role)) {
+      const senderUser = await prisma.user.findUnique({ where: { id: userId } });
+      await prisma.staffAlert.create({
+        data: {
+          tenantId,
+          type: 'letter',
+          content: `מכתב חדש התקבל מ${senderUser?.fullName}`,
+          metadata: {
+            letterId: newLetter.id,
+            senderName: senderUser?.fullName || 'לא ידוע',
+            recipientId: recipientUser.id
+          }
+        }
+      });
+    }
 
     return NextResponse.json(newLetter, { status: 201 });
   } catch (error) {

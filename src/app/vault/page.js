@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Lock, Star, BookOpen, Clock, X } from 'lucide-react';
-import styles from '../journal/journal.module.css'; // Reusing journal styles
+import styles from './vault.module.css';
 import { useToast } from '@/components/ToastProvider';
 
 export default function VaultPage() {
@@ -57,7 +57,7 @@ export default function VaultPage() {
           <div style={{background:'var(--primary-color)', padding:'10px', borderRadius:'12px', color:'white'}}>
             <Star size={24} />
           </div>
-          <h1>דברים מיוחדים</h1>
+          <h1>דברים שרציתי לשמור</h1>
         </div>
         <p>כאן שמורים הרגעים, המכתבים והתובנות החשובים ביותר שסימנת לאורך השנה, שייכנסו לספר המסע האישי שלך.</p>
       </header>

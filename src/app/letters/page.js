@@ -19,6 +19,16 @@ export default function LettersPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [aiThought, setAiThought] = useState('');
   const [aiTranscription, setAiTranscription] = useState('');
+  const [filterType, setFilterType] = useState('my_groups');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUsers = users.filter(u => {
+    if (searchQuery && !u.fullName.includes(searchQuery)) return false;
+    if (filterType === 'my_groups') return u.sharesGroup && u.role === 'student';
+    if (filterType === 'staff') return ['admin', 'staff', 'teacher', 'owner'].includes(u.role);
+    if (filterType === 'all') return u.role === 'student';
+    return true;
+  });
 
   useEffect(() => {
     fetchLetters();
@@ -227,18 +237,46 @@ export default function LettersPage() {
       {isComposing && (
         <form onSubmit={handleSend} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
           <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px' }}>למי תרצה לכתוב?</label>
-            <select 
-              value={selectedUser} 
-              onChange={e => setSelectedUser(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
-              required
-            >
-              <option value="">-- בחר/י --</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id}>{u.fullName} ({u.role})</option>
-              ))}
-            </select>
+            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>למי תרצה לכתוב?</label>
+            
+            {!selectedUser ? (
+              <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <button type="button" onClick={() => setFilterType('my_groups')} style={{ flex: 1, padding: '8px', borderRadius: '20px', border: '1px solid var(--primary-color)', background: filterType === 'my_groups' ? 'var(--primary-color)' : 'white', color: filterType === 'my_groups' ? 'white' : 'var(--primary-color)', cursor: 'pointer' }}>מהקבוצות שלי</button>
+                  <button type="button" onClick={() => setFilterType('all')} style={{ flex: 1, padding: '8px', borderRadius: '20px', border: '1px solid var(--primary-color)', background: filterType === 'all' ? 'var(--primary-color)' : 'white', color: filterType === 'all' ? 'white' : 'var(--primary-color)', cursor: 'pointer' }}>כולם</button>
+                  <button type="button" onClick={() => setFilterType('staff')} style={{ flex: 1, padding: '8px', borderRadius: '20px', border: '1px solid var(--primary-color)', background: filterType === 'staff' ? 'var(--primary-color)' : 'white', color: filterType === 'staff' ? 'white' : 'var(--primary-color)', cursor: 'pointer' }}>צוות</button>
+                </div>
+                
+                <input 
+                  type="text" 
+                  placeholder="חיפוש לפי שם..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #cbd5e1', marginBottom: '15px' }}
+                />
+                
+                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white' }}>
+                  {filteredUsers.length > 0 ? filteredUsers.map(u => (
+                    <div 
+                      key={u.id} 
+                      onClick={() => setSelectedUser(u.id)}
+                      style={{ padding: '10px 15px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
+                    >
+                      {u.fullName} {u.role !== 'student' && `(${u.role})`}
+                    </div>
+                  )) : (
+                    <div style={{ padding: '15px', textAlign: 'center', color: '#94a3b8' }}>לא נמצאו תוצאות</div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', padding: '12px 15px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
+                <span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>
+                  {users.find(u => u.id === selectedUser)?.fullName}
+                </span>
+                <button type="button" onClick={() => setSelectedUser('')} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer' }}>שנה נמען</button>
+              </div>
+            )}
           </div>
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px' }}>תוכן המכתב</label>

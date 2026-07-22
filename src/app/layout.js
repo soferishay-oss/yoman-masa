@@ -73,6 +73,10 @@ export default async function RootLayout({ children }) {
                 <div className={styles.icon}><User size={24} /></div>
                 <span>פרופיל</span>
               </Link>
+              <Link href="/staff/archive" className={styles.navItem}>
+                <div className={styles.icon}><BookOpen size={24} /></div>
+                <span>ארכיון</span>
+              </Link>
               <Link href={userRole === 'admin' ? '/admin' : '/staff'} className={`${styles.navItem} ${styles.active}`}>
                 <div className={styles.icon}><Home size={24} /></div>
                 <span>{userRole === 'admin' ? 'פאנל ניהול' : 'אזור צוות'}</span>

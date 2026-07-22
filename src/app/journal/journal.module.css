@@ -195,12 +195,19 @@
 }
 
 .journalPage {
-  background: #fffdf8; /* Slightly warm, paper-like color */
-  border-radius: 4px;
-  padding: 25px;
+  background-color: #fff;
+  background-image: 
+    linear-gradient(90deg, transparent 40px, #ef4444 40px, #ef4444 42px, transparent 42px),
+    linear-gradient(#f1f5f9 1px, transparent 1px);
+  background-size: 100% 100%, 100% 30px;
+  background-position: left top, left 45px;
+  border-radius: 4px 12px 12px 4px;
+  padding: 45px 25px 25px 60px; /* Leave space for the red margin */
   box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.08), -2px 0 5px rgba(0,0,0,0.02);
   position: relative;
-  border-right: 4px solid #e2e8f0; /* Simulate binding/spine */
+  border-right: 1px solid #cbd5e1;
+  border-left: 5px solid #cbd5e1; /* Simulate binding/spine */
+  margin-bottom: 30px;
 }
 
 /* Add a subtle page stack effect */
@@ -208,11 +215,11 @@
   content: '';
   position: absolute;
   bottom: -4px;
-  left: 2px;
+  left: 5px;
   right: -2px;
   height: 4px;
-  background: #f1f5f9;
-  border-radius: 0 0 4px 4px;
+  background: #f8fafc;
+  border-radius: 0 0 12px 0;
   border-bottom: 1px solid #cbd5e1;
   border-right: 1px solid #cbd5e1;
 }

@@ -16,12 +16,15 @@ export async function GET(request) {
 
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { tenantId: true }
+      select: { tenantId: true, classId: true, groupMemberships: { select: { groupId: true } } }
     });
 
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    const currentUserGroupIds = currentUser.groupMemberships.map(g => g.groupId);
+    if (currentUser.classId) currentUserGroupIds.push(currentUser.classId);
 
     // Return all users in the same tenant to allow sending messages to staff as well
     const users = await prisma.user.findMany({
@@ -33,14 +36,28 @@ export async function GET(request) {
       select: {
         id: true,
         fullName: true,
-        role: true
+        role: true,
+        classId: true,
+        groupMemberships: { select: { groupId: true } }
       },
       orderBy: {
         fullName: 'asc'
       }
     });
 
-    return NextResponse.json(users);
+    const enrichedUsers = users.map(u => {
+      const uGroupIds = u.groupMemberships.map(g => g.groupId);
+      if (u.classId) uGroupIds.push(u.classId);
+      const sharesGroup = uGroupIds.some(id => currentUserGroupIds.includes(id));
+      return {
+        id: u.id,
+        fullName: u.fullName,
+        role: u.role,
+        sharesGroup
+      };
+    });
+
+    return NextResponse.json(enrichedUsers);
   } catch (error) {
     console.error('Failed to fetch users:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

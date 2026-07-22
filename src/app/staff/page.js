@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle } from 'lucide-react';
+import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle, Mail, Archive } from 'lucide-react';
 import styles from './staff.module.css';
 import TaskBuilder from '@/components/TaskBuilder';
 import TaskTracker from '@/components/TaskTracker';
@@ -19,6 +19,7 @@ export default function StaffDashboard() {
   const [greeting, setGreeting] = useState('שלום');
   const [alerts, setAlerts] = useState([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [modalType, setModalType] = useState('system'); // 'system' or 'letter'
   const [triggeringGroupId, setTriggeringGroupId] = useState(null);
 
   useEffect(() => {
@@ -67,6 +68,16 @@ export default function StaffDashboard() {
     }
   };
 
+  const archiveAlert = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await fetch(`/api/staff/alerts/${id}/archive`, { method: 'PUT' });
+      setAlerts(alerts.filter(a => a.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
       const res = await fetch('/api/profile');
@@ -93,7 +104,11 @@ export default function StaffDashboard() {
     }
   };
 
-  const unreadAlerts = alerts.filter(a => !a.isRead);
+  const letterAlerts = alerts.filter(a => a.type === 'letter');
+  const systemAlerts = alerts.filter(a => a.type !== 'letter');
+  const unreadLetterAlerts = letterAlerts.filter(a => !a.isRead);
+  const unreadSystemAlerts = systemAlerts.filter(a => !a.isRead);
+  const displayedAlerts = modalType === 'system' ? systemAlerts : letterAlerts;
 
   return (
     <div className={styles.container}>
@@ -102,15 +117,26 @@ export default function StaffDashboard() {
           <h1 style={{ margin: 0 }}>{greeting} {userName || 'איש צוות'}!</h1>
           <p style={{ margin: '5px 0 0 0' }}>אזור ניהול והדרכת חניכים</p>
         </div>
-        <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', gap: '15px' }}>
           <button 
-            onClick={() => setShowNotificationModal(true)} 
+            onClick={() => { setModalType('letter'); setShowNotificationModal(true); }} 
             style={{ background: 'white', border: 'none', borderRadius: '50%', padding: '10px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', position: 'relative' }}
           >
-            <Bell size={24} color="#475569" />
-            {unreadAlerts.length > 0 && (
+            <Mail size={24} color="#3b82f6" />
+            {unreadLetterAlerts.length > 0 && (
+              <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#3b82f6', color: 'white', fontSize: '12px', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                {unreadLetterAlerts.length}
+              </span>
+            )}
+          </button>
+          <button 
+            onClick={() => { setModalType('system'); setShowNotificationModal(true); }} 
+            style={{ background: 'white', border: 'none', borderRadius: '50%', padding: '10px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', position: 'relative' }}
+          >
+            <Bell size={24} color="#f59e0b" />
+            {unreadSystemAlerts.length > 0 && (
               <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: 'white', fontSize: '12px', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                {unreadAlerts.length}
+                {unreadSystemAlerts.length}
               </span>
             )}
           </button>
@@ -122,26 +148,42 @@ export default function StaffDashboard() {
           <div style={{ background: 'white', width: '100%', maxWidth: '500px', borderRadius: '12px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <AlertTriangle color="#f59e0b" /> התראות צוות
+                {modalType === 'system' ? <><AlertTriangle color="#f59e0b" /> התראות מערכת</> : <><Mail color="#3b82f6" /> מכתבים נכנסים</>}
               </h2>
               <button onClick={() => setShowNotificationModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>×</button>
             </div>
             <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {alerts.length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#64748b' }}>אין התראות חדשות.</p>
+              {displayedAlerts.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#64748b' }}>אין {modalType === 'system' ? 'התראות' : 'מכתבים'} כרגע.</p>
               ) : (
-                alerts.map(alert => (
-                  <div key={alert.id} onClick={() => { if (!alert.isRead) markAlertAsRead(alert.id); }} style={{ background: alert.isRead ? '#f8fafc' : '#fee2e2', border: `1px solid ${alert.isRead ? '#e2e8f0' : '#fca5a5'}`, padding: '15px', borderRadius: '8px', cursor: alert.isRead ? 'default' : 'pointer' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <strong style={{ color: alert.isRead ? '#475569' : '#b91c1c' }}>{alert.content}</strong>
+                displayedAlerts.map(alert => (
+                  <div key={alert.id} onClick={() => { if (!alert.isRead) markAlertAsRead(alert.id); }} style={{ background: alert.isRead ? '#f8fafc' : (modalType === 'system' ? '#fee2e2' : '#eff6ff'), border: `1px solid ${alert.isRead ? '#e2e8f0' : (modalType === 'system' ? '#fca5a5' : '#bfdbfe')}`, padding: '15px', borderRadius: '8px', cursor: alert.isRead ? 'default' : 'pointer', position: 'relative' }}>
+                    <button 
+                      onClick={(e) => archiveAlert(alert.id, e)}
+                      style={{ position: 'absolute', top: '10px', left: '10px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+                      title="העבר לארכיון"
+                    >
+                      <Archive size={14} />
+                    </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', paddingLeft: '30px' }}>
+                      <strong style={{ color: alert.isRead ? '#475569' : (modalType === 'system' ? '#b91c1c' : '#1e3a8a') }}>{alert.content}</strong>
                       <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(alert.createdAt).toLocaleString('he-IL')}</span>
                     </div>
                     {alert.metadata && (
                       <div style={{ fontSize: '13px', color: '#475569', marginTop: '10px', background: 'rgba(255,255,255,0.5)', padding: '10px', borderRadius: '4px' }}>
-                        <div><strong>שולח:</strong> {alert.metadata.senderName}</div>
-                        <div><strong>נמען:</strong> {alert.metadata.recipientName}</div>
-                        <div style={{ marginTop: '5px' }}><strong>הודעה שנפסלה:</strong> "{alert.metadata.messageContent}"</div>
-                        <div style={{ marginTop: '5px', color: '#ef4444' }}><strong>סיבה:</strong> {alert.metadata.reason}</div>
+                        {modalType === 'letter' ? (
+                          <>
+                            <div><strong>שולח:</strong> {alert.metadata.senderName}</div>
+                            <div style={{ marginTop: '10px', fontStyle: 'italic' }}>* כנסו לתיבת המכתבים שלכם כדי לקרוא ולהשיב!</div>
+                          </>
+                        ) : (
+                          <>
+                            <div><strong>שולח:</strong> {alert.metadata.senderName}</div>
+                            <div><strong>נמען:</strong> {alert.metadata.recipientName}</div>
+                            <div style={{ marginTop: '5px' }}><strong>הודעה שנפסלה:</strong> "{alert.metadata.messageContent}"</div>
+                            <div style={{ marginTop: '5px', color: '#ef4444' }}><strong>סיבה:</strong> {alert.metadata.reason}</div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
