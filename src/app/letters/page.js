@@ -51,12 +51,6 @@ export default function LettersPage() {
     }
   };
 
-    if (type === 'image') {
-      setMediaUrls([...mediaUrls, { type: 'image', url: 'https://via.placeholder.com/400x300.png?text=Simulated+Letter+Image' }]);
-    }
-
-
-
   const handleSend = async (e) => {
     e.preventDefault();
     if (!selectedUser || (!letterContent && mediaUrls.length === 0)) return;
