@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { PenLine, Image as ImageIcon, Mic, Send, Sparkles, Star, Trash2 } from 'lucide-react';
+import { ThemeContext } from '@/components/ThemeProvider';
 import AppDate from '@/components/AppDate';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
@@ -10,6 +11,9 @@ import { useToast } from '@/components/ToastProvider';
 import EmojiPickerButton from '@/components/EmojiPickerButton';
 
 export default function JournalPage() {
+  const theme = useContext(ThemeContext);
+  const aiLevel = theme.themeConfig?.aiCorrectionLevel || 'phrasing';
+  
   const toast = useToast();
   const [entries, setEntries] = useState([]);
   const [newEntryContent, setNewEntryContent] = useState('');
@@ -256,14 +260,14 @@ export default function JournalPage() {
             <button onClick={handleSave} disabled={!newEntryContent && mediaUrls.length === 0} className={styles.roundActionBtn} style={{ color: '#3b82f6', background: '#eff6ff' }} title="שלח">
               <Send size={20} />
             </button>
-            {newEntryContent && !showFixedDraftOptions && (
+            {newEntryContent && !showFixedDraftOptions && aiLevel !== 'disabled' && (
               <button 
                 onClick={handleFixPhrasing} 
                 disabled={isFixingPhrasing} 
                 className={`${styles.fixPhrasingBtn} ${isFixingPhrasing ? styles.loadingBtn : ''}`}
-                title="תקן ניסוח עם AI"
+                title="תקן באמצעות AI"
               >
-                <Sparkles size={16} /> תקן ניסוח
+                <Sparkles size={16} /> {aiLevel === 'spelling_only' ? 'תקן שגיאות כתיב' : (aiLevel === 'spelling_punctuation' ? 'תקן שגיאות ופיסוק' : 'תקן שגיאות וניסוח')}
               </button>
             )}
           </div>

@@ -95,6 +95,10 @@ export async function PUT(request) {
       newThemeConfig.moderationMessage = data.moderationMessage;
       themeConfigChanged = true;
     }
+    if (data.aiCorrectionLevel !== undefined) {
+      newThemeConfig.aiCorrectionLevel = data.aiCorrectionLevel;
+      themeConfigChanged = true;
+    }
 
     if (themeConfigChanged) {
       updateData.themeConfig = newThemeConfig;

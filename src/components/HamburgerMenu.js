@@ -33,6 +33,15 @@ export default function HamburgerMenu({ isDutyStudent }) {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
   const navItems = [
     { href: '/profile', icon: User, label: 'פרופיל אישי' },
     { href: '/home', icon: Home, label: 'בית' },
@@ -76,10 +85,10 @@ export default function HamburgerMenu({ isDutyStudent }) {
           
           <div className={styles.divider} />
           
-          <Link href="/api/auth/logout" className={`${styles.navItem} ${styles.logoutItem}`}>
+          <button onClick={handleLogout} className={`${styles.navItem} ${styles.logoutItem}`} style={{background: 'none', border: 'none', width: '100%', textAlign: 'right', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit'}}>
             <LogOut size={20} />
             <span>התנתק</span>
-          </Link>
+          </button>
         </nav>
       </div>
     </>
