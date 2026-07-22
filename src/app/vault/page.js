@@ -96,13 +96,7 @@ export default function VaultPage() {
               {item.bodyText?.length > 150 ? '...' : ''}
             </p>
             
-            <div className={styles.entryFooter}>
-              <div className={styles.tagList}>
-                <span className={styles.tag} style={{background: 'var(--primary-light)', color: 'var(--primary-color)'}}>
-                  <Star size={12} style={{display:'inline', verticalAlign:'middle', marginRight:'3px'}}/> נשמר בדברים המיוחדים
-                </span>
-              </div>
-            </div>
+
           </div>
         ))}
         {items.length === 0 && (
