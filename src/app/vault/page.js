@@ -77,13 +77,17 @@ export default function VaultPage() {
               <X size={20} />
             </button>
             <div className={styles.entryHeader}>
-              <h3 className={styles.entryTitle}>{item.title || 'רשומה ללא כותרת'}</h3>
+              <h3 className={styles.entryTitle}>
+                {item.title ? item.title : <AppDate date={item.createdAt} />}
+              </h3>
               <div className={styles.entryMeta}>
-                <span className={styles.metaItem}>
-                  <div className={styles.itemDate}>
-                    <AppDate date={item.createdAt} />
-                  </div>
-                </span>
+                {item.title && (
+                  <span className={styles.metaItem}>
+                    <div className={styles.itemDate}>
+                      <AppDate date={item.createdAt} />
+                    </div>
+                  </span>
+                )}
                 <span className={styles.metaItem}>
                   <BookOpen size={14} />
                   {item.type === 'journal' ? 'יומן' : item.type === 'letter' ? 'מכתב' : 'סיכום'}
