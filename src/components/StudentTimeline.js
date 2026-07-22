@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, MapPin, Flag } from 'lucide-react';
 import styles from '@/app/page.module.css';
+import EventDetailsModal from './EventDetailsModal';
 
 export default function StudentTimeline() {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,8 +48,7 @@ export default function StudentTimeline() {
             key={ev.id}
             onClick={() => {
               if (isPast || eventDate.toDateString() === now.toDateString()) {
-                // Navigate to journal with this event as context (if we support that)
-                router.push(`/journal`);
+                setSelectedEvent(ev);
               }
             }}
             style={{ 
@@ -75,6 +76,13 @@ export default function StudentTimeline() {
           </div>
         );
       })}
+
+      {selectedEvent && (
+        <EventDetailsModal 
+          event={selectedEvent} 
+          onClose={() => setSelectedEvent(null)} 
+        />
+      )}
     </div>
   );
 }
