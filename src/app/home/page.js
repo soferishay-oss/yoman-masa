@@ -1,21 +1,28 @@
 'use client';
 
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect, Suspense } from 'react';
 import { ThemeContext } from '@/components/ThemeProvider';
-import { BookOpen, Map, Home as HomeIcon, CheckCircle, Clock, Users, Star, Mail, Flag, User, ImageIcon, ChevronLeft, Shield, Vault, Lock } from 'lucide-react';
+import { Shield, Lock, Frown, Meh, Smile, Heart, Star } from 'lucide-react';
 import styles from '../page.module.css';
 import Link from 'next/link';
 import TaskItem from '@/components/TaskItem';
 import StudentTimeline from '@/components/StudentTimeline';
 import { useToast } from '@/components/ToastProvider';
 import MoodSurveyModal from '@/components/MoodSurveyModal';
+import JournalComposer from '@/components/JournalComposer';
+import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function Home() {
+function HomeContent() {
   const theme = useContext(ThemeContext);
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
+  const router = useRouter();
+
   const [tasks, setTasks] = useState([]);
   const [userName, setUserName] = useState('');
   const [academicYear, setAcademicYear] = useState('');
   const [greeting, setGreeting] = useState('שלום');
+  const [initialEditData, setInitialEditData] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -33,7 +40,7 @@ export default function Home() {
       const res = await fetch('/api/profile');
       if(res.ok) {
         const data = await res.json();
-        setUserName(data.firstName || data.fullName);
+        setUserName(data.firstName || data.fullName.split(' ')[0] || '');
         setAcademicYear(data.tenant?.currentAcademicYear?.name || 'תשפ״ה');
       }
     }
@@ -41,108 +48,185 @@ export default function Home() {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    if (editId) {
+      async function fetchEntry() {
+        try {
+          const res = await fetch(`/api/journal/${editId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setInitialEditData(data);
+          } else {
+            toast.show('לא ניתן לטעון רשומה זו לעריכה', 'error');
+            router.replace('/home');
+          }
+        } catch(e) {
+          toast.show('שגיאה בטעינת הרשומה', 'error');
+        }
+      }
+      fetchEntry();
+    } else {
+      setInitialEditData(null);
+    }
+  }, [editId, router, toast]);
+
+  const handleMoodSelect = async (moodValue) => {
+    try {
+      await fetch('/api/student/mood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: moodValue })
+      });
+      toast.show('תודה על השיתוף!', 'success');
+    } catch (e) {
+      toast.show('שגיאה בשמירת מצב הרוח', 'error');
+    }
+  };
+
   return (
     <div className={styles.container}>
-      {/* Header Section */}
-      <header className={styles.header}>
-        <div className={styles.logoContainer}>
-          <p className={styles.schoolName}>
-            {theme.schoolName}
-            {academicYear && <span className={styles.academicYearBadge}>{academicYear}</span>}
-          </p>
-          <div className={styles.logoBadge}>
+      {/* Refactored Header Section */}
+      <header className={styles.header} style={{ paddingBottom: '30px', position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '20px' }}>
+          {/* Right: Logo */}
+          <div style={{ width: '60px', textAlign: 'right' }}>
             {theme.logoUrl ? (
-              <img src={theme.logoUrl} alt="Logo" style={{width: 40, height: 40, objectFit: 'contain', marginBottom: 5}} />
+              <img src={theme.logoUrl} alt="Logo" style={{width: 50, height: 50, objectFit: 'contain'}} />
             ) : (
-              <Shield className={styles.logoIcon} size={28} />
+              <Shield size={40} color="var(--primary-color)" />
             )}
-            <br/>
-            {theme.slogan}
+          </div>
+          
+          {/* Center: School Name & Slogan */}
+          <div style={{ flex: 1, textAlign: 'center', padding: '0 10px' }}>
+            <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--primary-color)', fontWeight: 'bold' }}>{theme.schoolName}</h2>
+            {theme.slogan && <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>{theme.slogan}</p>}
+          </div>
+
+          {/* Left: Academic Year */}
+          <div style={{ width: '60px', textAlign: 'left' }}>
+             <span style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', padding: '4px 8px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }}>
+               {academicYear}
+             </span>
           </div>
         </div>
-        <h1 className={styles.greeting} style={{ fontSize: '22px' }}>{greeting} {userName || 'חבר'}, מה מחכה לך היום?</h1>
-        <p className={styles.subtitle} style={{ fontSize: '14px' }}>המסע שלך. הסיפור שלך.</p>
+
+        {/* Greeting */}
+        <h1 className={styles.greeting} style={{ fontSize: '24px', textAlign: 'center', marginTop: '10px' }}>
+          {greeting} {userName}
+        </h1>
+        
+        {/* Arch separating header from content */}
+        <div style={{
+          position: 'absolute', bottom: '-20px', left: 0, right: 0, height: '40px',
+          background: 'var(--bg-color)', borderTopLeftRadius: '50%', borderTopRightRadius: '50%'
+        }}></div>
       </header>
 
-      {/* Mood Survey Popup */}
-      <MoodSurveyModal />
+      {/* Main Content Area starting under the arch */}
+      <div style={{ position: 'relative', zIndex: 1, marginTop: '-10px', padding: '0 15px' }}>
+        
+        {/* Journal Composer */}
+        <JournalComposer initialData={initialEditData} />
 
-      {/* Open Activities Section */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>משימות פתוחות מהצוות</h2>
-        <div className={styles.activitiesList}>
-          
-          {tasks.map(assignment => (
-            <TaskItem 
-              key={assignment.id} 
-              assignment={assignment} 
-              onComplete={async (assignmentId, checklistState) => {
-                const res = await fetch('/api/student/tasks', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
-                });
-                if(res.ok) {
-                  if (toast?.show) toast.show('כל הכבוד! המשימה הושלמה.', 'success');
-                  else alert('כל הכבוד! המשימה הושלמה.');
-                  setTasks(tasks.filter(t => t.id !== assignmentId));
-                }
-              }}
-              onProgress={async (assignmentId, checklistState, status) => {
-                await fetch('/api/student/tasks', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ assignmentId, status, checklistState })
-                });
-                setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
-              }}
-            />
-          ))}
-
-          {tasks.length === 0 && (
-            <div style={{padding: '20px', color: '#64748b', textAlign: 'center'}}>
-              אין משימות פתוחות כרגע.
-            </div>
-          )}
-
-        </div>
-      </section>
-
-      {/* Upcoming Stations Section */}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>ציר הזמן שלי</h2>
-        <StudentTimeline />
-      </section>
-
-      {/* Vault Section */}
-      <section className={styles.section} style={{ textAlign: 'center', marginTop: '40px', marginBottom: '40px' }}>
-        <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '22px', color: 'var(--primary-color)' }}>דברים שרציתי לשמור</h2>
-        <Link href="/vault" style={{textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'center', marginTop: '20px'}}>
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            padding: '30px', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-            border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.3s ease',
-            width: '80%', maxWidth: '300px'
-          }}>
-            <div style={{ 
-              width: '120px', height: '120px', borderRadius: '30px', background: 'var(--primary-color)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 8px 15px rgba(0,0,0,0.1)', marginBottom: '20px',
-              transform: 'rotate(-5deg)'
-            }}>
-              <div style={{ transform: 'rotate(5deg)' }}>
-                <Lock size={60} color="white" strokeWidth={1} />
-              </div>
-            </div>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#1e293b' }}>הכספת האישית שלך</h3>
-            <p style={{ color: '#64748b', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-              לחץ כאן כדי להיכנס ולצפות בכל הרגעים המיוחדים ששמרת במסע.
-            </p>
+        {/* Static Mood Survey */}
+        <div style={{
+          background: 'white', borderRadius: '16px', padding: '20px',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.05)', marginBottom: '30px', textAlign: 'center'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px' }}>איך המרגש היום?</h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+            <button onClick={() => handleMoodSelect(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Frown size={40} color="#ef4444" /></button>
+            <button onClick={() => handleMoodSelect(3)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Meh size={40} color="#f59e0b" /></button>
+            <button onClick={() => handleMoodSelect(4)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Smile size={40} color="#84cc16" /></button>
+            <button onClick={() => handleMoodSelect(5)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Heart size={40} color="#3b82f6" /></button>
+            <button onClick={() => handleMoodSelect(6)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s' }}><Star size={40} color="#d946ef" /></button>
           </div>
-        </Link>
-      </section>
-      
+        </div>
+
+        {/* Mood Survey Popup (Reminder) */}
+        <MoodSurveyModal />
+
+        {/* Open Activities Section */}
+        <section className={styles.section} style={{ marginTop: '40px' }}>
+          <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '20px', color: 'var(--primary-color)' }}>משימות פתוחות מהצוות</h2>
+          <div className={styles.activitiesList}>
+            {tasks.map(assignment => (
+              <TaskItem 
+                key={assignment.id} 
+                assignment={assignment} 
+                onComplete={async (assignmentId, checklistState) => {
+                  const res = await fetch('/api/student/tasks', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
+                  });
+                  if(res.ok) {
+                    if (toast?.show) toast.show('כל הכבוד! המשימה הושלמה.', 'success');
+                    setTasks(tasks.filter(t => t.id !== assignmentId));
+                  }
+                }}
+                onProgress={async (assignmentId, checklistState, status) => {
+                  await fetch('/api/student/tasks', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ assignmentId, status, checklistState })
+                  });
+                  setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
+                }}
+              />
+            ))}
+            {tasks.length === 0 && (
+              <div style={{padding: '20px', color: '#64748b', textAlign: 'center'}}>
+                אין משימות פתוחות כרגע.
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Upcoming Stations Section */}
+        <section className={styles.section} style={{ marginTop: '40px' }}>
+          <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '20px', color: 'var(--primary-color)' }}>ציר הזמן שלי</h2>
+          <StudentTimeline />
+        </section>
+
+        {/* Vault Section */}
+        <section className={styles.section} style={{ textAlign: 'center', marginTop: '40px', marginBottom: '40px' }}>
+          <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '20px', color: 'var(--primary-color)' }}>דברים שרציתי לשמור</h2>
+          <Link href="/vault" style={{textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'center', marginTop: '20px'}}>
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              padding: '30px', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+              border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.3s ease',
+              width: '80%', maxWidth: '300px'
+            }}>
+              <div style={{ 
+                width: '120px', height: '120px', borderRadius: '30px', background: 'var(--primary-color)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 8px 15px rgba(0,0,0,0.1)', marginBottom: '20px',
+                transform: 'rotate(-5deg)'
+              }}>
+                <div style={{ transform: 'rotate(5deg)' }}>
+                  <Lock size={60} color="white" strokeWidth={1} />
+                </div>
+              </div>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#1e293b' }}>הכספת האישית שלך</h3>
+              <p style={{ color: '#64748b', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
+                לחץ כאן כדי להיכנס ולצפות בכל הרגעים המיוחדים ששמרת במסע.
+              </p>
+            </div>
+          </Link>
+        </section>
+      </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

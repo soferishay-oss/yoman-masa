@@ -43,7 +43,7 @@ export async function middleware(request) {
       } else if (payload.role === 'staff') {
         return NextResponse.redirect(new URL('/staff', request.url));
       } else if (payload.role === 'student') {
-        return NextResponse.redirect(new URL('/journal', request.url));
+        return NextResponse.redirect(new URL('/home', request.url));
       }
     }
 
