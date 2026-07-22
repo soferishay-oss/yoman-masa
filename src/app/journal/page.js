@@ -34,8 +34,6 @@ export default function JournalPage() {
     }
   };
 
-  };
-
   const handleSaveToVault = async (entry) => {
     const newVaultStatus = !entry.isVault;
     setEntries(entries.map(e => e.id === entry.id ? { ...e, isVault: newVaultStatus } : e));
