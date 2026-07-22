@@ -259,15 +259,6 @@ export default function AdminDashboard() {
               <option value={5}>רמה 5 - מחמיר מאוד (אפס סובלנות לכל מילה שלילית או מרומזת)</option>
             </select>
           </div>
-          <div style={{marginBottom:'15px'}}>
-            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>רמת סיוע מבוסס בינה מלאכותית (AI) בכתיבה</label>
-            <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={aiCorrectionLevel} onChange={(e) => setAiCorrectionLevel(e.target.value)}>
-              <option value="phrasing">שגיאות כתיב, פיסוק ושיפור ניסוח (ברירת מחדל)</option>
-              <option value="spelling_punctuation">שגיאות כתיב ופיסוק (ללא שינוי סגנון וניסוח)</option>
-              <option value="spelling_only">רק שגיאות כתיב (ללא פיסוק וללא שינוי מילים)</option>
-              <option value="disabled">כבוי (כפתור התיקון לא יופיע לתלמידים)</option>
-            </select>
-          </div>
 
           <div style={{marginBottom:'15px', paddingRight: '20px', borderRight: '4px solid var(--primary-light)', backgroundColor: 'var(--bg-color, #f8fafc)', padding: '15px 20px 15px 15px', borderRadius: '8px 0 0 8px', marginTop: '-5px'}}>
             <label style={{display:'block', marginBottom:'5px', fontWeight:'bold', color: 'var(--primary-color)'}}>הודעה לתלמיד על תוכן שנפסל (קשור לרמת הסינון לעיל)</label>
@@ -290,6 +281,16 @@ export default function AdminDashboard() {
                 style={{ width: '100%', minHeight: '100px', resize: 'vertical', padding: '12px', marginTop: '10px', fontSize: '1rem', lineHeight: '1.5' }}
               />
             )}
+          </div>
+
+          <div style={{marginBottom:'15px'}}>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>רמת סיוע מבוסס בינה מלאכותית (AI) בכתיבה</label>
+            <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={aiCorrectionLevel} onChange={(e) => setAiCorrectionLevel(e.target.value)}>
+              <option value="phrasing">שגיאות כתיב, פיסוק ושיפור ניסוח (ברירת מחדל)</option>
+              <option value="spelling_punctuation">שגיאות כתיב ופיסוק (ללא שינוי סגנון וניסוח)</option>
+              <option value="spelling_only">רק שגיאות כתיב (ללא פיסוק וללא שינוי מילים)</option>
+              <option value="disabled">כבוי (כפתור התיקון לא יופיע לתלמידים)</option>
+            </select>
           </div>
 
           <div style={{marginBottom:'15px'}}>
