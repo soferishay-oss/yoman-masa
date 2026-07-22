@@ -2,6 +2,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react';
 import { Calendar, Plus, MapPin, Tag, Palette, CalendarDays } from 'lucide-react';
+import AppDate, { formatAppDateString } from '@/components/AppDate';
 import styles from '@/app/staff/staff.module.css';
 import { ThemeContext } from '@/components/ThemeProvider';
 import { useContext } from 'react';
@@ -197,8 +198,8 @@ export default function EventBuilder() {
         {isLoading ? <p>טוען...</p> : events.length === 0 ? <p>אין אירועים בלוח השנה</p> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {events.map(ev => {
-              const startStr = new Date(ev.scheduledDate).toLocaleDateString('he-IL');
-              const endStr = ev.endDate ? new Date(ev.endDate).toLocaleDateString('he-IL') : null;
+              const startStr = formatAppDateString(ev.scheduledDate);
+              const endStr = ev.endDate ? formatAppDateString(ev.endDate) : null;
               const dateStr = endStr && endStr !== startStr ? `${startStr} - ${endStr}` : startStr;
               
               return (

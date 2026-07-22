@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle, Mail, Archive } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 import styles from './staff.module.css';
 import TaskBuilder from '@/components/TaskBuilder';
 import TaskTracker from '@/components/TaskTracker';
@@ -167,7 +168,7 @@ export default function StaffDashboard() {
                     </button>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', paddingLeft: '30px' }}>
                       <strong style={{ color: alert.isRead ? '#475569' : (modalType === 'system' ? '#b91c1c' : '#1e3a8a') }}>{alert.content}</strong>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(alert.createdAt).toLocaleString('he-IL')}</span>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}><AppDate date={alert.createdAt} /></span>
                     </div>
                     {alert.metadata && (
                       <div style={{ fontSize: '13px', color: '#475569', marginTop: '10px', background: 'rgba(255,255,255,0.5)', padding: '10px', borderRadius: '4px' }}>

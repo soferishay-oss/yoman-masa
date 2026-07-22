@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import styles from './archive.module.css';
 import { Archive, ChevronDown, ChevronUp, Users, Presentation } from 'lucide-react';
 import YearTransitionWizard from '@/components/admin/YearTransitionWizard';
+import { formatAppDateString } from '@/components/AppDate';
 
 export default function AcademicYearsArchive() {
   const [years, setYears] = useState([]);
@@ -73,7 +74,7 @@ export default function AcademicYearsArchive() {
                 </div>
                 <div className={styles.yearActions}>
                   <span className={styles.dateRange}>
-                    {new Date(year.startDate).toLocaleDateString('he-IL')} - {new Date(year.endDate).toLocaleDateString('he-IL')}
+                    {formatAppDateString(year.startDate, 'hebrew_only')} - {formatAppDateString(year.endDate, 'hebrew_only')}
                   </span>
                   {expandedYear === year.id ? <ChevronUp /> : <ChevronDown />}
                 </div>

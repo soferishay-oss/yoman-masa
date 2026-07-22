@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Lock, Star, BookOpen, Clock, X } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 import styles from './vault.module.css';
 import { useToast } from '@/components/ToastProvider';
 
@@ -79,8 +80,9 @@ export default function VaultPage() {
               <h3 className={styles.entryTitle}>{item.title || 'רשומה ללא כותרת'}</h3>
               <div className={styles.entryMeta}>
                 <span className={styles.metaItem}>
-                  <Clock size={14} />
-                  {new Date(item.createdAt).toLocaleDateString('he-IL')}
+                  <div className={styles.itemDate}>
+                    <AppDate date={item.createdAt} />
+                  </div>
                 </span>
                 <span className={styles.metaItem}>
                   <BookOpen size={14} />

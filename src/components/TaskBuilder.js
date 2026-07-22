@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import styles from '@/app/staff/staff.module.css';
 import { Plus, Trash, Image as ImageIcon, Video, Mic, Upload, FileText, CheckSquare, AlignLeft } from 'lucide-react';
+import { formatAppDateString } from '@/components/AppDate';
 
 export default function TaskBuilder({ onTaskCreated }) {
   const [taskType, setTaskType] = useState('short_message');
@@ -212,7 +213,7 @@ export default function TaskBuilder({ onTaskCreated }) {
               <label style={{ display: 'block', fontSize: '13px', color: '#64748b', marginBottom: '5px' }}>בחר אירוע מלוח השנה</label>
               <select value={linkedEventId} onChange={e => setLinkedEventId(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
                 <option value="">ללא קישור לאירוע</option>
-                {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title} ({new Date(ev.scheduledDate).toLocaleDateString('he-IL')})</option>)}
+                {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title} ({formatAppDateString(ev.scheduledDate)})</option>)}
               </select>
             </div>
             {linkedEventId && (

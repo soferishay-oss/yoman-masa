@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatAppDateString } from '@/components/AppDate';
 
 export default function StudentMoodChart({ moodChecks }) {
   const [timeframe, setTimeframe] = useState('month');
@@ -39,7 +40,7 @@ export default function StudentMoodChart({ moodChecks }) {
           ...m,
           // Format date for X axis
           dateStr: `${d.getDate()}/${d.getMonth() + 1}`,
-          fullDate: d.toLocaleDateString('he-IL'),
+          fullDate: formatAppDateString(d),
           timeStr: d.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})
         };
       });

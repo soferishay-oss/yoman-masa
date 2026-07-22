@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 import styles from '../page.module.css'; // reusing some dashboard styles for consistency
 
 export default function StudentEventsPage() {
@@ -73,7 +74,7 @@ export default function StudentEventsPage() {
               
               <div style={{display: 'flex', gap: '20px', marginBottom: '20px', fontSize: '14px', color: '#444'}}>
                 <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
-                  <Calendar size={16} /> {new Date(ev.scheduledDate).toLocaleDateString('he-IL')}
+                  <Calendar size={16} /> <AppDate date={ev.scheduledDate} mode={theme.defaultDateMode} />
                 </span>
                 <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
                   <MapPin size={16} /> {ev.location || 'לא צוין'}

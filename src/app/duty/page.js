@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Shield, Send, CheckCircle2, XCircle, AlertCircle, Calendar } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 import styles from './duty.module.css';
 
 export default function DutyStudentDashboard() {
@@ -95,7 +96,7 @@ export default function DutyStudentDashboard() {
             <h2>האירוע הקרוב: {activeEvent.title}</h2>
             <div className={styles.dateRow}>
               <Calendar size={18} />
-              <span>{new Date(activeEvent.scheduledDate || activeEvent.date).toLocaleDateString('he-IL')}</span>
+              <span><AppDate date={activeEvent.scheduledDate || activeEvent.date} mode={theme.defaultDateMode} /></span>
             </div>
           </div>
 

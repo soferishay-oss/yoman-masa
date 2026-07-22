@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Archive, Bell, Mail, RefreshCw } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 
 export default function StaffArchivePage() {
   const [alerts, setAlerts] = useState([]);
@@ -70,7 +71,7 @@ export default function StaffArchivePage() {
             <div key={alert.id} style={{ background: 'white', border: '1px solid #e2e8f0', padding: '15px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                 <strong style={{ color: activeTab === 'letters' ? '#1e3a8a' : '#475569' }}>{alert.content}</strong>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(alert.createdAt).toLocaleString('he-IL')}</span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}><AppDate date={alert.createdAt} /></span>
               </div>
               {alert.metadata && (
                 <div style={{ fontSize: '13px', color: '#475569', marginTop: '10px', background: '#f8fafc', padding: '10px', borderRadius: '4px' }}>

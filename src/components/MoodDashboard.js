@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Activity, User, AlertTriangle, TrendingDown, BellPlus } from 'lucide-react';
+import { formatAppDateString } from '@/components/AppDate';
 import styles from '@/app/staff/staff.module.css';
 import { useToast } from '@/components/ToastProvider';
 
@@ -128,7 +129,7 @@ export default function MoodDashboard({ isAdmin = false }) {
                   <h3>{student.name || student.fullName || 'שם חסר'}</h3>
                   <p>
                     {latestMood 
-                      ? `עדכון אחרון: ${new Date(latestMood.createdAt).toLocaleDateString('he-IL')}` 
+                      ? `עודכן: ${formatAppDateString(latestMood.createdAt)}` 
                       : 'טרם דווח'}
                   </p>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Heart, User, Image as ImageIcon, Mic, Sparkles, Reply, Smile, Star, Send } from 'lucide-react';
+import AppDate, { formatAppDateString } from '@/components/AppDate';
 import styles from './letters.module.css';
 import { useToast } from '@/components/ToastProvider';
 import AudioRecorder from '@/components/AudioRecorder';
@@ -351,7 +352,7 @@ export default function LettersPage() {
                   <span className={styles.senderName}>{letter.author?.fullName || 'חבר אנונימי'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <span className={styles.letterDate}>{new Date(letter.createdAt).toLocaleDateString('he-IL')}</span>
+                  <span className={styles.letterDate}><AppDate date={letter.createdAt} /></span>
                   <button 
                     onClick={() => handleSaveToVault(letter)} 
                     style={{ background: 'none', border: 'none', padding: '0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -387,7 +388,7 @@ export default function LettersPage() {
                     onClick={() => {
                       setSelectedUser(letter.authorId);
                       setIsComposing(true);
-                      setLetterContent(`בתגובה למכתבך מהתאריך ${new Date(letter.createdAt).toLocaleDateString('he-IL')}:\n\n`);
+                      setLetterContent(`בתגובה למכתבך מהתאריך ${formatAppDateString(letter.createdAt)}:\n\n`);
                       window.scrollTo(0, 0);
                     }}
                     style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 'bold' }}

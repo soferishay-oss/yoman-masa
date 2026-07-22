@@ -230,10 +230,12 @@ export default function AdminDashboard() {
           </div>
 
           <div style={{marginBottom:'15px'}}>
-            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>תצוגת תאריכים (ברירת מחדל)</label>
+            <label style={{display:'block', marginBottom:'5px', fontWeight:'bold'}}>תצוגת תאריכים במערכת (ברירת מחדל)</label>
             <select style={{width:'100%', padding:'10px', borderRadius:'8px', border:'1px solid #cbd5e1'}} value={dateMode} onChange={(e) => setDateMode(e.target.value)}>
-              <option value="hebrew">לוח שנה עברי</option>
-              <option value="gregorian">לוח שנה לועזי</option>
+              <option value="hebrew_dominant">עברי דומיננטי (לועזי בסוגריים)</option>
+              <option value="gregorian_dominant">לועזי דומיננטי (עברי בסוגריים)</option>
+              <option value="hebrew_only">רק עברי</option>
+              <option value="gregorian_only">רק לועזי</option>
             </select>
           </div>
 

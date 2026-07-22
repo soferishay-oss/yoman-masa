@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Calendar } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 import styles from '../users/users.module.css'; // Reusing admin styles
 
 export default function AdminStationsPage() {
@@ -116,7 +117,7 @@ export default function AdminStationsPage() {
                 <td>{s.orderIndex}</td>
                 <td style={{fontWeight: 500}}>{s.name}</td>
                 <td>{s.stationType === 'milestone' ? 'אבן דרך' : s.stationType === 'routine' ? 'שגרה' : 'תוכן'}</td>
-                <td>{s.scheduledDate ? new Date(s.scheduledDate).toLocaleDateString('he-IL') : 'לא נקבע'}</td>
+                <td>{s.scheduledDate ? <AppDate date={s.scheduledDate} /> : 'לא נקבע'}</td>
                 <td>
                   <span style={{color: s.status === 'active' ? 'green' : 'gray'}}>{s.status === 'active' ? 'פעיל' : 'כבוי'}</span>
                 </td>

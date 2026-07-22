@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Plus, MapPin, Users } from 'lucide-react';
+import { Calendar, Plus, MapPin, Users, Search, Info } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 
 export default function StaffEventsPage() {
   const [events, setEvents] = useState([]);
@@ -106,7 +107,7 @@ export default function StaffEventsPage() {
                   
                   <div style={{display: 'flex', gap: '20px', fontSize: '14px', color: '#555'}}>
                     <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
-                      <Calendar size={16} /> {new Date(ev.scheduledDate).toLocaleDateString('he-IL')}
+                      <Calendar size={16} /> <AppDate date={ev.scheduledDate} />
                     </span>
                     <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
                       <MapPin size={16} /> {ev.location || 'לא צוין'}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PenLine, Image as ImageIcon, Mic, Send, Sparkles, Star, Trash2 } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 import styles from './journal.module.css';
 import { queueSyncAction } from '@/lib/sync/localStore';
 import AudioRecorder from '@/components/AudioRecorder';
@@ -292,14 +293,12 @@ export default function JournalPage() {
           <div className={styles.emptyJournal}>אין עדיין רשומות. זה הזמן לכתוב!</div>
         ) : (
           entries.map(entry => {
-            const dateStr = new Date(entry.createdAt).toLocaleDateString('he-IL');
-            const timeStr = new Date(entry.createdAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
             const isDeletable = (new Date() - new Date(entry.createdAt)) / (1000 * 60) <= 30;
 
             return (
               <div key={entry.id} className={styles.journalPage}>
                 <div className={styles.pageHeader}>
-                  <span className={styles.pageDate}>{dateStr} {timeStr}</span>
+                  <div className={styles.pageDate}><AppDate date={entry.createdAt} /></div>
                   <div className={styles.pageActions}>
                     {isDeletable && (
                       <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn}>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Book, Printer, Download } from 'lucide-react';
+import AppDate from '@/components/AppDate';
 
 export default function BookExportPage() {
   const [bookData, setBookData] = useState(null);
@@ -57,7 +58,7 @@ export default function BookExportPage() {
                 {entry.title || `פרק ${idx + 1}`}
               </h2>
               <div style={{fontSize: '14px', color: '#888', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px'}}>
-                {new Date(entry.createdAt).toLocaleDateString('he-IL')} • {entry.type === 'journal' ? 'יומן אישי' : entry.type === 'letter' ? 'מכתב' : 'תיעוד'}
+                <AppDate date={entry.createdAt} /> &bull; {entry.type === 'journal' ? 'יומן אישי' : entry.type === 'letter' ? 'מכתב' : 'תיעוד'}
               </div>
               <div style={{fontSize: '18px', lineHeight: '1.8', color: '#222', whiteSpace: 'pre-wrap'}}>
                 {entry.bodyText}
