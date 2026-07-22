@@ -25,7 +25,7 @@ export async function GET(request) {
     else if (range === 'year') startDate.setFullYear(startDate.getFullYear() - 1);
     else startDate = new Date(0); // all time
 
-    const moods = await prisma.moodEntry.findMany({
+    const moods = await prisma.moodCheck.findMany({
       where: {
         tenantId,
         userId: userId,

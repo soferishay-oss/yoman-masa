@@ -15,6 +15,7 @@ export default function JournalPage() {
   const [mediaUrls, setMediaUrls] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const [userName, setUserName] = useState('');
   
   // AI Fixing States
   const [isFixingPhrasing, setIsFixingPhrasing] = useState(false);
@@ -24,7 +25,15 @@ export default function JournalPage() {
 
   useEffect(() => {
     fetchEntries();
+    fetch('/api/profile').then(res => res.ok && res.json()).then(data => {
+      if (data && data.fullName) setUserName(data.fullName.split(' ')[0]);
+    }).catch(err => console.error(err));
   }, []);
+
+  const hour = new Date().getHours();
+  let greetingTime = 'ערב טוב';
+  if (hour < 12) greetingTime = 'בוקר טוב';
+  else if (hour < 18) greetingTime = 'צהריים טובים';
 
   const fetchEntries = async () => {
     try {
@@ -146,7 +155,6 @@ export default function JournalPage() {
         toast.show('הקובץ גדול מדי. ניתן להעלות עד 4MB', 'error');
         return;
       }
-      toast.show('התמונה נוספה (עד 4MB)', 'success');
       const reader = new FileReader();
       reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'image', url: reader.result }]);
       reader.readAsDataURL(file);
@@ -194,18 +202,22 @@ export default function JournalPage() {
     <div className={styles.container}>
       {/* Quick Composition Area */}
       <div className={styles.composeArea}>
+        <h2 className={styles.greetingTitle}>{greetingTime}{userName ? `, ${userName}` : ''}</h2>
         <div className={styles.inputWrapper}>
           <textarea 
             className={styles.quickInput}
             placeholder="מה איתך???"
             value={newEntryContent}
             onChange={(e) => setNewEntryContent(e.target.value)}
-            rows={4}
+            rows={6}
           />
           <div className={styles.emojiCorner}>
             <EmojiPickerButton onEmojiClick={(emoji) => setNewEntryContent(prev => prev + emoji)} />
           </div>
         </div>
+        <p className={styles.helperText} style={{ textAlign: 'right', marginTop: '-10px', marginBottom: '15px' }}>
+          * לא ניתן למחוק רשומה לאחר חצי שעה מפרסומה
+        </p>
 
         {showFixedDraftOptions && (
           <div className={styles.aiDraftOptions}>
@@ -240,7 +252,7 @@ export default function JournalPage() {
 
         <div className={styles.actionButtons}>
           <div className={styles.leftActions}>
-            <button onClick={handleSave} disabled={!newEntryContent && mediaUrls.length === 0} className={styles.roundActionBtn} title="שלח">
+            <button onClick={handleSave} disabled={!newEntryContent && mediaUrls.length === 0} className={styles.roundActionBtn} style={{ color: '#3b82f6', background: '#eff6ff' }} title="שלח">
               <Send size={20} />
             </button>
             {newEntryContent && !showFixedDraftOptions && (
@@ -258,18 +270,18 @@ export default function JournalPage() {
             <AudioRecorder 
               onRecordingComplete={handleAudioComplete} 
               customButton={
-                <button className={styles.roundActionBtn} title="הקלט קול" disabled={isRecording}>
+                <button className={styles.roundActionBtn} style={{ color: '#ef4444', background: '#fee2e2' }} title="הקלט קול" disabled={isRecording}>
                   <Mic size={20} />
                 </button>
               }
             />
-            <label className={styles.roundActionBtn} title="הוסף תמונה">
+            <label className={styles.roundActionBtn} style={{ color: '#64748b', background: '#f1f5f9' }} title="הוסף תמונה">
               <ImageIcon size={20} />
               <input type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload} />
             </label>
           </div>
         </div>
-        <p className={styles.helperText}>* לא ניתן למחוק רשומה לאחר חצי שעה מפרסומה</p>
+        <p className={styles.helperText} style={{ textAlign: 'left' }}>* ניתן להעלות תמונה עד 4MB</p>
       </div>
 
       {/* Journal Pages Feed */}

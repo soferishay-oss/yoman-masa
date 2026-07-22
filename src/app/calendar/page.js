@@ -134,14 +134,13 @@ export default function CalendarPage() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>לוח השנה</h1>
-        <p>מעקב אחר אירועים, חגים ותחנות</p>
+      <header className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h2 style={{ margin: 0, fontSize: '1.2rem' }}>לוח מסע</h2>
         <button 
           onClick={toggleDominantMode}
-          style={{ marginTop: '10px', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--primary-color)', background: 'transparent', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '13px' }}
+          style={{ padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--primary-color)', background: 'transparent', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '12px' }}
         >
-          שנה לתצוגה {dominantMode === 'hebrew' ? 'לועזית' : 'עברית'}
+          החלף ל{dominantMode === 'hebrew' ? 'לועזי' : 'עברי'}
         </button>
       </header>
 

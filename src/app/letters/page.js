@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, User, Image as ImageIcon, Mic, Sparkles, Reply, Smile, Star } from 'lucide-react';
+import { Heart, User, Image as ImageIcon, Mic, Sparkles, Reply, Smile, Star, Send } from 'lucide-react';
 import styles from './letters.module.css';
 import { useToast } from '@/components/ToastProvider';
 import AudioRecorder from '@/components/AudioRecorder';
@@ -271,25 +271,39 @@ export default function LettersPage() {
 
           {renderMediaPreview()}
 
-          <div style={{display: 'flex', gap: '10px', marginTop: '10px', marginBottom: '15px'}}>
-            <label style={{padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px'}}>
-              <ImageIcon size={18} /> תמונה
-              <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'image', url: reader.result }]);
-                  reader.readAsDataURL(file);
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', marginBottom: '15px'}}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" disabled={!selectedUser || (!letterContent && mediaUrls.length === 0)} style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#eff6ff', color: '#3b82f6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="שלח מכתב">
+                <Send size={20} />
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <AudioRecorder 
+                onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} 
+                customButton={
+                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="הקלט קול" disabled={isRecording}>
+                    <Mic size={20} />
+                  </button>
                 }
-              }} />
-            </label>
-
-            <AudioRecorder onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} />
+              />
+              <label style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="הוסף תמונה">
+                <ImageIcon size={20} />
+                <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    if (file.size > 4 * 1024 * 1024) {
+                      toast.show('הקובץ גדול מדי. ניתן להעלות עד 4MB', 'error');
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onloadend = () => setMediaUrls([...mediaUrls, { type: 'image', url: reader.result }]);
+                    reader.readAsDataURL(file);
+                  }
+                }} />
+              </label>
+            </div>
           </div>
-
-          <button type="submit" disabled={!selectedUser || (!letterContent && mediaUrls.length === 0)} style={{ width: '100%', padding: '12px', borderRadius: '10px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            שלח מכתב
-          </button>
         </form>
       )}
 
