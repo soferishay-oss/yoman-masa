@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, Users, Settings, BarChart2, Shield, Archive } from 'lucide-react';
+import { Home, Users, Settings, BarChart2, Shield, Archive, Map } from 'lucide-react';
 import styles from './layout.module.css';
 import prisma from '@/lib/prisma';
 import { cookies } from 'next/headers';
@@ -37,6 +37,10 @@ export default async function AdminLayout({ children }) {
           <Link href="/admin" className={styles.navLink}>
             <Home size={20} />
             <span>קוקפיט (ראשי)</span>
+          </Link>
+          <Link href="/admin/guidance-track" className={styles.navLink}>
+            <Map size={20} />
+            <span>מסלול ליווי חינוכי</span>
           </Link>
           <Link href="/admin/people" className={styles.navLink}>
             <Users size={20} />
