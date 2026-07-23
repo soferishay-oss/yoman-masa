@@ -22,6 +22,7 @@ export default function StaffDashboard() {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [modalType, setModalType] = useState('system'); // 'system' or 'letter'
   const [triggeringGroupId, setTriggeringGroupId] = useState(null);
+  const [guidanceTrack, setGuidanceTrack] = useState('documentation_only');
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -34,7 +35,20 @@ export default function StaffDashboard() {
     fetchStudents();
     fetchGroups();
     fetchAlerts();
+    fetchTenantSettings();
   }, []);
+
+  const fetchTenantSettings = async () => {
+    try {
+      const res = await fetch('/api/tenant');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.guidanceTrack) setGuidanceTrack(data.guidanceTrack);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchGroups = async () => {
     try {
@@ -316,18 +330,22 @@ export default function StaffDashboard() {
         >
           <BarChart size={18} /> דאשבורד מצבי רוח
         </button>
-        <button 
-          onClick={() => setActiveTab('task_builder')} 
-          style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'task_builder' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'task_builder' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
-        >
-          <MessageCircle size={18} /> יצירת משימה
-        </button>
-        <button 
-          onClick={() => setActiveTab('task_tracker')} 
-          style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'task_tracker' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'task_tracker' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
-        >
-          <CheckSquare size={18} /> מעקב משימות
-        </button>
+        {guidanceTrack !== 'documentation_only' && (
+          <>
+            <button 
+              onClick={() => setActiveTab('task_builder')} 
+              style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'task_builder' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'task_builder' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+            >
+              <MessageCircle size={18} /> יצירת משימה
+            </button>
+            <button 
+              onClick={() => setActiveTab('task_tracker')} 
+              style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'task_tracker' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'task_tracker' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+            >
+              <CheckSquare size={18} /> מעקב משימות
+            </button>
+          </>
+        )}
         <button 
           onClick={() => setActiveTab('events')} 
           style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'events' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'events' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}

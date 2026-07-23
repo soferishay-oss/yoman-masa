@@ -59,7 +59,8 @@ export async function GET(request) {
       groupName: user.class?.name || 'ללא קבוצה',
       tenant: {
         name: user.tenant?.name || 'מערכת מסע',
-        currentAcademicYear: user.tenant?.currentAcademicYear || null
+        currentAcademicYear: user.tenant?.currentAcademicYear || null,
+        guidanceTrack: user.tenant?.guidanceTrack || 'documentation_only'
       },
       stats
     });

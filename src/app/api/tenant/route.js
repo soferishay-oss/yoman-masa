@@ -36,7 +36,8 @@ export async function GET() {
       primaryColor: tenant.themeConfig?.primaryColor,
       defaultDateMode: tenant.dominantDateMode,
       themeConfig: tenant.themeConfig,
-      enabledModules: tenant.enabledModules
+      enabledModules: tenant.enabledModules,
+      guidanceTrack: tenant.guidanceTrack
     });
   } catch (err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

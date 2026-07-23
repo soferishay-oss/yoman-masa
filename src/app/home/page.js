@@ -23,6 +23,7 @@ function HomeContent() {
   const [academicYear, setAcademicYear] = useState('');
   const [greeting, setGreeting] = useState('שלום');
   const [initialEditData, setInitialEditData] = useState(null);
+  const [guidanceTrack, setGuidanceTrack] = useState('documentation_only');
   const toast = useToast();
 
   useEffect(() => {
@@ -42,6 +43,7 @@ function HomeContent() {
         const data = await res.json();
         setUserName(data.firstName || data.fullName.split(' ')[0] || '');
         setAcademicYear(data.tenant?.currentAcademicYear?.name || 'תשפ״ה');
+        if (data.tenant?.guidanceTrack) setGuidanceTrack(data.tenant.guidanceTrack);
       }
     }
     fetchTasks();
@@ -154,41 +156,43 @@ function HomeContent() {
         <MoodSurveyModal />
 
         {/* Open Activities Section */}
-        <section className={styles.section} style={{ marginTop: '40px' }}>
-          <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '20px', color: 'var(--primary-color)' }}>משימות פתוחות מהצוות</h2>
-          <div className={styles.activitiesList}>
-            {tasks.map(assignment => (
-              <TaskItem 
-                key={assignment.id} 
-                assignment={assignment} 
-                onComplete={async (assignmentId, checklistState) => {
-                  const res = await fetch('/api/student/tasks', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
-                  });
-                  if(res.ok) {
-                    if (toast?.show) toast.show('כל הכבוד! המשימה הושלמה.', 'success');
-                    setTasks(tasks.filter(t => t.id !== assignmentId));
-                  }
-                }}
-                onProgress={async (assignmentId, checklistState, status) => {
-                  await fetch('/api/student/tasks', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ assignmentId, status, checklistState })
-                  });
-                  setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
-                }}
-              />
-            ))}
-            {tasks.length === 0 && (
-              <div style={{padding: '20px', color: '#64748b', textAlign: 'center'}}>
-                אין משימות פתוחות כרגע.
-              </div>
-            )}
-          </div>
-        </section>
+        {guidanceTrack !== 'documentation_only' && (
+          <section className={styles.section} style={{ marginTop: '40px' }}>
+            <h2 className={styles.sectionTitle} style={{ textAlign: 'center', fontSize: '20px', color: 'var(--primary-color)' }}>משימות פתוחות מהצוות</h2>
+            <div className={styles.activitiesList}>
+              {tasks.map(assignment => (
+                <TaskItem 
+                  key={assignment.id} 
+                  assignment={assignment} 
+                  onComplete={async (assignmentId, checklistState) => {
+                    const res = await fetch('/api/student/tasks', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
+                    });
+                    if(res.ok) {
+                      if (toast?.show) toast.show('כל הכבוד! המשימה הושלמה.', 'success');
+                      setTasks(tasks.filter(t => t.id !== assignmentId));
+                    }
+                  }}
+                  onProgress={async (assignmentId, checklistState, status) => {
+                    await fetch('/api/student/tasks', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ assignmentId, status, checklistState })
+                    });
+                    setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
+                  }}
+                />
+              ))}
+              {tasks.length === 0 && (
+                <div style={{padding: '20px', color: '#64748b', textAlign: 'center'}}>
+                  אין משימות פתוחות כרגע.
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Upcoming Stations Section */}
         <section className={styles.section} style={{ marginTop: '40px' }}>
