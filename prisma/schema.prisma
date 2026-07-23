@@ -22,6 +22,7 @@ model Tenant {
   nameFormat       String   @default("last_first") // "last_first" or "first_last"
   enabledModules   Json?
   retentionPolicy  String?
+  guidanceTrack    String   @default("documentation_only")
   currentAcademicYearId String?
   currentAcademicYear AcademicYear? @relation("TenantCurrentYear", fields: [currentAcademicYearId], references: [id])
   createdAt        DateTime @default(now())

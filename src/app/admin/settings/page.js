@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
-import { Settings, Users, Save, Edit, Calendar } from 'lucide-react';
+import { Settings, Users, Save, Edit, Calendar, Map } from 'lucide-react';
 import styles from '../dashboard.module.css'; // changed to dashboard.module.css since we removed admin.module.css
 import { ThemeContext } from '@/components/ThemeProvider';
 import { HexColorPicker } from 'react-colorful';
@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [hebrewCalendarNikud, setHebrewCalendarNikud] = useState(false);
   const [moodSurveySchedule, setMoodSurveySchedule] = useState('weekly_first_login');
   const [aiCorrectionLevel, setAiCorrectionLevel] = useState('phrasing');
+  const [guidanceTrack, setGuidanceTrack] = useState('documentation_only');
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
   
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
         if (data.studyYears) setStudyYears(data.studyYears);
         if (data.moderationLevel) setModerationLevel(data.moderationLevel);
         if (data.nameFormat) setNameFormat(data.nameFormat);
+        if (data.guidanceTrack) setGuidanceTrack(data.guidanceTrack);
         if (data.themeConfig?.moodSurveySchedule) setMoodSurveySchedule(data.themeConfig.moodSurveySchedule);
         if (data.themeConfig?.aiCorrectionLevel) setAiCorrectionLevel(data.themeConfig.aiCorrectionLevel);
         if (data.themeConfig?.moderationMessage) {
@@ -85,6 +87,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name: schoolName, logoUrl, slogan, primaryColor, dateMode, institutionType, studyYears, moderationLevel, nameFormat,
+          guidanceTrack,
           showHolidays, showParasha, showOmer, showSchoolEvents, hebrewCalendarNikud,
           moodSurveySchedule, aiCorrectionLevel,
           moderationMessage: moderationMessageSelect === 'custom' ? customModerationMessage : moderationMessageSelect
@@ -301,6 +304,100 @@ export default function AdminDashboard() {
               <option value="disabled">מופסק (יופעל רק לפי דרישה של איש צוות)</option>
             </select>
             <p style={{fontSize: '13px', color: '#64748b', marginTop: '5px'}}>* השבוע מתאפס במוצאי שבת בחצות. מנהל/מחנך תמיד יכול לדרוש מצב רוח מתלמיד קבוצה.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}><Map size={20} style={{display:'inline', verticalAlign:'middle'}}/> מסלול ליווי חינוכי</h2>
+        <div className={styles.card}>
+          <p style={{color:'#64748b', marginBottom:'20px'}}>
+            בחר את האופן שבו המערכת תשתלב בתהליך החינוכי של המוסד. בחירת מסלול משפיעה על הכלים והאפשרויות הזמינות לצוות ולתלמידים.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <label style={{ 
+              display: 'flex', gap: '15px', alignItems: 'flex-start', padding: '15px', 
+              border: guidanceTrack === 'documentation_only' ? '2px solid var(--primary-color)' : '1px solid #cbd5e1',
+              borderRadius: '8px', cursor: 'pointer', backgroundColor: guidanceTrack === 'documentation_only' ? 'var(--primary-light)' : 'transparent'
+            }}>
+              <input 
+                type="radio" 
+                name="guidanceTrack" 
+                value="documentation_only" 
+                checked={guidanceTrack === 'documentation_only'} 
+                onChange={(e) => setGuidanceTrack(e.target.value)} 
+                style={{ marginTop: '5px' }} 
+              />
+              <div>
+                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>תיעוד בלבד</h3>
+                <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  המערכת משמשת כיומן דיגיטלי בלבד. התלמידים יכולים לתעד, ואנשי הצוות יכולים לקרוא את התוכן. המערכת אינה יוצרת שאלות, משימות או תהליכי ליווי.
+                </p>
+              </div>
+            </label>
+
+            <label style={{ 
+              display: 'flex', gap: '15px', alignItems: 'flex-start', padding: '15px', 
+              border: guidanceTrack === 'manual' ? '2px solid var(--primary-color)' : '1px solid #cbd5e1',
+              borderRadius: '8px', cursor: 'pointer', backgroundColor: guidanceTrack === 'manual' ? 'var(--primary-light)' : 'transparent'
+            }}>
+              <input 
+                type="radio" 
+                name="guidanceTrack" 
+                value="manual" 
+                checked={guidanceTrack === 'manual'} 
+                onChange={(e) => setGuidanceTrack(e.target.value)} 
+                style={{ marginTop: '5px' }} 
+              />
+              <div>
+                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>ליווי ידני</h3>
+                <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  הצוות החינוכי אחראי באופן מלא על תהליך הליווי. הוא בונה את הטפסים, השאלות, המשימות ותהליכי הרפלקציה, בעוד שהמערכת מספקת את הכלים לביצוע.
+                </p>
+              </div>
+            </label>
+
+            <label style={{ 
+              display: 'flex', gap: '15px', alignItems: 'flex-start', padding: '15px', 
+              border: guidanceTrack === 'automatic' ? '2px solid var(--primary-color)' : '1px solid #cbd5e1',
+              borderRadius: '8px', cursor: 'pointer', backgroundColor: guidanceTrack === 'automatic' ? 'var(--primary-light)' : 'transparent'
+            }}>
+              <input 
+                type="radio" 
+                name="guidanceTrack" 
+                value="automatic" 
+                checked={guidanceTrack === 'automatic'} 
+                onChange={(e) => setGuidanceTrack(e.target.value)} 
+                style={{ marginTop: '5px' }} 
+              />
+              <div>
+                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>ליווי אוטומטי</h3>
+                <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  המוסד בוחר מסלול ליווי מתוך מספר מסלולים שהמערכת מציעה. כל מסלול כולל רצף של שאלות, משימות ונקודות עצירה לאורך השנה (בקרוב).
+                </p>
+              </div>
+            </label>
+
+            <label style={{ 
+              display: 'flex', gap: '15px', alignItems: 'flex-start', padding: '15px', 
+              border: guidanceTrack === 'hybrid' ? '2px solid var(--primary-color)' : '1px solid #cbd5e1',
+              borderRadius: '8px', cursor: 'pointer', backgroundColor: guidanceTrack === 'hybrid' ? 'var(--primary-light)' : 'transparent'
+            }}>
+              <input 
+                type="radio" 
+                name="guidanceTrack" 
+                value="hybrid" 
+                checked={guidanceTrack === 'hybrid'} 
+                onChange={(e) => setGuidanceTrack(e.target.value)} 
+                style={{ marginTop: '5px' }} 
+              />
+              <div>
+                <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem' }}>ליווי היברידי</h3>
+                <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  מבוסס על מסלול אוטומטי, אך מאפשר לצוות לערוך אותו באופן מלא: להוסיף, למחוק, לשנות ולהזיז שאלות, משימות ושלבים (בקרוב).
+                </p>
+              </div>
+            </label>
           </div>
         </div>
       </section>

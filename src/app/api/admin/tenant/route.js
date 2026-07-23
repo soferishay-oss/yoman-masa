@@ -53,6 +53,7 @@ export async function PUT(request) {
     if (data.studyYears !== undefined) updateData.studyYears = parseInt(data.studyYears, 10);
     if (data.moderationLevel !== undefined) updateData.moderationLevel = parseInt(data.moderationLevel, 10);
     if (data.nameFormat !== undefined) updateData.nameFormat = data.nameFormat;
+    if (data.guidanceTrack !== undefined) updateData.guidanceTrack = data.guidanceTrack;
     
     const newThemeConfig = { ...currentThemeConfig };
     let themeConfigChanged = false;
