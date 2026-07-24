@@ -110,7 +110,7 @@ export default function LoginPage() {
               type="submit" 
               disabled={isLoading || !phoneNumber || !password}
               style={{
-                background: 'white',
+                background: 'transparent',
                 border: 'none',
                 borderRadius: '50%',
                 padding: 0,
@@ -119,9 +119,9 @@ export default function LoginPage() {
                 height: '120px',
                 position: 'relative',
                 boxShadow: '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-                opacity: (isLoading || !phoneNumber || !password) ? 0.6 : 1,
-                overflow: 'hidden',
+                transition: 'transform 0.15s, box-shadow 0.15s, filter 0.2s',
+                filter: (isLoading || !phoneNumber || !password) ? 'grayscale(0.5) opacity(0.7)' : 'none',
+                WebkitAppearance: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -130,21 +130,22 @@ export default function LoginPage() {
               onMouseUp={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; } }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; }}
             >
-              <img src="/app-logo.png" alt="App Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/app-logo.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               
               {/* Overlay Text */}
               <div style={{
                 position: 'absolute',
-                bottom: '15px',
+                bottom: '20px',
                 left: 0,
                 right: 0,
                 textAlign: 'center',
                 color: 'white',
                 fontSize: '18px',
-                fontWeight: '800',
-                textShadow: '0px 2px 4px rgba(0,0,0,0.9), 0px 0px 8px rgba(0,0,0,0.6)',
+                fontWeight: '900',
+                textShadow: '0px 2px 4px rgba(0,0,0,1), 0px 0px 10px rgba(0,0,0,0.8)',
                 letterSpacing: '1px',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                zIndex: 10
               }}>
                 {isLoading ? '...' : 'כניסה'}
               </div>
