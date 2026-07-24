@@ -115,25 +115,40 @@ export default function LoginPage() {
                 borderRadius: '50%',
                 padding: 0,
                 cursor: (isLoading || !phoneNumber || !password) ? 'not-allowed' : 'pointer',
-                width: '140px',
-                height: '140px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.15), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset',
-                transition: 'transform 0.1s, box-shadow 0.1s',
+                width: '120px',
+                height: '120px',
+                position: 'relative',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset',
+                transition: 'transform 0.15s, box-shadow 0.15s',
                 opacity: (isLoading || !phoneNumber || !password) ? 0.6 : 1,
                 overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
-              onMouseDown={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(0.95)'; e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.15)'; } }}
-              onMouseUp={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; }}
+              onMouseDown={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(0.95)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)'; } }}
+              onMouseUp={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; }}
             >
               <img src="/icon.png" alt="App Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              
+              {/* Overlay Text */}
+              <div style={{
+                position: 'absolute',
+                bottom: '15px',
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: '800',
+                textShadow: '0px 2px 4px rgba(0,0,0,0.9), 0px 0px 8px rgba(0,0,0,0.6)',
+                letterSpacing: '1px',
+                pointerEvents: 'none'
+              }}>
+                {isLoading ? '...' : 'כניסה'}
+              </div>
             </button>
-            <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-              {isLoading ? 'מתחבר...' : 'כניסה למסע'}
-            </span>
           </div>
         </form>
         

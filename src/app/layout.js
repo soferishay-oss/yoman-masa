@@ -42,7 +42,7 @@ export default async function RootLayout({ children }) {
           {/* Global Watermark */}
           <div style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            width: '80%', maxWidth: '400px', height: '80%', opacity: 0.03,
+            width: '80%', maxWidth: '400px', height: '80%', opacity: 0.05,
             backgroundImage: 'url(/icon.png)', backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center', backgroundSize: 'contain', pointerEvents: 'none', zIndex: -1
           }}></div>
