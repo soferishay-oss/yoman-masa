@@ -9,6 +9,7 @@ import TaskItem from '@/components/TaskItem';
 import StudentTimeline from '@/components/StudentTimeline';
 import { useToast } from '@/components/ToastProvider';
 import MoodSurveyModal from '@/components/MoodSurveyModal';
+import GoalReminderModal from '@/components/GoalReminderModal';
 import JournalComposer from '@/components/JournalComposer';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -154,6 +155,7 @@ function HomeContent() {
 
         {/* Mood Survey Popup (Reminder) */}
         <MoodSurveyModal />
+        <GoalReminderModal />
 
         {/* Open Activities Section */}
         {guidanceTrack !== 'documentation_only' && (

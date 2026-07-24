@@ -49,7 +49,7 @@ export default function HamburgerMenu({ isDutyStudent }) {
     { href: '/journal', icon: BookOpen, label: 'היומן שלי' },
     { href: '/calendar', icon: Calendar, label: 'לוח מסע' },
     ...(isDutyStudent ? [{ href: '/duty', icon: Shield, label: 'תורן' }] : []),
-    { href: '/student/mood-chart', icon: Activity, label: 'גרפים' },
+    { href: '/student/charts', icon: Activity, label: 'גרפים' },
     { href: '/vault', icon: Star, label: 'דברים שרציתי לשמור' },
   ];
 

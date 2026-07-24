@@ -38,6 +38,7 @@ model Tenant {
   moodChecks       MoodCheck[]
   staffAlerts      StaffAlert[]
   academicYears    AcademicYear[]
+  goals            Goal[]
 }
 
 model User {
@@ -73,6 +74,7 @@ model User {
   eventRsvps       EventRSVP[]
   authoredLetters  Letter[] @relation("AuthoredLetters")
   receivedLetters  Letter[] @relation("ReceivedLetters")
+  goals            Goal[]
 }
 
 model Group {
@@ -306,4 +308,34 @@ model GroupYearHistory {
   createdAt      DateTime @default(now())
 
   @@unique([groupId, academicYearId])
+}
+
+model Goal {
+  id               String   @id @default(uuid())
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title            String
+  targetDateType   String   // "weekly", "monthly", "trimester", "semester", "yearly", "two_years", "lifetime"
+  reminderFrequency String  // "weekly", "monthly", "custom"
+  isPrivate        Boolean  @default(false)
+  
+  status           String   @default("active") // active, completed, archived
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  updates          GoalUpdate[]
+}
+
+model GoalUpdate {
+  id               String   @id @default(uuid())
+  goalId           String
+  goal             Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  rating           Int      // 1 to 5
+  reflection       String?  
+  
+  createdAt        DateTime @default(now())
 }

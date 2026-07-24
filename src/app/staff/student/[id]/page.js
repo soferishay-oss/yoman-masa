@@ -3,9 +3,10 @@ import { verifyToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Activity, BellPlus, ChevronRight, User } from 'lucide-react';
+import { Activity, BellPlus, ChevronRight, User, Target } from 'lucide-react';
 import StudentProfileClient from './StudentProfileClient';
 import StudentMoodChart from '@/components/staff/StudentMoodChart';
+import StudentGoalChart from '@/components/StudentGoalChart';
 
 export default async function StudentProfilePage({ params }) {
   const { id: studentId } = await params;
@@ -26,6 +27,15 @@ export default async function StudentProfilePage({ params }) {
       moodChecks: {
         orderBy: { createdAt: 'desc' },
         take: 365 // Enough for a year of daily reports
+      },
+      goals: {
+        where: { isPrivate: false },
+        include: {
+          updates: {
+            orderBy: { createdAt: 'desc' }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
       }
     }
   });
@@ -62,12 +72,31 @@ export default async function StudentProfilePage({ params }) {
         </div>
       </div>
 
-      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
           <Activity color="var(--primary-color)" /> היסטוריית מצב רוח
         </h2>
         
         <StudentMoodChart moodChecks={moodChecks} />
+      </div>
+
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+          <Target color="#f97316" /> יעדים אישיים
+        </h2>
+        
+        {!student.goals || student.goals.length === 0 ? (
+          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>אין יעדים פומביים להצגה.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {student.goals.map(goal => (
+              <div key={goal.id} style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '18px' }}>{goal.title}</h3>
+                <StudentGoalChart goal={goal} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

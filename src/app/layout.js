@@ -1,6 +1,6 @@
 import './globals.css';
 import Link from 'next/link';
-import { User, Heart, Calendar, Home, BookOpen, Shield } from 'lucide-react';
+import { User, Heart, Calendar, Home, BookOpen, Shield, Target } from 'lucide-react';
 import { headers } from 'next/headers';
 import styles from './layout.module.css';
 import ThemeProvider from '@/components/ThemeProvider';
@@ -56,6 +56,11 @@ export default async function RootLayout({ children }) {
                   <span>לוח מסע</span>
                 </Link>
                 
+                <Link href="/student/goals" className={styles.navItem}>
+                  <div className={styles.icon}><Target size={24} /></div>
+                  <span>היעדים שלי</span>
+                </Link>
+
                 <Link href="/journal" className={styles.navItem}>
                   <div className={styles.icon}><BookOpen size={24} /></div>
                   <span>היומן שלי</span>
