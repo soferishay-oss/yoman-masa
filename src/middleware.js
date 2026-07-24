@@ -12,7 +12,11 @@ export async function middleware(request) {
     pathname.startsWith('/api/tenant') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon.ico')
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/app-logo.png') ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.jpg')
   ) {
     return NextResponse.next();
   }
