@@ -115,8 +115,9 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* Left: Empty for Hamburger Menu */}
+          {/* Left: App Icon */}
           <div style={{ width: '60px', textAlign: 'left' }}>
+            <img src="/icon.png" alt="App Icon" style={{width: 50, height: 50, objectFit: 'contain', borderRadius: '50%'}} />
           </div>
         </div>
 
