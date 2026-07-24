@@ -62,11 +62,7 @@ export default function LoginPage() {
           )}
           <h2 style={{ fontSize: '24px', color: 'var(--primary-color)' }}>{theme.schoolName || 'יומן מסע אישי'}</h2>
           
-          <div style={{ margin: '20px 0', padding: '15px', border: '2px dashed #cbd5e1', borderRadius: '12px', color: '#94a3b8' }}>
-            <p style={{ margin: 0 }}>[לוגו אפליקציה עתידי]</p>
-          </div>
-          
-          <p>התחברות למערכת</p>
+          <p style={{ margin: '10px 0 0 0', color: '#64748b' }}>התחברות למערכת</p>
         </div>
 
         <form onSubmit={handleLogin} className={styles.form}>
@@ -111,11 +107,30 @@ export default function LoginPage() {
 
           <button 
             type="submit" 
-            className={styles.loginBtn}
             disabled={isLoading || !phoneNumber || !password}
+            style={{
+              background: 'linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '24px',
+              padding: '20px',
+              fontSize: '22px',
+              fontWeight: 'bold',
+              cursor: (isLoading || !phoneNumber || !password) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '15px',
+              marginTop: '30px',
+              minHeight: '160px',
+              boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              opacity: (isLoading || !phoneNumber || !password) ? 0.7 : 1
+            }}
           >
-            <LogIn size={20} />
-            {isLoading ? 'מתחבר...' : 'כניסה'}
+            <img src="/icon.png" alt="App Icon" style={{ width: '70px', height: '70px', objectFit: 'contain', borderRadius: '50%', background: 'white', padding: '4px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
+            <span>{isLoading ? 'מתחבר...' : 'כניסה למסע'}</span>
           </button>
         </form>
         
