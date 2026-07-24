@@ -105,33 +105,36 @@ export default function LoginPage() {
 
           {error && <div style={{color: '#e53e3e', marginBottom: '15px', fontSize: '14px'}}>{error}</div>}
 
-          <button 
-            type="submit" 
-            disabled={isLoading || !phoneNumber || !password}
-            style={{
-              background: 'linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '24px',
-              padding: '20px',
-              fontSize: '22px',
-              fontWeight: 'bold',
-              cursor: (isLoading || !phoneNumber || !password) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '15px',
-              marginTop: '30px',
-              minHeight: '160px',
-              boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              opacity: (isLoading || !phoneNumber || !password) ? 0.7 : 1
-            }}
-          >
-            <img src="/icon.png" alt="App Icon" style={{ width: '70px', height: '70px', objectFit: 'contain', borderRadius: '50%', background: 'white', padding: '4px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
-            <span>{isLoading ? 'מתחבר...' : 'כניסה למסע'}</span>
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', gap: '15px' }}>
+            <button 
+              type="submit" 
+              disabled={isLoading || !phoneNumber || !password}
+              style={{
+                background: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                padding: 0,
+                cursor: (isLoading || !phoneNumber || !password) ? 'not-allowed' : 'pointer',
+                width: '140px',
+                height: '140px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.15), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset',
+                transition: 'transform 0.1s, box-shadow 0.1s',
+                opacity: (isLoading || !phoneNumber || !password) ? 0.6 : 1,
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              onMouseDown={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(0.95)'; e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.15)'; } }}
+              onMouseUp={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; }}
+            >
+              <img src="/icon.png" alt="App Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </button>
+            <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--primary-color)' }}>
+              {isLoading ? 'מתחבר...' : 'כניסה למסע'}
+            </span>
+          </div>
         </form>
         
         <p style={{textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#64748b'}}>
