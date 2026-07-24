@@ -23,6 +23,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (isLoading || !phoneNumber || !password) return;
+    
     setIsLoading(true);
     setError('');
 
@@ -108,7 +110,7 @@ export default function LoginPage() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', gap: '15px' }}>
             <button 
               type="submit" 
-              disabled={isLoading || !phoneNumber || !password}
+              onClick={(e) => { if (isLoading || !phoneNumber || !password) e.preventDefault(); }}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -119,8 +121,8 @@ export default function LoginPage() {
                 height: '120px',
                 position: 'relative',
                 boxShadow: '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset',
-                transition: 'transform 0.15s, box-shadow 0.15s, filter 0.2s',
-                filter: (isLoading || !phoneNumber || !password) ? 'grayscale(0.5) opacity(0.7)' : 'none',
+                transition: 'transform 0.15s, box-shadow 0.15s, opacity 0.2s',
+                opacity: (isLoading || !phoneNumber || !password) ? 0.9 : 1,
                 WebkitAppearance: 'none',
                 display: 'flex',
                 alignItems: 'center',
