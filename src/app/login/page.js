@@ -130,7 +130,7 @@ export default function LoginPage() {
               onMouseUp={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; } }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.2), 0 -3px 10px rgba(255,255,255,0.8) inset, 0 5px 15px rgba(0,0,0,0.1) inset'; }}
             >
-              <img src="/icon.png" alt="App Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/app-logo.png" alt="App Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               
               {/* Overlay Text */}
               <div style={{
