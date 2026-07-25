@@ -135,11 +135,26 @@ export default function JournalPage() {
                 key={entry.id} 
                 className={styles.journalPage} 
                 style={isMood ? { 
-                  border: '2px dashed var(--primary-color)', 
                   paddingTop: '20px', 
                   paddingBottom: '20px' 
                 } : {}}
               >
+                {isMood && (
+                  <div style={{
+                    position: 'absolute',
+                    left: '5px',
+                    top: '50%',
+                    transform: 'translateY(-50%) rotate(-90deg)',
+                    transformOrigin: 'center center',
+                    color: '#0ea5e9', // Tailwind sky-500 (light blue but readable)
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    letterSpacing: '2px',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    מצב הרוח
+                  </div>
+                )}
                 <div className={styles.pageHeader}>
                   <div className={styles.pageDate}>
                     <AppDate date={entry.createdAt} />
