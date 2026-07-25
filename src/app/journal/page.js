@@ -142,11 +142,11 @@ export default function JournalPage() {
                 {isMood && (
                   <div style={{
                     position: 'absolute',
-                    left: '5px',
+                    left: '20px',
                     top: '50%',
-                    transform: 'translateY(-50%) rotate(-90deg)',
+                    transform: 'translate(-50%, -50%) rotate(-90deg)',
                     transformOrigin: 'center center',
-                    color: '#0ea5e9', // Tailwind sky-500 (light blue but readable)
+                    color: '#94a3b8', // Soft grey to match the notebook style
                     fontWeight: 'bold',
                     fontSize: '14px',
                     letterSpacing: '2px',
