@@ -24,10 +24,13 @@ export default function AudioRecorder({ onRecordingComplete, customButton }) {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
         const file = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
         
-        onRecordingComplete({ url: audioUrl, file, type: 'audio' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          onRecordingComplete({ url: reader.result, file, type: 'audio' });
+        };
+        reader.readAsDataURL(audioBlob);
         
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());

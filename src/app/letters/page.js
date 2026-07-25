@@ -66,9 +66,21 @@ export default function LettersPage() {
     }
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!selectedUser || (!letterContent && mediaUrls.length === 0)) return;
+  const handleSend = async (e, isVoiceOnly = false) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!selectedUser) return;
+    
+    let finalContent = letterContent;
+    let finalMedia = mediaUrls;
+
+    if (isVoiceOnly) {
+      finalContent = ''; // clear text
+      // keep audio and images in mediaUrls
+    } else {
+      // standard text send - remove audio from mediaUrls to save space since it was transcribed
+      finalMedia = mediaUrls.filter(m => m.type !== 'audio');
+      if (!finalContent && finalMedia.length === 0) return;
+    }
 
     try {
       const res = await fetch('/api/letters', {
@@ -76,8 +88,8 @@ export default function LettersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           recipientId: selectedUser, 
-          content: letterContent,
-          mediaUrls,
+          content: finalContent,
+          mediaUrls: finalMedia,
           parentId: replyParentId
         })
       });
@@ -99,42 +111,77 @@ export default function LettersPage() {
     }
   };
 
-  const handleTranscribe = async () => {
+  const handleAudioRecordingComplete = async (media) => {
+    // add media
+    setMediaUrls(prev => [...prev, media]);
+    
+    // auto transcribe
     setIsRecording(true);
     try {
-      const audioFiles = mediaUrls.filter(m => m.type === 'audio' && m.file).map(m => m.file);
-      if (audioFiles.length === 0) return;
-
-      let combinedBasic = '';
-
-      for (let i = 0; i < audioFiles.length; i++) {
-        const formData = new FormData();
-        formData.append('audio', audioFiles[i], `recording_${i}.webm`);
-        const res = await fetch('/api/ai/transcribe', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          if (data.basicText?.includes('שגיאה: חסר מפתח')) {
-            toast.show(data.basicText, 'error');
-            setIsRecording(false);
-            return;
-          }
-          combinedBasic += (combinedBasic ? '\n\n' : '') + (data.basicText || '');
+      if (!media.file) return;
+      const formData = new FormData();
+      formData.append('audio', media.file, `recording.webm`);
+      
+      const res = await fetch('/api/ai/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.basicText?.includes('שגיאה: חסר מפתח')) {
+          toast.show(data.basicText, 'error');
+          return;
         }
+        setLetterContent(prev => prev ? prev + '\n' + (data.basicText || '') : (data.basicText || ''));
       }
-
-      setLetterContent(prev => prev ? prev + '\n' + combinedBasic : combinedBasic);
-      toast.show('ההקלטה תומללה בהצלחה', 'success');
-      // Remove audio files from mediaUrls after transcription so they don't upload
-      setMediaUrls(prev => prev.filter(m => m.type !== 'audio'));
     } catch (err) {
       console.error(err);
-      toast.show('שגיאה בתמלול', 'error');
+      toast.show('שגיאה בתמלול אוטומטי', 'error');
     } finally {
       setIsRecording(false);
+    }
+  };
+
+  const handleTranscribeReceivedAudio = async (letterId, mediaUrl) => {
+    try {
+      toast.show('מתחיל תמלול, אנא המתן...', 'info');
+      // Convert base64 to blob
+      const resBlob = await fetch(mediaUrl).then(r => r.blob());
+      const file = new File([resBlob], 'received_audio.webm', { type: 'audio/webm' });
+      
+      const formData = new FormData();
+      formData.append('audio', file, `received_audio.webm`);
+      
+      const res = await fetch('/api/ai/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.basicText) {
+          // Update the UI temporarily (or permanently save it to DB?)
+          // For now, let's just update the local state for this letter.
+          // To permanently save, we would need a PUT endpoint to update letter content.
+          // Since it's quick, we will just update local state.
+          const updateLetter = (l) => {
+            if (l.id === letterId) {
+              return { ...l, content: l.content ? l.content + '\n' + data.basicText : data.basicText };
+            }
+            if (l.replies) {
+              return { ...l, replies: l.replies.map(r => updateLetter(r)) };
+            }
+            return l;
+          };
+          setInboxLetters(prev => prev.map(updateLetter));
+          setOutboxLetters(prev => prev.map(updateLetter));
+          toast.show('תומלל בהצלחה', 'success');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.show('שגיאה בתמלול ההודעה', 'error');
     }
   };
 
@@ -209,16 +256,16 @@ export default function LettersPage() {
             return (
               <div key={idx} style={{position: 'relative', display: 'inline-block'}}>
                 {media.type === 'image' && <img src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />}
-                {media.type === 'audio' && <div style={{width: '100px', height: '100px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px'}}><Mic size={24} color="#64748b" /></div>}
-                <button type="button" onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== idx))} style={{position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 24, height: 24, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>X</button>
+                {media.type === 'audio' && <audio controls src={media.url} style={{ height: '40px', width: '250px' }} />}
+                <button type="button" onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== idx))} style={{position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 24, height: 24, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10}}>X</button>
               </div>
             );
           })}
         </div>
-        {audioMedia && audioMedia.file && (
+        {audioMedia && (
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={() => handleTranscribe()} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              {isRecording ? 'מתמלל...' : 'הפוך הקלטה לטקסט'}
+            <button type="button" onClick={() => handleSend(null, true)} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'}}>
+              <Mic size={18} /> {isRecording ? 'מתמלל... שים לב' : 'שלח כהודעה קולית'}
             </button>
           </div>
         )}
@@ -289,10 +336,26 @@ export default function LettersPage() {
             <p className={styles.letterBody} style={{ whiteSpace: 'pre-wrap' }}>{letter.content}</p>
 
             {letter.mediaUrls && letter.mediaUrls.length > 0 && (
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
-                {letter.mediaUrls.map((media, idx) => (
-                  media.type === 'image' && <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
-                ))}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap', flexDirection: 'column' }}>
+                {letter.mediaUrls.map((media, idx) => {
+                  if (media.type === 'image') {
+                    return <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />;
+                  }
+                  if (media.type === 'audio') {
+                    return (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <audio controls src={media.url} style={{ height: '40px' }} />
+                        <button 
+                          onClick={() => handleTranscribeReceivedAudio(letter.id, media.url)}
+                          style={{ padding: '8px 12px', background: '#eff6ff', color: '#3b82f6', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}
+                        >
+                          <Mic size={14} /> תמלל הודעה
+                        </button>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
               </div>
             )}
 
@@ -431,9 +494,9 @@ export default function LettersPage() {
             
             <div style={{ display: 'flex', gap: '10px' }}>
               <AudioRecorder 
-                onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} 
+                onRecordingComplete={handleAudioRecordingComplete} 
                 customButton={
-                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="הקלט קול ותמלל" disabled={isRecording}>
+                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: isRecording ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="הקלט קול" disabled={isRecording}>
                     <Mic size={20} />
                   </button>
                 }
