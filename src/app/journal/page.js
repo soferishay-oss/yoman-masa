@@ -131,10 +131,17 @@ export default function JournalPage() {
             }
 
             return (
-              <div key={entry.id} className={styles.journalPage} style={isMood ? { border: '2px dashed var(--primary-color)', background: '#f8fafc' } : {}}>
+              <div 
+                key={entry.id} 
+                className={styles.journalPage} 
+                style={isMood ? { 
+                  border: '2px dashed var(--primary-color)', 
+                  paddingTop: '20px', 
+                  paddingBottom: '20px' 
+                } : {}}
+              >
                 <div className={styles.pageHeader}>
                   <div className={styles.pageDate}>
-                    {isMood && <span style={{ fontSize: '20px', marginLeft: '8px' }}>{moodEmoji}</span>}
                     <AppDate date={entry.createdAt} />
                   </div>
                   <div className={styles.pageActions}>
@@ -160,9 +167,9 @@ export default function JournalPage() {
                 </div>
                 
                 {isMood ? (
-                  <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                    <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 10px 0' }}>דיווח מצב רוח</p>
-                    <p className={styles.pageBody} style={{ fontStyle: 'italic', color: '#475569' }}>"{entry.bodyText}"</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                    <span style={{ fontSize: '32px' }}>{moodEmoji}</span>
+                    <p className={styles.pageBody} style={{ fontStyle: 'italic', margin: 0 }}>"{entry.bodyText}"</p>
                   </div>
                 ) : (
                   <p className={styles.pageBody}>{entry.bodyText}</p>
