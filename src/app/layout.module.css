@@ -44,6 +44,55 @@
   color: var(--accent-color);
 }
 
+.fabWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: -30px;
+  gap: 8px;
+  width: 30%;
+  text-decoration: none;
+}
+
+.fabButton {
+  width: 70px;
+  height: 70px;
+  background-color: var(--bg-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  transition: transform 0.2s ease;
+}
+
+.fabWrapper:hover .fabButton {
+  transform: scale(1.05);
+}
+
+.fabButton img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transform: scale(1.08);
+}
+
+.fabWrapper span {
+  color: #a0aec0;
+  font-size: 13px;
+  text-align: center;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.fabWrapper:hover span {
+  color: var(--accent-color);
+}
+
 .icon {
   font-size: 24px;
 }

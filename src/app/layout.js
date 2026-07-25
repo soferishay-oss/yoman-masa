@@ -59,24 +59,23 @@ export default async function RootLayout({ children }) {
               <HamburgerMenu isDutyStudent={isDutyStudent} />
               
               <nav className={styles.bottomNav}>
-                <Link href="/calendar" className={styles.navItem}>
-                  <div className={styles.icon}><Calendar size={24} /></div>
-                  <span>לוח מסע</span>
+                <Link href="/home" className={styles.navItem}>
+                  <div className={styles.icon}><Home size={24} /></div>
+                  <span>בית</span>
+                </Link>
+
+                <Link href="/journal" className={styles.fabWrapper}>
+                  <div className={styles.fabButton}>
+                    <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: '50%' }}>
+                      <img src="/app-logo.png" alt="היומן שלי" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.08)' }} />
+                    </div>
+                  </div>
+                  <span>היומן שלי</span>
                 </Link>
                 
                 <Link href="/student/goals" className={styles.navItem}>
                   <div className={styles.icon}><Target size={24} /></div>
                   <span>היעדים שלי</span>
-                </Link>
-
-                <Link href="/journal" className={styles.navItem}>
-                  <div className={styles.icon}><BookOpen size={24} /></div>
-                  <span>היומן שלי</span>
-                </Link>
-                
-                <Link href="/home" className={styles.navItem}>
-                  <div className={styles.icon}><Home size={24} /></div>
-                  <span>בית</span>
                 </Link>
               </nav>
             </>
