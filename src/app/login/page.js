@@ -71,16 +71,6 @@ export default function LoginPage() {
             muted 
             playsInline
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onTimeUpdate={(e) => {
-              const vid = e.target;
-              if (vid.duration && vid.currentTime >= vid.duration - 0.5) {
-                vid.pause();
-                router.refresh();
-                if (userRole === 'admin') router.push('/admin');
-                else if (userRole === 'staff') router.push('/staff');
-                else router.push('/');
-              }
-            }}
             onEnded={(e) => {
               router.refresh();
               if (userRole === 'admin') router.push('/admin');

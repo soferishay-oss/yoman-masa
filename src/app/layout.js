@@ -7,6 +7,7 @@ import ThemeProvider from '@/components/ThemeProvider';
 import ErrorTracker from '@/components/ErrorTracker';
 import { ToastProvider } from '@/components/ToastProvider';
 import HamburgerMenu from '@/components/HamburgerMenu';
+import PwaServiceWorker from '@/components/PwaServiceWorker';
 
 export const metadata = {
   title: 'יומן מסע חינוכי',
@@ -61,6 +62,7 @@ export default async function RootLayout({ children }) {
           }}></div>
 
           <main className={styles.mainContent}>
+            <PwaServiceWorker />
             <ErrorTracker />
             {children}
           </main>
