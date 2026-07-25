@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, User, Image as ImageIcon, Mic, Sparkles, Reply, Smile, Star, Send } from 'lucide-react';
+import { Heart, User, Image as ImageIcon, Mic, Reply, Star, Send, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import AppDate, { formatAppDateString } from '@/components/AppDate';
 import styles from './letters.module.css';
 import { useToast } from '@/components/ToastProvider';
@@ -10,7 +10,9 @@ import EmojiPickerButton from '@/components/EmojiPickerButton';
 
 export default function LettersPage() {
   const toast = useToast();
-  const [letters, setLetters] = useState([]);
+  const [inboxLetters, setInboxLetters] = useState([]);
+  const [outboxLetters, setOutboxLetters] = useState([]);
+  const [activeTab, setActiveTab] = useState('inbox'); // 'inbox' or 'outbox'
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isComposing, setIsComposing] = useState(false);
@@ -18,10 +20,11 @@ export default function LettersPage() {
   const [letterContent, setLetterContent] = useState('');
   const [mediaUrls, setMediaUrls] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [aiThought, setAiThought] = useState('');
-  const [aiTranscription, setAiTranscription] = useState('');
   const [filterType, setFilterType] = useState('my_groups');
   const [searchQuery, setSearchQuery] = useState('');
+  const [letterSearchQuery, setLetterSearchQuery] = useState('');
+  const [expandedThreads, setExpandedThreads] = useState({});
+  const [replyParentId, setReplyParentId] = useState(null);
 
   const filteredUsers = users.filter(u => {
     if (searchQuery && !u.fullName.includes(searchQuery)) return false;
@@ -41,7 +44,8 @@ export default function LettersPage() {
       const res = await fetch('/api/letters');
       if (res.ok) {
         const data = await res.json();
-        setLetters(data);
+        setInboxLetters(data.received || []);
+        setOutboxLetters(data.sent || []);
       }
     } catch (error) {
       console.error('Failed to fetch letters:', error);
@@ -74,8 +78,7 @@ export default function LettersPage() {
           recipientId: selectedUser, 
           content: letterContent,
           mediaUrls,
-          aiTranscription,
-          aiThought 
+          parentId: replyParentId
         })
       });
       if (res.ok) {
@@ -84,8 +87,7 @@ export default function LettersPage() {
         setLetterContent('');
         setSelectedUser('');
         setMediaUrls([]);
-        setAiThought('');
-        setAiTranscription('');
+        setReplyParentId(null);
         fetchLetters();
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -97,15 +99,13 @@ export default function LettersPage() {
     }
   };
 
-  const handleTranscribeAll = async (type = 'smart') => {
+  const handleTranscribe = async () => {
     setIsRecording(true);
     try {
       const audioFiles = mediaUrls.filter(m => m.type === 'audio' && m.file).map(m => m.file);
       if (audioFiles.length === 0) return;
 
       let combinedBasic = '';
-      let combinedSmart = '';
-      let lastAiThought = '';
 
       for (let i = 0; i < audioFiles.length; i++) {
         const formData = new FormData();
@@ -118,23 +118,18 @@ export default function LettersPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.basicText?.includes('שגיאה: חסר מפתח')) {
-            toast.show(data.basicText + '\n' + data.aiThought, 'error');
+            toast.show(data.basicText, 'error');
             setIsRecording(false);
             return;
           }
           combinedBasic += (combinedBasic ? '\n\n' : '') + (data.basicText || '');
-          combinedSmart += (combinedSmart ? '\n\n' : '') + (data.smartText || '');
-          if (data.aiThought) lastAiThought = data.aiThought;
         }
       }
 
-      if (type === 'smart') {
-        setLetterContent(prev => prev ? prev + '\n' + combinedSmart : combinedSmart);
-        setAiThought(lastAiThought);
-      } else {
-        setLetterContent(prev => prev ? prev + '\n' + combinedBasic : combinedBasic);
-      }
-      toast.show('ההקלטות תומללו בהצלחה', 'success');
+      setLetterContent(prev => prev ? prev + '\n' + combinedBasic : combinedBasic);
+      toast.show('ההקלטה תומללה בהצלחה', 'success');
+      // Remove audio files from mediaUrls after transcription so they don't upload
+      setMediaUrls(prev => prev.filter(m => m.type !== 'audio'));
     } catch (err) {
       console.error(err);
       toast.show('שגיאה בתמלול', 'error');
@@ -143,15 +138,19 @@ export default function LettersPage() {
     }
   };
 
-  const handleAddReaction = async (letterId, emoji) => {
-    const letter = letters.find(l => l.id === letterId);
+  const handleAddReaction = async (letterId, emoji, isInbox) => {
+    const lettersList = isInbox ? inboxLetters : outboxLetters;
+    const letter = lettersList.find(l => l.id === letterId);
     if (!letter) return;
     
     let currentReactions = Array.isArray(letter.reactions) ? letter.reactions : [];
     const newReactions = [...currentReactions, emoji];
 
-    // Optimistic
-    setLetters(letters.map(l => l.id === letterId ? { ...l, reactions: newReactions } : l));
+    if (isInbox) {
+      setInboxLetters(inboxLetters.map(l => l.id === letterId ? { ...l, reactions: newReactions } : l));
+    } else {
+      setOutboxLetters(outboxLetters.map(l => l.id === letterId ? { ...l, reactions: newReactions } : l));
+    }
     
     try {
       const res = await fetch(`/api/letters/${letterId}`, {
@@ -161,17 +160,24 @@ export default function LettersPage() {
       });
       if (!res.ok) {
         toast.show('שגיאה בהוספת תגובה', 'error');
-        setLetters(letters.map(l => l.id === letterId ? { ...l, reactions: currentReactions } : l));
+        if (isInbox) {
+          setInboxLetters(inboxLetters.map(l => l.id === letterId ? { ...l, reactions: currentReactions } : l));
+        } else {
+          setOutboxLetters(outboxLetters.map(l => l.id === letterId ? { ...l, reactions: currentReactions } : l));
+        }
       }
     } catch (err) {
       console.error(err);
-      setLetters(letters.map(l => l.id === letterId ? { ...l, reactions: currentReactions } : l));
     }
   };
 
-  const handleSaveToVault = async (letter) => {
+  const handleSaveToVault = async (letter, isInbox) => {
     const newVaultStatus = !letter.isVault;
-    setLetters(letters.map(l => l.id === letter.id ? { ...l, isVault: newVaultStatus } : l));
+    if (isInbox) {
+      setInboxLetters(inboxLetters.map(l => l.id === letter.id ? { ...l, isVault: newVaultStatus } : l));
+    } else {
+      setOutboxLetters(outboxLetters.map(l => l.id === letter.id ? { ...l, isVault: newVaultStatus } : l));
+    }
     try {
       const res = await fetch('/api/vault', {
         method: 'PUT',
@@ -179,14 +185,17 @@ export default function LettersPage() {
         body: JSON.stringify({ entryId: letter.id, isVault: newVaultStatus, type: 'letter' })
       });
       if (!res.ok) {
-        setLetters(letters.map(l => l.id === letter.id ? { ...l, isVault: letter.isVault } : l));
+        if (isInbox) {
+          setInboxLetters(inboxLetters.map(l => l.id === letter.id ? { ...l, isVault: letter.isVault } : l));
+        } else {
+          setOutboxLetters(outboxLetters.map(l => l.id === letter.id ? { ...l, isVault: letter.isVault } : l));
+        }
         toast.show('שגיאה בשמירה לתיבה', 'error');
       } else {
         toast.show(newVaultStatus ? 'נשמר בדברים המיוחדים' : 'הוסר מהדברים המיוחדים', 'success');
       }
     } catch (error) {
       console.error(error);
-      setLetters(letters.map(l => l.id === letter.id ? { ...l, isVault: letter.isVault } : l));
     }
   };
 
@@ -200,6 +209,7 @@ export default function LettersPage() {
             return (
               <div key={idx} style={{position: 'relative', display: 'inline-block'}}>
                 {media.type === 'image' && <img src={media.url} alt="Uploaded" style={{width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px'}} />}
+                {media.type === 'audio' && <div style={{width: '100px', height: '100px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px'}}><Mic size={24} color="#64748b" /></div>}
                 <button type="button" onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== idx))} style={{position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 24, height: 24, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>X</button>
               </div>
             );
@@ -207,17 +217,125 @@ export default function LettersPage() {
         </div>
         {audioMedia && audioMedia.file && (
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={() => handleTranscribeAll('basic')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              {isRecording ? 'מעבד...' : 'תמלול רגיל'}
-            </button>
-            <button type="button" onClick={() => handleTranscribeAll('smart')} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
-              {isRecording ? 'מעבד...' : 'תמלול חכם'}
+            <button type="button" onClick={() => handleTranscribe()} disabled={isRecording} style={{padding: '8px', borderRadius: '8px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer', flex: 1}}>
+              {isRecording ? 'מתמלל...' : 'הפוך הקלטה לטקסט'}
             </button>
           </div>
         )}
       </div>
     );
   };
+
+  const renderLetterNode = (letter, isInbox, isReply = false) => {
+    const isExpanded = expandedThreads[letter.id];
+    
+    // Filter by search query
+    if (letterSearchQuery) {
+      const term = letterSearchQuery.toLowerCase();
+      const contentMatch = letter.content?.toLowerCase().includes(term);
+      const authorMatch = letter.author?.fullName?.toLowerCase().includes(term);
+      const recipientMatch = letter.recipient?.fullName?.toLowerCase().includes(term);
+      
+      // If none match, and we are at the top level, don't render. 
+      // We still render replies if the parent matches.
+      if (!isReply && !contentMatch && !authorMatch && !recipientMatch) {
+        return null;
+      }
+    }
+
+    const firstSentence = letter.content ? (letter.content.split(/[.\n]/)[0].substring(0, 50) + '...') : '';
+
+    return (
+      <div key={letter.id} className={styles.letterCard} style={{ marginLeft: isReply ? '20px' : '0', background: isReply ? '#f8fafc' : (isInbox ? '#ffffff' : '#f0fdf4'), border: isInbox ? 'none' : '1px solid #bbf7d0' }}>
+        
+        {!isExpanded && !isReply ? (
+          <div onClick={() => setExpandedThreads({...expandedThreads, [letter.id]: true})} style={{ cursor: 'pointer', padding: '5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>
+                {isInbox ? `מאת: ${letter.author?.fullName || 'חבר אנונימי'}` : `אל: ${letter.recipient?.fullName || 'חבר אנונימי'}`}
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}><AppDate date={letter.createdAt} /></div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px' }}>
+              <p style={{ margin: 0, color: '#475569', fontSize: '14px' }}>{firstSentence}</p>
+              <ChevronDown size={20} color="#94a3b8" />
+            </div>
+          </div>
+        ) : (
+          <>
+            {!isReply && (
+              <div onClick={() => setExpandedThreads({...expandedThreads, [letter.id]: false})} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                <ChevronUp size={20} color="#94a3b8" />
+              </div>
+            )}
+            <div className={styles.letterHeader}>
+              <div className={styles.senderInfo}>
+                <User size={18} className={styles.senderIcon} />
+                <span className={styles.senderName}>
+                  {isInbox ? `מאת: ${letter.author?.fullName || 'חבר אנונימי'}` : `נשלח אל: ${letter.recipient?.fullName || 'חבר אנונימי'}`}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <span className={styles.letterDate}><AppDate date={letter.createdAt} /></span>
+                <button 
+                  onClick={() => handleSaveToVault(letter, isInbox)} 
+                  style={{ background: 'none', border: 'none', padding: '0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  title={letter.isVault ? "הסר מדברים מיוחדים" : "שמור בדברים מיוחדים"}
+                >
+                  <Star size={20} fill={letter.isVault ? '#f59e0b' : 'none'} color={letter.isVault ? '#f59e0b' : '#94a3b8'} />
+                </button>
+              </div>
+            </div>
+            <p className={styles.letterBody} style={{ whiteSpace: 'pre-wrap' }}>{letter.content}</p>
+
+            {letter.mediaUrls && letter.mediaUrls.length > 0 && (
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
+                {letter.mediaUrls.map((media, idx) => (
+                  media.type === 'image' && <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
+                ))}
+              </div>
+            )}
+
+            {Array.isArray(letter.reactions) && letter.reactions.length > 0 && (
+              <div style={{ display: 'flex', gap: '5px', marginTop: '10px', flexWrap: 'wrap' }}>
+                {letter.reactions.map((rx, idx) => (
+                  <span key={idx} style={{ background: '#f1f5f9', padding: '4px 8px', borderRadius: '16px', fontSize: '14px' }}>{rx}</span>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
+              <EmojiPickerButton onEmojiClick={(emoji) => handleAddReaction(letter.id, emoji, isInbox)} />
+              {(letter.authorId || letter.recipientId) && (
+                <button 
+                  onClick={() => {
+                    const recipient = isInbox ? letter.authorId : letter.recipientId;
+                    setSelectedUser(recipient);
+                    setReplyParentId(letter.id);
+                    setIsComposing(true);
+                    setLetterContent(''); // Clean reply
+                    window.scrollTo(0, 0);
+                  }}
+                  style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 'bold' }}
+                >
+                  <Reply size={16} /> השב
+                </button>
+              )}
+            </div>
+
+            {/* Render Replies recursively */}
+            {letter.replies && letter.replies.length > 0 && (
+              <div style={{ marginTop: '15px', borderRight: '2px solid #e2e8f0', paddingRight: '15px' }}>
+                {letter.replies.map(reply => renderLetterNode(reply, reply.recipientId === (isInbox ? letter.recipientId : letter.authorId), true))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const activeLetters = activeTab === 'inbox' ? inboxLetters : outboxLetters;
 
   return (
     <div className={styles.container}>
@@ -226,19 +344,25 @@ export default function LettersPage() {
         <p>מילים טובות מהחברים והצוות</p>
       </header>
 
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+      <div style={{ marginBottom: '20px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '10px' }}>
         <button 
-          onClick={() => setIsComposing(!isComposing)}
+          onClick={() => { setIsComposing(!isComposing); setReplyParentId(null); setSelectedUser(''); setLetterContent(''); setMediaUrls([]); }}
           style={{ padding: '10px 20px', borderRadius: '20px', backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}
         >
-          {isComposing ? 'ביטול' : 'כתוב מכתב חדש'}
+          {isComposing ? 'ביטול כתיבה' : 'כתוב מכתב חדש'}
         </button>
       </div>
 
       {isComposing && (
         <form onSubmit={handleSend} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+          {replyParentId && (
+            <div style={{ background: '#fef3c7', padding: '10px', borderRadius: '8px', marginBottom: '15px', color: '#b45309', fontSize: '14px', fontWeight: 'bold' }}>
+              כותב תגובה לשרשור
+            </div>
+          )}
+          
           <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>למי תרצה לכתוב?</label>
+            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>{replyParentId ? 'נמען התגובה:' : 'למי תרצה לכתוב?'}</label>
             
             {!selectedUser ? (
               <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
@@ -273,9 +397,11 @@ export default function LettersPage() {
             ) : (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', padding: '12px 15px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
                 <span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>
-                  {users.find(u => u.id === selectedUser)?.fullName}
+                  {users.find(u => u.id === selectedUser)?.fullName || 'טוען נמען...'}
                 </span>
-                <button type="button" onClick={() => setSelectedUser('')} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer' }}>שנה נמען</button>
+                {!replyParentId && (
+                  <button type="button" onClick={() => setSelectedUser('')} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer' }}>שנה נמען</button>
+                )}
               </div>
             )}
           </div>
@@ -286,21 +412,13 @@ export default function LettersPage() {
                 value={letterContent}
                 onChange={e => setLetterContent(e.target.value)}
                 style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '100px' }}
+                placeholder="כתוב כאן הודעה לחבר..."
               />
-              <div style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+              <div style={{ position: 'absolute', bottom: '10px', left: '10px' }}>
                 <EmojiPickerButton onEmojiClick={(emoji) => setLetterContent(prev => prev + emoji)} />
               </div>
             </div>
           </div>
-
-          {aiThought && (
-            <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', marginBottom: '10px', borderLeft: '4px solid var(--primary-color)' }}>
-              <span style={{color: 'var(--primary-color)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px'}}>
-                <Sparkles size={16} /> עצה מה-AI לתוספת אישית:
-              </span>
-              <p style={{fontSize: '14px', margin: '5px 0 0'}}>{aiThought}</p>
-            </div>
-          )}
 
           {renderMediaPreview()}
 
@@ -315,7 +433,7 @@ export default function LettersPage() {
               <AudioRecorder 
                 onRecordingComplete={(media) => setMediaUrls([...mediaUrls, media])} 
                 customButton={
-                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="הקלט קול" disabled={isRecording}>
+                  <button type="button" style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="הקלט קול ותמלל" disabled={isRecording}>
                     <Mic size={20} />
                   </button>
                 }
@@ -340,69 +458,43 @@ export default function LettersPage() {
         </form>
       )}
 
+      {/* Tabs */}
+      <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #e2e8f0' }}>
+        <button 
+          onClick={() => setActiveTab('inbox')}
+          style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: activeTab === 'inbox' ? '3px solid var(--primary-color)' : 'none', color: activeTab === 'inbox' ? 'var(--primary-color)' : '#64748b', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          מכתבים נכנסים
+        </button>
+        <button 
+          onClick={() => setActiveTab('outbox')}
+          style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: activeTab === 'outbox' ? '3px solid var(--primary-color)' : 'none', color: activeTab === 'outbox' ? 'var(--primary-color)' : '#64748b', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          מכתבים ששלחתי
+        </button>
+      </div>
+
+      {/* Search Letters */}
+      <div style={{ position: 'relative', marginBottom: '20px' }}>
+        <input 
+          type="text" 
+          placeholder="חפש במכתבים (לפי שם, תאריך או תוכן)..." 
+          value={letterSearchQuery}
+          onChange={(e) => setLetterSearchQuery(e.target.value)}
+          style={{ width: '100%', padding: '10px 40px 10px 10px', borderRadius: '20px', border: '1px solid #cbd5e1' }}
+        />
+        <Search size={18} color="#94a3b8" style={{ position: 'absolute', right: '15px', top: '12px' }} />
+      </div>
+
       <div className={styles.lettersList}>
         {isLoading ? (
-          <p>טוען מכתבים...</p>
-        ) : letters.length > 0 ? (
-          letters.map(letter => (
-            <div key={letter.id} className={styles.letterCard}>
-              <div className={styles.letterHeader}>
-                <div className={styles.senderInfo}>
-                  <User size={18} className={styles.senderIcon} />
-                  <span className={styles.senderName}>{letter.author?.fullName || 'חבר אנונימי'}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <span className={styles.letterDate}><AppDate date={letter.createdAt} /></span>
-                  <button 
-                    onClick={() => handleSaveToVault(letter)} 
-                    style={{ background: 'none', border: 'none', padding: '0', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                    title={letter.isVault ? "הסר מדברים מיוחדים" : "שמור בדברים מיוחדים"}
-                  >
-                    <Star size={20} fill={letter.isVault ? '#f59e0b' : 'none'} color={letter.isVault ? '#f59e0b' : '#94a3b8'} />
-                  </button>
-                </div>
-              </div>
-              <p className={styles.letterBody}>"{letter.content}"</p>
-
-              {letter.mediaUrls && letter.mediaUrls.length > 0 && (
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
-                  {letter.mediaUrls.map((media, idx) => (
-                    media.type === 'image' && <img key={idx} src={media.url} alt="Media" style={{width: '100%', maxWidth: '300px', borderRadius: '8px'}} />
-                  ))}
-                </div>
-              )}
-
-              {/* Reactions UI */}
-              {Array.isArray(letter.reactions) && letter.reactions.length > 0 && (
-                <div style={{ display: 'flex', gap: '5px', marginTop: '10px', flexWrap: 'wrap' }}>
-                  {letter.reactions.map((rx, idx) => (
-                    <span key={idx} style={{ background: '#f1f5f9', padding: '4px 8px', borderRadius: '16px', fontSize: '14px' }}>{rx}</span>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
-                <EmojiPickerButton onEmojiClick={(emoji) => handleAddReaction(letter.id, emoji)} />
-                {letter.authorId && (
-                  <button 
-                    onClick={() => {
-                      setSelectedUser(letter.authorId);
-                      setIsComposing(true);
-                      setLetterContent(`בתגובה למכתבך מהתאריך ${formatAppDateString(letter.createdAt)}:\n\n`);
-                      window.scrollTo(0, 0);
-                    }}
-                    style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 'bold' }}
-                  >
-                    <Reply size={16} /> השב
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
+          <p style={{ textAlign: 'center' }}>טוען מכתבים...</p>
+        ) : activeLetters.length > 0 ? (
+          activeLetters.map(letter => renderLetterNode(letter, activeTab === 'inbox'))
         ) : (
           <div className={styles.emptyState}>
             <Heart size={40} color="#cbd5e0" />
-            <p>עדיין אין מכתבים. אבל הם יגיעו!</p>
+            <p>{activeTab === 'inbox' ? 'עדיין אין מכתבים נכנסים.' : 'עוד לא שלחת מכתבים.'}</p>
           </div>
         )}
       </div>

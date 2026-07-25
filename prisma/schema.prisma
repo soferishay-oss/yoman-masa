@@ -251,6 +251,11 @@ model Letter {
   aiThought        String?
   reactions        Json?
   isVault          Boolean  @default(false)
+  
+  parentId         String?
+  parent           Letter?  @relation("LetterReplies", fields: [parentId], references: [id])
+  replies          Letter[] @relation("LetterReplies")
+
   createdAt        DateTime @default(now())
 }
 

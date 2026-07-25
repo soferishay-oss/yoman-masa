@@ -7,6 +7,8 @@ import AppDate from '@/components/AppDate';
 import styles from './journal.module.css';
 import { useToast } from '@/components/ToastProvider';
 import { useRouter } from 'next/navigation';
+import JournalComposer from '@/components/JournalComposer';
+import { Plus, X } from 'lucide-react';
 
 export default function JournalPage() {
   const theme = useContext(ThemeContext);
@@ -15,6 +17,7 @@ export default function JournalPage() {
   const toast = useToast();
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isComposing, setIsComposing] = useState(false);
 
   useEffect(() => {
     fetchEntries();
@@ -73,6 +76,31 @@ export default function JournalPage() {
 
   return (
     <div className={styles.container}>
+
+      {/* Floating Action Button for Composer */}
+      <div style={{ position: 'fixed', bottom: '80px', left: '20px', zIndex: 100 }}>
+        <button 
+          onClick={() => setIsComposing(!isComposing)}
+          style={{
+            width: '60px', height: '60px', borderRadius: '30px', 
+            background: 'var(--primary-color)', color: 'white',
+            border: 'none', cursor: 'pointer', display: 'flex', 
+            alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)', transition: 'transform 0.2s'
+          }}
+        >
+          {isComposing ? <X size={30} /> : <Plus size={30} />}
+        </button>
+      </div>
+
+      {isComposing && (
+        <div style={{ marginBottom: '20px' }}>
+          <JournalComposer onPostCreated={(newPost) => {
+            setEntries([newPost, ...entries]);
+            setIsComposing(false);
+          }} onCancelEdit={() => setIsComposing(false)} />
+        </div>
+      )}
 
       {/* Journal Pages Feed */}
       <div className={styles.pagesFeed}>

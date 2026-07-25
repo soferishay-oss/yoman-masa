@@ -25,6 +25,8 @@ function HomeContent() {
   const [greeting, setGreeting] = useState('שלום');
   const [initialEditData, setInitialEditData] = useState(null);
   const [guidanceTrack, setGuidanceTrack] = useState('documentation_only');
+  const [selectedMood, setSelectedMood] = useState(null);
+  const [moodText, setMoodText] = useState('');
   const toast = useToast();
 
   useEffect(() => {
@@ -74,14 +76,21 @@ function HomeContent() {
   }, [editId, router, toast]);
 
   const handleMoodSelect = async (moodValue) => {
+    setSelectedMood(moodValue);
+  };
+
+  const submitMood = async () => {
+    if (!selectedMood) return;
     try {
       const res = await fetch('/api/student/mood', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ratingValue: moodValue, explanation: 'דיווח מהיר ממסך הבית' })
+        body: JSON.stringify({ ratingValue: selectedMood, explanation: moodText || 'דיווח מהיר ממסך הבית' })
       });
       if (res.ok) {
         toast.show('תודה על השיתוף!', 'success');
+        setSelectedMood(null);
+        setMoodText('');
       } else {
         toast.show('שגיאה בשמירת מצב הרוח', 'error');
       }
@@ -144,13 +153,40 @@ function HomeContent() {
           boxShadow: '0 4px 10px rgba(0,0,0,0.05)', marginBottom: '30px', textAlign: 'center'
         }}>
           <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '16px' }}>איך המרגש היום?</h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
-            <button onClick={() => handleMoodSelect(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😞</button>
-            <button onClick={() => handleMoodSelect(2)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😕</button>
-            <button onClick={() => handleMoodSelect(3)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😐</button>
-            <button onClick={() => handleMoodSelect(4)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>🙂</button>
-            <button onClick={() => handleMoodSelect(5)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>🤩</button>
-          </div>
+          {!selectedMood ? (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+              <button onClick={() => handleMoodSelect(1)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😞</button>
+              <button onClick={() => handleMoodSelect(2)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😕</button>
+              <button onClick={() => handleMoodSelect(3)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>😐</button>
+              <button onClick={() => handleMoodSelect(4)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>🙂</button>
+              <button onClick={() => handleMoodSelect(5)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', fontSize: '32px' }}>🤩</button>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: '32px', marginBottom: '10px' }}>
+                {selectedMood === 1 && '😞'}
+                {selectedMood === 2 && '😕'}
+                {selectedMood === 3 && '😐'}
+                {selectedMood === 4 && '🙂'}
+                {selectedMood === 5 && '🤩'}
+              </div>
+              <input 
+                type="text" 
+                placeholder="רוצה להוסיף כמה מילים?" 
+                value={moodText}
+                onChange={e => setMoodText(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #cbd5e1', marginBottom: '10px' }}
+              />
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button onClick={submitMood} style={{ padding: '8px 20px', borderRadius: '20px', background: 'var(--primary-color)', color: 'white', border: 'none', cursor: 'pointer' }}>
+                  שלח
+                </button>
+                <button onClick={() => { setSelectedMood(null); setMoodText(''); }} style={{ padding: '8px 20px', borderRadius: '20px', background: '#f1f5f9', color: '#64748b', border: 'none', cursor: 'pointer' }}>
+                  ביטול
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mood Survey Popup (Reminder) */}

@@ -16,26 +16,51 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const letters = await prisma.letter.findMany({
+    const received = await prisma.letter.findMany({
       where: {
         recipientId: userId,
         tenantId: tenantId,
+        parentId: null
       },
       orderBy: {
         createdAt: 'desc',
       },
       include: {
-        author: {
-          select: {
-            id: true,
-            fullName: true,
-            avatarUrl: true
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+        recipient: { select: { id: true, fullName: true, avatarUrl: true } },
+        replies: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            author: { select: { id: true, fullName: true, avatarUrl: true } },
+            recipient: { select: { id: true, fullName: true, avatarUrl: true } }
           }
         }
       }
     });
 
-    return NextResponse.json(letters);
+    const sent = await prisma.letter.findMany({
+      where: {
+        authorId: userId,
+        tenantId: tenantId,
+        parentId: null
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        author: { select: { id: true, fullName: true, avatarUrl: true } },
+        recipient: { select: { id: true, fullName: true, avatarUrl: true } },
+        replies: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            author: { select: { id: true, fullName: true, avatarUrl: true } },
+            recipient: { select: { id: true, fullName: true, avatarUrl: true } }
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({ received, sent });
   } catch (error) {
     console.error('Failed to fetch letters:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -55,7 +80,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { content, recipientId, mediaUrls, aiTranscription, aiThought } = await request.json();
+    const { content, recipientId, mediaUrls, parentId } = await request.json();
 
     if (!content && !(mediaUrls && mediaUrls.length > 0)) {
       return NextResponse.json({ error: 'Missing content or media' }, { status: 400 });
@@ -140,9 +165,8 @@ Message to check: "${content}"`;
         authorId: userId,
         recipientId,
         tenantId,
-        mediaUrls: mediaUrls || [],
-        aiTranscription: aiTranscription || null,
-        aiThought: aiThought || null
+        parentId: parentId || null,
+        mediaUrls: mediaUrls || []
       }
     });
 
