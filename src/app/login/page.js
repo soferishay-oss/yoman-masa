@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSplash, setShowSplash] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const theme = useContext(ThemeContext) || {};
@@ -37,10 +39,8 @@ export default function LoginPage() {
 
       if (res.ok) {
         const data = await res.json();
-        // Redirect based on role with full reload to ensure middleware gets the cookie
-        if (data.user.role === 'admin') window.location.href = '/admin';
-        else if (data.user.role === 'staff') window.location.href = '/staff';
-        else window.location.href = '/'; // Student dashboard
+        setUserRole(data.user.role);
+        setShowSplash(true);
       } else {
         const errorData = await res.json();
         setError(errorData.error || 'שגיאה בהתחברות. ודא שהפרטים תקינים.');
@@ -55,6 +55,42 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
+      {showSplash && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#ffffff',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <video 
+            src="/clip.mp4" 
+            autoPlay 
+            muted 
+            playsInline
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onTimeUpdate={(e) => {
+              const vid = e.target;
+              if (vid.duration && vid.currentTime >= vid.duration - 0.5) {
+                vid.pause();
+                router.refresh();
+                if (userRole === 'admin') router.push('/admin');
+                else if (userRole === 'staff') router.push('/staff');
+                else router.push('/');
+              }
+            }}
+            onEnded={(e) => {
+              router.refresh();
+              if (userRole === 'admin') router.push('/admin');
+              else if (userRole === 'staff') router.push('/staff');
+              else router.push('/');
+            }}
+          />
+        </div>
+      )}
+
       <div className={styles.card}>
         <div className={styles.header}>
           {theme.logoUrl ? (

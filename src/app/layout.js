@@ -11,6 +11,19 @@ import HamburgerMenu from '@/components/HamburgerMenu';
 export const metadata = {
   title: 'יומן מסע חינוכי',
   description: 'המסע האישי שלך',
+  manifest: '/manifest.json', // Next.js will auto-generate it from manifest.js but sometimes links it this way
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'יומן מסע',
+  },
+};
+
+export const viewport = {
+  themeColor: '#3b82f6',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 import { redirect } from 'next/navigation';
