@@ -39,6 +39,18 @@ export async function POST(request) {
       }
     });
 
+    // Also add it to the user's journal
+    await prisma.contentEntry.create({
+      data: {
+        tenantId,
+        ownerUserId: userId,
+        type: 'journal',
+        category: 'mood',
+        bodyText: explanation || 'דיווח מצב רוח',
+        tags: ["mood", ratingValue.toString()]
+      }
+    });
+
     // Clear forceMoodSurvey flag if it exists
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user && user.preferences && user.preferences.forceMoodSurvey) {

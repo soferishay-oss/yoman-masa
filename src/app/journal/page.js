@@ -94,11 +94,18 @@ export default function JournalPage() {
       </div>
 
       {isComposing && (
-        <div style={{ marginBottom: '20px' }}>
-          <JournalComposer onPostCreated={(newPost) => {
-            setEntries([newPost, ...entries]);
-            setIsComposing(false);
-          }} onCancelEdit={() => setIsComposing(false)} />
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{ width: '100%', maxWidth: '600px', background: 'white', borderRadius: '16px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <JournalComposer onPostCreated={(newPost) => {
+              setEntries([newPost, ...entries]);
+              setIsComposing(false);
+            }} onCancelEdit={() => setIsComposing(false)} />
+          </div>
         </div>
       )}
 
@@ -112,13 +119,26 @@ export default function JournalPage() {
           entries.map(entry => {
             const timeRef = entry.updatedAt ? new Date(entry.updatedAt) : new Date(entry.createdAt);
             const isEditable = (new Date() - timeRef) / (1000 * 60) <= 30;
+            const isMood = entry.category === 'mood';
+            let moodEmoji = '📝';
+            if (isMood && Array.isArray(entry.tags) && entry.tags[1]) {
+              const rating = parseInt(entry.tags[1]);
+              if (rating === 1) moodEmoji = '😞';
+              if (rating === 2) moodEmoji = '😕';
+              if (rating === 3) moodEmoji = '😐';
+              if (rating === 4) moodEmoji = '🙂';
+              if (rating === 5) moodEmoji = '🤩';
+            }
 
             return (
-              <div key={entry.id} className={styles.journalPage}>
+              <div key={entry.id} className={styles.journalPage} style={isMood ? { border: '2px dashed var(--primary-color)', background: '#f8fafc' } : {}}>
                 <div className={styles.pageHeader}>
-                  <div className={styles.pageDate}><AppDate date={entry.createdAt} /></div>
+                  <div className={styles.pageDate}>
+                    {isMood && <span style={{ fontSize: '20px', marginLeft: '8px' }}>{moodEmoji}</span>}
+                    <AppDate date={entry.createdAt} />
+                  </div>
                   <div className={styles.pageActions}>
-                    {isEditable && (
+                    {isEditable && !isMood && (
                       <>
                         <button onClick={() => router.push(`/home?edit=${entry.id}`)} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="ערוך">
                           <Edit2 size={18} />
@@ -128,13 +148,25 @@ export default function JournalPage() {
                         </button>
                       </>
                     )}
+                    {isEditable && isMood && (
+                      <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                     <button onClick={() => handleSaveToVault(entry)} className={entry.isVault ? styles.starBtnActive : styles.starBtn}>
                       <Star size={18} fill={entry.isVault ? '#f59e0b' : 'none'} />
                     </button>
                   </div>
                 </div>
                 
-                <p className={styles.pageBody}>{entry.bodyText}</p>
+                {isMood ? (
+                  <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                    <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 10px 0' }}>דיווח מצב רוח</p>
+                    <p className={styles.pageBody} style={{ fontStyle: 'italic', color: '#475569' }}>"{entry.bodyText}"</p>
+                  </div>
+                ) : (
+                  <p className={styles.pageBody}>{entry.bodyText}</p>
+                )}
                 
                 {entry.mediaUrls && entry.mediaUrls.length > 0 && (
                   <div className={styles.pageMedia}>
