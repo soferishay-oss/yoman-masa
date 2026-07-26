@@ -46,7 +46,7 @@ export async function POST(request) {
         ownerUserId: userId,
         type: 'journal',
         category: 'mood',
-        bodyText: explanation || 'דיווח מצב רוח',
+        bodyText: explanation || '',
         tags: ["mood", ratingValue.toString()]
       }
     });

@@ -184,7 +184,9 @@ export default function JournalPage() {
                 {isMood ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                     <span style={{ fontSize: '32px' }}>{moodEmoji}</span>
-                    <p className={styles.pageBody} style={{ fontStyle: 'italic', margin: 0 }}>"{entry.bodyText}"</p>
+                    {entry.bodyText && (
+                      <p className={styles.pageBody} style={{ fontStyle: 'italic', margin: 0 }}>"{entry.bodyText}"</p>
+                    )}
                   </div>
                 ) : (
                   <p className={styles.pageBody}>{entry.bodyText}</p>
