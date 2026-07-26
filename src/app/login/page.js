@@ -142,10 +142,9 @@ export default function LoginPage() {
               }
             }}
             onEnded={(e) => {
-              router.refresh();
-              if (userRole === 'admin') router.push('/admin');
-              else if (userRole === 'staff') router.push('/staff');
-              else router.push('/');
+              if (userRole === 'admin') window.location.href = '/admin';
+              else if (userRole === 'staff') window.location.href = '/staff';
+              else window.location.href = '/home';
             }}
           />
         </div>
