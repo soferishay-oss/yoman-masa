@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSplash, setShowSplash] = useState(false);
+  const [isSplashFading, setIsSplashFading] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,7 +64,9 @@ export default function LoginPage() {
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          opacity: isSplashFading ? 0 : 1,
+          transition: 'opacity 0.4s ease-out'
         }}>
           <video 
             src="/clip.mp4" 
@@ -71,11 +74,27 @@ export default function LoginPage() {
             muted 
             playsInline
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onTimeUpdate={(e) => {
+              const vid = e.target;
+              if (vid.duration && vid.currentTime >= vid.duration - 0.5) {
+                vid.pause();
+                setIsSplashFading(true);
+                setTimeout(() => {
+                  router.refresh();
+                  if (userRole === 'admin') router.push('/admin');
+                  else if (userRole === 'staff') router.push('/staff');
+                  else router.push('/');
+                }, 400); // Wait for the fade out to finish before navigating
+              }
+            }}
             onEnded={(e) => {
-              router.refresh();
-              if (userRole === 'admin') router.push('/admin');
-              else if (userRole === 'staff') router.push('/staff');
-              else router.push('/');
+              setIsSplashFading(true);
+              setTimeout(() => {
+                router.refresh();
+                if (userRole === 'admin') router.push('/admin');
+                else if (userRole === 'staff') router.push('/staff');
+                else router.push('/');
+              }, 400);
             }}
           />
         </div>
