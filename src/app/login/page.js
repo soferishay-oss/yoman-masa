@@ -122,15 +122,19 @@ export default function LoginPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          opacity: isSplashFading ? 0 : 1,
-          transition: 'opacity 1.5s ease-out'
         }}>
           <video 
             src="/clip.mp4" 
             autoPlay 
             muted 
             playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover',
+              opacity: isSplashFading ? 0 : 1,
+              transition: 'opacity 1.5s ease-out'
+            }}
             onTimeUpdate={(e) => {
               const vid = e.target;
               if (vid.duration && vid.currentTime >= vid.duration - 1.5 && !isSplashFading) {
