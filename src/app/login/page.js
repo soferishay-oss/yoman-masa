@@ -66,7 +66,7 @@ export default function LoginPage() {
           alignItems: 'center',
           justifyContent: 'center',
           opacity: isSplashFading ? 0 : 1,
-          transition: 'opacity 0.8s ease-out'
+          transition: 'opacity 1.5s ease-out'
         }}>
           <video 
             src="/clip.mp4" 
@@ -76,25 +76,17 @@ export default function LoginPage() {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onTimeUpdate={(e) => {
               const vid = e.target;
-              if (vid.duration && vid.currentTime >= vid.duration - 0.5) {
-                vid.pause();
+              // Start fading 1.5 seconds before the video ends, but let it keep playing!
+              if (vid.duration && vid.currentTime >= vid.duration - 1.5 && !isSplashFading) {
                 setIsSplashFading(true);
-                setTimeout(() => {
-                  router.refresh();
-                  if (userRole === 'admin') router.push('/admin');
-                  else if (userRole === 'staff') router.push('/staff');
-                  else router.push('/');
-                }, 800); // Wait for the fade out to finish before navigating
               }
             }}
             onEnded={(e) => {
-              setIsSplashFading(true);
-              setTimeout(() => {
-                router.refresh();
-                if (userRole === 'admin') router.push('/admin');
-                else if (userRole === 'staff') router.push('/staff');
-                else router.push('/');
-              }, 800);
+              // Once the video finishes naturally, we navigate. The screen is already fully white.
+              router.refresh();
+              if (userRole === 'admin') router.push('/admin');
+              else if (userRole === 'staff') router.push('/staff');
+              else router.push('/');
             }}
           />
         </div>
