@@ -8,10 +8,10 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-
 
 export async function POST(request) {
   try {
-    const { phoneNumber, password } = await request.json();
+    const { phoneNumber, password, institutionCode } = await request.json();
 
-    if (!phoneNumber || !password) {
-      return NextResponse.json({ error: 'Phone number and password are required' }, { status: 400 });
+    if (!phoneNumber || !password || !institutionCode) {
+      return NextResponse.json({ error: 'Phone number, password, and institution code are required' }, { status: 400 });
     }
 
     // Clean phone number (strip spaces/dashes if any)
@@ -55,6 +55,11 @@ export async function POST(request) {
       }
 
       return NextResponse.json({ error: 'User not found or incorrect credentials' }, { status: 401 });
+    }
+
+    // Verify user belongs to the selected tenant
+    if (user.tenant?.institutionCode !== institutionCode) {
+      return NextResponse.json({ error: 'המשתמש לא נמצא במוסד שנבחר.' }, { status: 401 });
     }
 
     // Validate password

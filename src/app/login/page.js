@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LogIn, Phone, Shield } from 'lucide-react';
+import { Phone, Shield, Search, ChevronDown, Check } from 'lucide-react';
 import styles from './login.module.css';
 import { ThemeContext } from '@/components/ThemeProvider';
 
@@ -11,23 +11,76 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Splash
   const [showSplash, setShowSplash] = useState(false);
   const [isSplashFading, setIsSplashFading] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  
+  // Multi-tenant
+  const [tenants, setTenants] = useState([]);
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
+
   const router = useRouter();
   const searchParams = useSearchParams();
-  const theme = useContext(ThemeContext) || {};
+
+  useEffect(() => {
+    // Click outside to close dropdown
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('error') === 'suspended') {
       setError('חשבונך ננעל ע"י מנהל המערכת. נא פנה למחנך או למנהל.');
     }
+
+    // Fetch tenants
+    fetch('/api/tenants/public')
+      .then(r => r.json())
+      .then(data => {
+        if (data.tenants) {
+          setTenants(data.tenants);
+          // Try to load saved tenant from localStorage
+          const savedCode = localStorage.getItem('yoman_institution_code');
+          if (savedCode) {
+            const found = data.tenants.find(t => t.institutionCode === savedCode);
+            if (found) setSelectedTenant(found);
+          }
+        }
+      })
+      .catch(err => console.error('Error fetching tenants:', err));
   }, [searchParams]);
+
+  const handleSelectTenant = (tenant) => {
+    setSelectedTenant(tenant);
+    localStorage.setItem('yoman_institution_code', tenant.institutionCode);
+    setIsDropdownOpen(false);
+    setSearchQuery('');
+  };
+
+  const filteredTenants = tenants.filter(t => 
+    t.name.includes(searchQuery) || 
+    (t.institutionCode && t.institutionCode.includes(searchQuery))
+  );
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (isLoading || !phoneNumber || !password) return;
     
+    if (!selectedTenant) {
+      setError('נא לבחור מוסד מהרשימה תחילה.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -35,7 +88,11 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, password })
+        body: JSON.stringify({ 
+          phoneNumber, 
+          password,
+          institutionCode: selectedTenant.institutionCode
+        })
       });
 
       if (res.ok) {
@@ -76,13 +133,11 @@ export default function LoginPage() {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onTimeUpdate={(e) => {
               const vid = e.target;
-              // Start fading 1.5 seconds before the video ends, but let it keep playing!
               if (vid.duration && vid.currentTime >= vid.duration - 1.5 && !isSplashFading) {
                 setIsSplashFading(true);
               }
             }}
             onEnded={(e) => {
-              // Once the video finishes naturally, we navigate. The screen is already fully white.
               router.refresh();
               if (userRole === 'admin') router.push('/admin');
               else if (userRole === 'staff') router.push('/staff');
@@ -92,24 +147,22 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className={styles.card}>
-        <div className={styles.header}>
-          {theme.logoUrl ? (
-            <img src={theme.logoUrl} alt="Institution Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '10px' }} />
-          ) : (
-            <Shield size={60} color="var(--primary-color)" style={{ marginBottom: '10px' }} />
-          )}
-          <h2 style={{ fontSize: '24px', color: 'var(--primary-color)' }}>{theme.schoolName || 'יומן מסע אישי'}</h2>
-          
-          <p style={{ margin: '10px 0 0 0', color: '#64748b' }}>התחברות למערכת</p>
+      <div className={styles.card} style={{ maxWidth: '400px', width: '100%' }}>
+        
+        {/* App Logo & Title - Dominant at the top */}
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <img src="/app-logo.png" alt="יומן מסע" style={{ width: '100px', height: '100px', objectFit: 'contain', marginBottom: '10px' }} />
+          <h1 style={{ fontSize: '28px', color: '#16a34a', margin: '0 0 5px 0', fontWeight: '800' }}>יומן מסע</h1>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>התחברות למערכת</p>
         </div>
 
-        <form onSubmit={handleLogin} className={styles.form}>
-          <div style={{position: 'relative', marginBottom: '15px'}}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          
+          <div style={{position: 'relative'}}>
             <Phone size={20} style={{position: 'absolute', right: '15px', top: '15px', color: '#94a3b8'}} />
             <input 
               type="tel" 
-              placeholder="הזן מספר פלאפון" 
+              placeholder="מספר פלאפון" 
               value={phoneNumber} 
               onChange={e => setPhoneNumber(e.target.value)}
               required
@@ -119,12 +172,13 @@ export default function LoginPage() {
                 borderRadius: '8px', 
                 border: '1px solid #e2e8f0',
                 fontSize: '16px',
-                fontFamily: 'inherit'
+                fontFamily: 'inherit',
+                backgroundColor: '#f8fafc'
               }}
             />
           </div>
 
-          <div style={{position: 'relative', marginBottom: '20px'}}>
+          <div style={{position: 'relative'}}>
             <input 
               type="password" 
               placeholder="סיסמא" 
@@ -137,65 +191,133 @@ export default function LoginPage() {
                 borderRadius: '8px', 
                 border: '1px solid #e2e8f0',
                 fontSize: '16px',
-                fontFamily: 'inherit'
+                fontFamily: 'inherit',
+                backgroundColor: '#f8fafc'
               }}
             />
           </div>
 
-          {error && <div style={{color: '#e53e3e', marginBottom: '15px', fontSize: '14px'}}>{error}</div>}
-
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '40px', gap: '15px' }}>
-            <button 
-              type="submit" 
-              onClick={(e) => { if (isLoading || !phoneNumber || !password) e.preventDefault(); }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '50%',
-                padding: 0,
-                cursor: (isLoading || !phoneNumber || !password) ? 'not-allowed' : 'pointer',
-                width: '120px',
-                height: '120px',
-                position: 'relative',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.3), 0 -4px 12px rgba(255,255,255,0.9) inset, 0 6px 15px rgba(0,0,0,0.2) inset',
-                transition: 'transform 0.15s, box-shadow 0.15s, opacity 0.2s',
-                opacity: (isLoading || !phoneNumber || !password) ? 0.85 : 1,
-                WebkitAppearance: 'none',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              onMouseDown={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(0.95)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3), 0 -2px 8px rgba(255,255,255,0.9) inset, 0 4px 10px rgba(0,0,0,0.2) inset'; } }}
-              onMouseUp={e => { if (!isLoading && phoneNumber && password) { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3), 0 -4px 12px rgba(255,255,255,0.9) inset, 0 6px 15px rgba(0,0,0,0.2) inset'; } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.3), 0 -4px 12px rgba(255,255,255,0.9) inset, 0 6px 15px rgba(0,0,0,0.2) inset'; }}
-            >
-              <img src="/app-logo.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.08)' }} />
-              
-              {/* Overlay Text */}
-              <div style={{
-                position: 'absolute',
-                bottom: '20px',
-                left: 0,
-                right: 0,
-                textAlign: 'center',
-                color: 'white',
-                fontSize: '18px',
-                fontWeight: '900',
-                textShadow: '0px 2px 4px rgba(0,0,0,1), 0px 0px 10px rgba(0,0,0,0.8)',
-                letterSpacing: '1px',
-                pointerEvents: 'none',
-                zIndex: 10
-              }}>
-                {isLoading ? '...' : 'כניסה'}
+          {/* School Details - Below inputs but smaller */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10px', gap: '10px', padding: '15px', backgroundColor: '#f1f5f9', borderRadius: '12px' }}>
+            {selectedTenant ? (
+              <>
+                {selectedTenant.logoUrl ? (
+                  <img src={selectedTenant.logoUrl} alt="Institution Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
+                ) : (
+                  <Shield size={40} color="#94a3b8" />
+                )}
+                <div style={{ textAlign: 'center' }}>
+                  <h3 style={{ fontSize: '16px', color: '#334155', margin: '0 0 4px 0', fontWeight: '600' }}>{selectedTenant.name}</h3>
+                  <span style={{ fontSize: '12px', color: '#64748b', background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px' }}>
+                    סמל: {selectedTenant.institutionCode}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#64748b' }}>
+                <Shield size={40} color="#cbd5e1" style={{ margin: '0 auto 8px auto' }} />
+                <p style={{ margin: 0, fontSize: '14px' }}>לא נבחר מוסד</p>
               </div>
-            </button>
+            )}
+
+            {/* Dropdown for School Selection */}
+            <div ref={dropdownRef} style={{ width: '100%', position: 'relative', marginTop: '5px' }}>
+              <div 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                style={{ 
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                  padding: '12px 15px', backgroundColor: 'white', border: '1px solid #cbd5e1', 
+                  borderRadius: '8px', cursor: 'pointer' 
+                }}
+              >
+                <span style={{ fontSize: '14px', color: selectedTenant ? '#0f172a' : '#94a3b8' }}>
+                  {selectedTenant ? 'החלף מוסד' : 'בחר מוסד מרשימה...'}
+                </span>
+                <ChevronDown size={18} color="#64748b" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </div>
+
+              {isDropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 5px)', left: 0, right: 0,
+                  backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                  zIndex: 50, overflow: 'hidden', border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ padding: '10px', borderBottom: '1px solid #e2e8f0', position: 'relative' }}>
+                    <Search size={16} color="#94a3b8" style={{ position: 'absolute', right: '20px', top: '20px' }} />
+                    <input 
+                      type="text" 
+                      placeholder="חפש מוסד או סמל..." 
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      style={{ 
+                        width: '100%', padding: '8px 30px 8px 10px', borderRadius: '6px', 
+                        border: '1px solid #cbd5e1', fontSize: '14px', backgroundColor: '#f8fafc' 
+                      }}
+                      autoFocus
+                    />
+                  </div>
+                  <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                    {filteredTenants.length === 0 ? (
+                      <div style={{ padding: '15px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+                        לא נמצאו מוסדות
+                      </div>
+                    ) : (
+                      filteredTenants.map(t => (
+                        <div 
+                          key={t.id}
+                          onClick={() => handleSelectTenant(t)}
+                          style={{
+                            padding: '12px 15px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            backgroundColor: selectedTenant?.id === t.id ? '#f0fdf4' : 'transparent'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                          onMouseLeave={e => e.currentTarget.style.backgroundColor = selectedTenant?.id === t.id ? '#f0fdf4' : 'transparent'}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {t.logoUrl ? (
+                              <img src={t.logoUrl} alt="" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                            ) : (
+                              <Shield size={24} color="#94a3b8" />
+                            )}
+                            <div>
+                              <div style={{ fontSize: '14px', color: '#1e293b', fontWeight: '500' }}>{t.name}</div>
+                              <div style={{ fontSize: '12px', color: '#64748b' }}>סמל: {t.institutionCode}</div>
+                            </div>
+                          </div>
+                          {selectedTenant?.id === t.id && <Check size={18} color="#16a34a" />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
+          {error && <div style={{color: '#e53e3e', fontSize: '14px', textAlign: 'center', marginTop: '5px'}}>{error}</div>}
+
+          <button 
+            type="submit" 
+            disabled={isLoading || !phoneNumber || !password || !selectedTenant}
+            style={{
+              backgroundColor: '#16a34a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '15px',
+              fontSize: '18px',
+              fontWeight: '700',
+              cursor: (isLoading || !phoneNumber || !password || !selectedTenant) ? 'not-allowed' : 'pointer',
+              marginTop: '10px',
+              boxShadow: '0 4px 10px rgba(22, 163, 74, 0.3)',
+              opacity: (isLoading || !phoneNumber || !password || !selectedTenant) ? 0.7 : 1,
+              transition: 'all 0.2s'
+            }}
+          >
+            {isLoading ? 'מתחבר...' : 'כניסה'}
+          </button>
         </form>
-        
-        <p style={{textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#64748b'}}>
-          * ההתחברות באמצעות מספר הפלאפון כפי שהוזן על ידי צוות המוסד.
-        </p>
       </div>
     </div>
   );
