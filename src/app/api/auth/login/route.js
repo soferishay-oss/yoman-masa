@@ -8,7 +8,7 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-
 
 export async function POST(request) {
   try {
-    const { phoneNumber, password, institutionCode } = await request.json();
+    const { phoneNumber, password, institutionCode, rememberMe } = await request.json();
 
     if (!phoneNumber || !password || !institutionCode) {
       return NextResponse.json({ error: 'Phone number, password, and institution code are required' }, { status: 400 });
@@ -30,6 +30,9 @@ export async function POST(request) {
       // For development fallback if no user exists, maybe they meant to use standard admin
       const allUsersCount = await prisma.user.count();
       if (cleanPhone === '0500000000' && password === 'admin') {
+        const expirationTimeStr = rememberMe ? '365d' : '24h';
+        const maxAgeSeconds = rememberMe ? 60 * 60 * 24 * 365 : 60 * 60 * 24;
+
         const token = await new SignJWT({
           userId: 'dev-admin',
           tenantId: 'dev-tenant',
@@ -37,7 +40,7 @@ export async function POST(request) {
         })
           .setProtectedHeader({ alg: 'HS256' })
           .setIssuedAt()
-          .setExpirationTime('24h')
+          .setExpirationTime(expirationTimeStr)
           .sign(JWT_SECRET);
           
         const response = NextResponse.json({ 
@@ -49,7 +52,7 @@ export async function POST(request) {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 60 * 60 * 24 // 24 hours
+          maxAge: maxAgeSeconds
         });
         return response;
       }
@@ -83,6 +86,9 @@ export async function POST(request) {
     // Generate real JWT
     const isDutyStudent = user.groupMemberships?.some(m => m.isDutyStudent) || false;
     
+    const expirationTimeStr = rememberMe ? '365d' : '24h';
+    const maxAgeSeconds = rememberMe ? 60 * 60 * 24 * 365 : 60 * 60 * 24;
+
     const token = await new SignJWT({
       userId: user.id,
       tenantId: user.tenantId,
@@ -92,7 +98,7 @@ export async function POST(request) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('24h')
+      .setExpirationTime(expirationTimeStr)
       .sign(JWT_SECRET);
 
     const response = NextResponse.json({ 
@@ -109,7 +115,7 @@ export async function POST(request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: maxAgeSeconds
     });
 
     return response;

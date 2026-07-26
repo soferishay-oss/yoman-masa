@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   
   // Splash
   const [showSplash, setShowSplash] = useState(false);
@@ -91,7 +92,8 @@ export default function LoginPage() {
         body: JSON.stringify({ 
           phoneNumber, 
           password,
-          institutionCode: selectedTenant.institutionCode
+          institutionCode: selectedTenant.institutionCode,
+          rememberMe
         })
       });
 
@@ -299,6 +301,19 @@ export default function LoginPage() {
           </div>
 
           {error && <div style={{color: '#e53e3e', fontSize: '14px', textAlign: 'center', marginTop: '5px'}}>{error}</div>}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
+            <input 
+              type="checkbox" 
+              id="rememberMe" 
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              style={{ width: '16px', height: '16px', accentColor: '#16a34a', cursor: 'pointer' }}
+            />
+            <label htmlFor="rememberMe" style={{ fontSize: '14px', color: '#475569', cursor: 'pointer', userSelect: 'none' }}>
+              זכור אותי (מכשיר אישי)
+            </label>
+          </div>
 
           <button 
             type="submit" 
