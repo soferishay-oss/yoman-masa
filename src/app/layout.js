@@ -10,7 +10,7 @@ import HamburgerMenu from '@/components/HamburgerMenu';
 import PwaServiceWorker from '@/components/PwaServiceWorker';
 
 export const metadata = {
-  title: 'יומן מסע חינוכי',
+  title: 'יומן מסע',
   description: 'המסע האישי שלך',
   manifest: '/manifest.json', // Next.js will auto-generate it from manifest.js but sometimes links it this way
   appleWebApp: {

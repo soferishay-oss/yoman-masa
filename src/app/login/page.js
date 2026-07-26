@@ -66,7 +66,7 @@ export default function LoginPage() {
           alignItems: 'center',
           justifyContent: 'center',
           opacity: isSplashFading ? 0 : 1,
-          transition: 'opacity 0.4s ease-out'
+          transition: 'opacity 0.8s ease-out'
         }}>
           <video 
             src="/clip.mp4" 
@@ -84,7 +84,7 @@ export default function LoginPage() {
                   if (userRole === 'admin') router.push('/admin');
                   else if (userRole === 'staff') router.push('/staff');
                   else router.push('/');
-                }, 400); // Wait for the fade out to finish before navigating
+                }, 800); // Wait for the fade out to finish before navigating
               }
             }}
             onEnded={(e) => {
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 if (userRole === 'admin') router.push('/admin');
                 else if (userRole === 'staff') router.push('/staff');
                 else router.push('/');
-              }, 400);
+              }, 800);
             }}
           />
         </div>

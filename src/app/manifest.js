@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
     name: 'יומן מסע',
-    short_name: 'יומן',
+    short_name: 'יומן מסע',
     description: 'יומן מסע אישי לתלמידים',
     start_url: '/',
     display: 'standalone',
@@ -9,12 +9,12 @@ export default function manifest() {
     theme_color: '#3b82f6',
     icons: [
       {
-        src: '/app-logo.png',
+        src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
       },
       {
-        src: '/app-logo.png',
+        src: '/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any maskable'
