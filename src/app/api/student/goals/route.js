@@ -80,7 +80,7 @@ export async function POST(request) {
     await prisma.contentEntry.create({
       data: {
         tenantId,
-        userId,
+        ownerUserId: userId,
         category: 'goal',
         type: 'text',
         title: 'יעדים',

@@ -130,9 +130,9 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
               {[
-                { val: 1, emoji: '🔴' },
-                { val: 2, emoji: '🟡' },
-                { val: 3, emoji: '🟢' }
+                { val: 1, emoji: '😞' },
+                { val: 2, emoji: '😐' },
+                { val: 3, emoji: '😊' }
               ].map(item => (
                 <button
                   key={item.val}
