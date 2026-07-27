@@ -28,7 +28,7 @@ export async function POST(request, context) {
     const { rating, reflection } = await request.json();
 
     if (!rating || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: 'Invalid rating (must be 1-5)' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid rating' }, { status: 400 });
     }
 
     const goalUpdate = await prisma.goalUpdate.create({
@@ -44,6 +44,20 @@ export async function POST(request, context) {
       where: { id: goalId },
       data: { updatedAt: new Date() }
     });
+
+    if (reflection && reflection.trim().length > 0) {
+      await prisma.contentEntry.create({
+        data: {
+          tenantId,
+          userId,
+          category: 'goal',
+          type: 'text',
+          title: 'יעדים',
+          bodyText: `${goal.title}:\n\n${reflection}`,
+          visibility: goal.isPrivate ? 'private' : 'staff'
+        }
+      });
+    }
 
     return NextResponse.json(goalUpdate, { status: 201 });
   } catch (error) {

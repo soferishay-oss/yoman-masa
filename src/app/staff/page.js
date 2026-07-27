@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle, Mail, Archive } from 'lucide-react';
+import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle, Mail, Archive, Contact } from 'lucide-react';
 import AppDate from '@/components/AppDate';
 import styles from './staff.module.css';
 import TaskBuilder from '@/components/TaskBuilder';
@@ -311,7 +311,7 @@ export default function StaffDashboard() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     {student.trend === 'down' ? <Activity color="#ef4444" size={18} /> : student.trend === 'up' ? <Activity color="#10b981" size={18} /> : null}
-                    <span style={{ color: 'var(--primary-color)', fontSize: '14px', fontWeight: 'bold' }}>פרופיל {'<'}</span>
+                    <Contact color="#3b82f6" size={24} title="פתח כרטיס אישי" />
                   </div>
                 </div>
               ))}

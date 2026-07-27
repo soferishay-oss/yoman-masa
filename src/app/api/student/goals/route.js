@@ -61,6 +61,34 @@ export async function POST(request) {
       }
     });
 
+    const frequencyMap = {
+      'daily': 'תזכורת יומית',
+      'weekly': 'תזכורת שבועית',
+      'monthly': 'תזכורת חודשית'
+    };
+    
+    const targetMap = {
+      'weekly': 'שבועי',
+      'monthly': 'חודשי',
+      'trimester': 'טרימסטר',
+      'semester': 'מחצית',
+      'yearly': 'שנתי',
+      'two_years': 'שנתיים',
+      'lifetime': 'לחיים'
+    };
+
+    await prisma.contentEntry.create({
+      data: {
+        tenantId,
+        userId,
+        category: 'goal',
+        type: 'text',
+        title: 'יעדים',
+        bodyText: `הצבתי לעצמי יעד חדש: ${title}\n(תזמון יעד: ${targetMap[targetDateType] || targetDateType}, ${frequencyMap[reminderFrequency] || reminderFrequency})`,
+        visibility: isPrivate ? 'private' : 'staff'
+      }
+    });
+
     return NextResponse.json(newGoal, { status: 201 });
   } catch (error) {
     console.error('Failed to create goal:', error);

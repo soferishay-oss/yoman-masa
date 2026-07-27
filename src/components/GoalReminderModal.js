@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Target, X, MessageSquare, ChevronRight } from 'lucide-react';
 import { useToast } from './ToastProvider';
 
-export default function GoalReminderModal() {
+export default function GoalReminderModal({ manualGoal, onClose }) {
   const [dueGoals, setDueGoals] = useState([]);
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +16,12 @@ export default function GoalReminderModal() {
   const toast = useToast();
 
   useEffect(() => {
+    if (manualGoal) {
+      setDueGoals([manualGoal]);
+      setIsOpen(true);
+      return;
+    }
+
     // Fetch if any reminders are due
     fetch('/api/student/goals/reminders')
       .then(res => res.json())
@@ -26,7 +32,7 @@ export default function GoalReminderModal() {
         }
       })
       .catch(err => console.error('Failed to check goal reminders:', err));
-  }, []);
+  }, [manualGoal]);
 
   if (!isOpen || dueGoals.length === 0) return null;
 
@@ -51,12 +57,13 @@ export default function GoalReminderModal() {
         toast.show('העדכון נשמר בהצלחה, כל הכבוד!', 'success');
         
         // Move to next goal or close
-        if (currentGoalIndex < dueGoals.length - 1) {
+        if (!manualGoal && currentGoalIndex < dueGoals.length - 1) {
           setCurrentGoalIndex(currentGoalIndex + 1);
           setRating(0);
           setReflection('');
         } else {
           setIsOpen(false);
+          if (onClose) onClose();
         }
       } else {
         toast.show('שגיאה בשמירת העדכון', 'error');
@@ -69,12 +76,13 @@ export default function GoalReminderModal() {
   };
 
   const handleSkip = () => {
-    if (currentGoalIndex < dueGoals.length - 1) {
+    if (!manualGoal && currentGoalIndex < dueGoals.length - 1) {
       setCurrentGoalIndex(currentGoalIndex + 1);
       setRating(0);
       setReflection('');
     } else {
       setIsOpen(false);
+      if (onClose) onClose();
     }
   };
 
@@ -118,37 +126,37 @@ export default function GoalReminderModal() {
           {/* Rating */}
           <div>
             <div style={{ textAlign: 'center', marginBottom: '10px', fontSize: '14px', color: '#475569', fontWeight: 'bold' }}>
-              דרג את ההתקדמות שלך כרגע:
+              איך ההתקדמות שלך כרגע?
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '5px' }}>
-              {[1, 2, 3, 4, 5].map(num => (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
+              {[
+                { val: 1, emoji: '🔴' },
+                { val: 2, emoji: '🟡' },
+                { val: 3, emoji: '🟢' }
+              ].map(item => (
                 <button
-                  key={num}
-                  onClick={() => setRating(num)}
+                  key={item.val}
+                  onClick={() => setRating(item.val)}
                   style={{
-                    flex: 1, aspectRatio: '1', borderRadius: '12px', border: '2px solid',
-                    borderColor: rating === num ? 'var(--primary-color)' : '#e2e8f0',
-                    background: rating === num ? 'var(--primary-light)' : 'white',
-                    color: rating === num ? 'var(--primary-color)' : '#64748b',
-                    fontSize: '18px', fontWeight: 'bold', cursor: 'pointer',
+                    width: '60px', height: '60px', borderRadius: '16px', border: '2px solid',
+                    borderColor: rating === item.val ? 'var(--primary-color)' : '#e2e8f0',
+                    background: rating === item.val ? 'var(--primary-light)' : 'white',
+                    fontSize: '28px', cursor: 'pointer',
                     transition: 'all 0.2s',
-                    boxShadow: rating === num ? '0 4px 10px rgba(0,0,0,0.05)' : 'none'
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: rating === item.val ? '0 4px 10px rgba(0,0,0,0.05)' : 'none'
                   }}
                 >
-                  {num}
+                  {item.emoji}
                 </button>
               ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#94a3b8', marginTop: '5px', padding: '0 5px' }}>
-              <span>עוד רחוק</span>
-              <span>ממש ביעד!</span>
             </div>
           </div>
 
           {/* Text Reflection */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px', fontSize: '14px', color: '#475569', fontWeight: 'bold' }}>
-              <MessageSquare size={16} /> רוצה לשתף קצת במילים?
+              <MessageSquare size={16} /> מדוע?
             </div>
             <textarea
               value={reflection}

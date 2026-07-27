@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, Plus, CheckCircle, Calendar, Lock } from 'lucide-react';
+import { Target, Plus, CheckCircle, Calendar, Eye, EyeOff, Activity, MessageSquare } from 'lucide-react';
 import styles from './goals.module.css';
 import { useToast } from '@/components/ToastProvider';
 import AppDate from '@/components/AppDate';
+import GoalReminderModal from '@/components/GoalReminderModal';
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGoal, setNewGoal] = useState({ title: '', targetDateType: 'weekly', reminderFrequency: 'weekly', isPrivate: false });
+  const [updatingGoal, setUpdatingGoal] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function GoalsPage() {
             <div key={goal.id} className={styles.goalCard}>
               <div className={styles.goalHeader}>
                 <h3 className={styles.goalTitle}>{goal.title}</h3>
-                {goal.isPrivate && <Lock size={16} color="#64748b" title="פרטי - רק אתה יכול לראות יעד זה" />}
+                {goal.isPrivate ? <EyeOff size={20} color="#64748b" title="פרטי - רק אתה יכול לראות יעד זה" /> : <Eye size={20} color="#16a34a" title="גלוי - משותף עם הצוות" />}
               </div>
               <div className={styles.goalMeta}>
                 <span className={styles.metaBadge}><Calendar size={14} /> {targetDateOptions.find(o => o.value === goal.targetDateType)?.label}</span>
@@ -109,22 +111,32 @@ export default function GoalsPage() {
               </div>
               
               {goal.updates && goal.updates.length > 0 ? (
-                <div className={styles.lastUpdateBox}>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>עדכון אחרון (<AppDate date={goal.updates[0].createdAt} />):</div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <div className={styles.ratingCircle} style={{ background: getRatingColor(goal.updates[0].rating) }}>
-                      {goal.updates[0].rating}
-                    </div>
-                    <div style={{ flex: 1, fontSize: '14px', color: '#334155' }}>
-                      {goal.updates[0].reflection || <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>ללא מילים</span>}
-                    </div>
+                <div style={{ marginTop: '15px', background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px', fontWeight: 'bold' }}>היסטוריית עדכונים:</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '150px', overflowY: 'auto', paddingRight: '5px' }}>
+                    {goal.updates.map(update => (
+                      <div key={update.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '20px' }}>{update.rating === 1 ? '🔴' : update.rating === 2 ? '🟡' : update.rating === 3 ? '🟢' : '⚪'}</div>
+                        <div style={{ flex: 1, fontSize: '14px', color: '#334155' }}>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}><AppDate date={update.createdAt} /></div>
+                          <div>{update.reflection || <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>ללא מלל</span>}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : (
-                <div className={styles.lastUpdateBox} style={{ fontStyle: 'italic', color: '#94a3b8', textAlign: 'center' }}>
-                  טרם עודכן. תזכורת תופיע במועד הקרוב!
+                <div style={{ fontStyle: 'italic', color: '#94a3b8', textAlign: 'center', marginTop: '15px', padding: '10px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  טרם עודכן. לחץ למטה כדי לעדכן התקדמות!
                 </div>
               )}
+              
+              <button 
+                onClick={() => setUpdatingGoal(goal)}
+                style={{ width: '100%', marginTop: '15px', padding: '12px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <Activity size={18} /> איך הולך?
+              </button>
             </div>
           ))
         )}
@@ -160,18 +172,18 @@ export default function GoalsPage() {
               </select>
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', cursor: 'pointer', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <input 
-                type="checkbox" 
-                checked={newGoal.isPrivate} 
-                onChange={e => setNewGoal({...newGoal, isPrivate: e.target.checked})} 
-                style={{ width: '18px', height: '18px' }}
-              />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 'bold', color: '#334155' }}>הפוך לפרטי (מוצפן)</div>
-                <div style={{ fontSize: '13px', color: '#64748b' }}>רק אני אראה את היעד והעדכונים, לא יוצג לאנשי הצוות.</div>
+            <div 
+              onClick={() => setNewGoal({...newGoal, isPrivate: !newGoal.isPrivate})}
+              style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '20px', cursor: 'pointer', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+            >
+              <div style={{ padding: '10px', borderRadius: '50%', background: newGoal.isPrivate ? '#f1f5f9' : '#dcfce7', color: newGoal.isPrivate ? '#64748b' : '#16a34a' }}>
+                {newGoal.isPrivate ? <EyeOff size={36} /> : <Eye size={36} />}
               </div>
-            </label>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', color: '#334155' }}>{newGoal.isPrivate ? 'יעד פרטי' : 'יעד גלוי לצפייה'}</div>
+                <div style={{ fontSize: '13px', color: '#64748b' }}>{newGoal.isPrivate ? 'רק אני אראה את היעד והעדכונים, לא יוצג לאנשי הצוות.' : 'היעד ישותף עם הצוות כדי שיוכלו לעזור לי בדרך.'}</div>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
               <button className={styles.submitBtn} onClick={handleAddGoal}>צור יעד</button>
@@ -180,15 +192,12 @@ export default function GoalsPage() {
           </div>
         </div>
       )}
+      {updatingGoal && (
+        <GoalReminderModal 
+          manualGoal={updatingGoal} 
+          onClose={() => { setUpdatingGoal(null); fetchGoals(); }} 
+        />
+      )}
     </div>
   );
-}
-
-function getRatingColor(rating) {
-  if (rating === 1) return '#ef4444';
-  if (rating === 2) return '#f97316';
-  if (rating === 3) return '#eab308';
-  if (rating === 4) return '#84cc16';
-  if (rating === 5) return '#22c55e';
-  return '#cbd5e1';
 }

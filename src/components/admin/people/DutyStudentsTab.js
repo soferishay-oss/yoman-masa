@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { UserCheck, Search, Edit2 } from 'lucide-react';
+import { UserCheck, Search, Edit2, Contact } from 'lucide-react';
+import Link from 'next/link';
 import StudentEditModal from './StudentEditModal';
 
 export default function DutyStudentsTab() {
@@ -99,7 +100,14 @@ export default function DutyStudentsTab() {
               <tbody>
                 {filtered.map(item => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#1e293b' }}>{item.student.fullName}</td>
+                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#1e293b' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {item.student.fullName}
+                        <Link href={`/staff/student/${item.student.id}`} title="פתח כרטיס אישי" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                          <Contact size={20} />
+                        </Link>
+                      </div>
+                    </td>
                     <td style={{ padding: '12px', color: '#475569', fontSize: '14px' }}>{item.roleName}</td>
                     <td style={{ padding: '12px' }}>
                       <span style={{ padding: '4px 8px', background: item.group.type === 'class' ? '#dbeafe' : '#fef3c7', color: item.group.type === 'class' ? '#1e3a8a' : '#92400e', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold' }}>
