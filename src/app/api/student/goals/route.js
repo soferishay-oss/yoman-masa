@@ -82,8 +82,8 @@ export async function POST(request) {
         tenantId,
         ownerUserId: userId,
         category: 'goal',
-        type: 'text',
-        title: 'יעדים',
+        type: 'journal',
+        title: title,
         bodyText: `הצבתי לעצמי יעד חדש: ${title}\n(תזמון יעד: ${targetMap[targetDateType] || targetDateType}, ${frequencyMap[reminderFrequency] || reminderFrequency})`,
         visibility: isPrivate ? 'private' : 'staff'
       }

@@ -51,9 +51,9 @@ export async function POST(request, context) {
           tenantId,
           ownerUserId: userId,
           category: 'goal',
-          type: 'text',
-          title: 'יעדים',
-          bodyText: `${goal.title}:\n\n${reflection}`,
+          type: 'journal',
+          title: goal.title,
+          bodyText: reflection,
           visibility: goal.isPrivate ? 'private' : 'staff'
         }
       });

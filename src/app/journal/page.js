@@ -144,6 +144,10 @@ export default function JournalPage() {
             const timeRef = entry.updatedAt ? new Date(entry.updatedAt) : new Date(entry.createdAt);
             const isEditable = (new Date() - timeRef) / (1000 * 60) <= 30;
             const isMood = entry.category === 'mood';
+            const isGoal = entry.category === 'goal';
+            const hasSideTitle = isMood || isGoal;
+            const sideTitleText = isMood ? 'מצב הרוח' : 'יעדים';
+            
             let moodEmoji = '📝';
             if (isMood && Array.isArray(entry.tags) && entry.tags[1]) {
               const rating = parseInt(entry.tags[1]);
@@ -158,25 +162,25 @@ export default function JournalPage() {
               <div 
                 key={entry.id} 
                 className={styles.journalPage} 
-                style={isMood ? { 
+                style={hasSideTitle ? { 
                   paddingTop: '20px', 
                   paddingBottom: '20px' 
                 } : {}}
               >
-                {isMood && (
+                {hasSideTitle && (
                   <div style={{
                     position: 'absolute',
                     left: '20px',
                     top: '50%',
                     transform: 'translate(-50%, -50%) rotate(-90deg)',
                     transformOrigin: 'center center',
-                    color: '#94a3b8', // Soft grey to match the notebook style
+                    color: '#94a3b8',
                     fontWeight: 'bold',
                     fontSize: '14px',
                     letterSpacing: '2px',
                     whiteSpace: 'nowrap'
                   }}>
-                    מצב הרוח
+                    {sideTitleText}
                   </div>
                 )}
                 <div className={styles.pageHeader}>
@@ -223,6 +227,11 @@ export default function JournalPage() {
                     {entry.bodyText && (
                       <p className={styles.pageBody} style={{ fontStyle: 'italic', margin: 0 }}>"{entry.bodyText}"</p>
                     )}
+                  </div>
+                ) : isGoal ? (
+                  <div style={{ marginTop: '10px' }}>
+                    <h3 style={{ fontSize: '16px', color: '#1e293b', marginBottom: '5px' }}>{entry.title}</h3>
+                    <p className={styles.pageBody} style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{entry.bodyText}</p>
                   </div>
                 ) : (
                   <p className={styles.pageBody}>{entry.bodyText}</p>
