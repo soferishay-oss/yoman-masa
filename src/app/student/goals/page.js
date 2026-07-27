@@ -135,7 +135,7 @@ export default function GoalsPage() {
               
               <button 
                 onClick={() => setUpdatingGoal(goal)}
-                style={{ width: '100%', marginTop: '15px', padding: '12px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#f97316', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <Activity size={18} /> איך הולך?
               </button>

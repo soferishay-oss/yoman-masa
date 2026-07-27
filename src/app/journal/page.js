@@ -189,9 +189,19 @@ export default function JournalPage() {
                   </div>
                   <div className={styles.pageActions} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      {isEditable && !isMood && (
+                      {isEditable && !isMood && !isGoal && (
                         <>
                           <button onClick={() => router.push(`/home?edit=${entry.id}`)} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="ערוך">
+                            <Edit2 size={18} />
+                          </button>
+                          <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
+                      {isEditable && isGoal && (
+                        <>
+                          <button onClick={() => router.push('/student/goals')} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="עבור למסך יעדים">
                             <Edit2 size={18} />
                           </button>
                           <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">
