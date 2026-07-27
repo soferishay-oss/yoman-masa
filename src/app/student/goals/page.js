@@ -113,7 +113,7 @@ export default function GoalsPage() {
               {goal.updates && goal.updates.length > 0 ? (
                 <div style={{ marginTop: '15px', background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px', fontWeight: 'bold' }}>היסטוריית עדכונים:</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '150px', overflowY: 'auto', paddingRight: '5px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '150px', overflowY: 'auto', paddingRight: '5px' }}>
                     {goal.updates.map(update => (
                       <div key={update.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

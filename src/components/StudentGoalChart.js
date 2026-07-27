@@ -9,7 +9,7 @@ export default function StudentGoalChart({ goal }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '180px', overflowY: 'auto', paddingRight: '5px' }}>
       {goal.updates.map(update => (
         <div key={update.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
