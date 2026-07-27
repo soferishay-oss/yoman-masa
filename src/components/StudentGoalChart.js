@@ -1,6 +1,7 @@
 'use client';
 
 import AppDate from './AppDate';
+import { Frown, Meh, Smile } from 'lucide-react';
 
 export default function StudentGoalChart({ goal }) {
   if (!goal.updates || goal.updates.length === 0) {
@@ -11,8 +12,8 @@ export default function StudentGoalChart({ goal }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
       {goal.updates.map(update => (
         <div key={update.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: '20px' }}>
-            {update.rating === 1 ? '😞' : update.rating === 2 ? '😐' : update.rating === 3 ? '😊' : '⚪'}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {update.rating === 1 ? <Frown size={24} color="#ef4444" /> : update.rating === 2 ? <Meh size={24} color="#f59e0b" /> : update.rating === 3 ? <Smile size={24} color="#22c55e" /> : '⚪'}
           </div>
           <div style={{ flex: 1, fontSize: '14px', color: '#334155' }}>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>

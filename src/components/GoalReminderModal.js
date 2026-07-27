@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, X, MessageSquare, ChevronRight } from 'lucide-react';
+import { Target, X, MessageSquare, ChevronRight, Frown, Meh, Smile } from 'lucide-react';
 import { useToast } from './ToastProvider';
 
 export default function GoalReminderModal({ manualGoal, onClose }) {
@@ -130,9 +130,9 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
               {[
-                { val: 1, emoji: '😞' },
-                { val: 2, emoji: '😐' },
-                { val: 3, emoji: '😊' }
+                { val: 1, icon: <Frown size={32} color="#ef4444" /> },
+                { val: 2, icon: <Meh size={32} color="#f59e0b" /> },
+                { val: 3, icon: <Smile size={32} color="#22c55e" /> }
               ].map(item => (
                 <button
                   key={item.val}
@@ -141,13 +141,13 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
                     width: '60px', height: '60px', borderRadius: '16px', border: '2px solid',
                     borderColor: rating === item.val ? 'var(--primary-color)' : '#e2e8f0',
                     background: rating === item.val ? 'var(--primary-light)' : 'white',
-                    fontSize: '28px', cursor: 'pointer',
+                    cursor: 'pointer',
                     transition: 'all 0.2s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: rating === item.val ? '0 4px 10px rgba(0,0,0,0.05)' : 'none'
                   }}
                 >
-                  {item.emoji}
+                  {item.icon}
                 </button>
               ))}
             </div>
