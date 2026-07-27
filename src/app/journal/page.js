@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useContext } from 'react';
-import { Star, Trash2, Edit2 } from 'lucide-react';
+import { Star, Trash2, Edit2, Eye, EyeOff } from 'lucide-react';
 import { ThemeContext } from '@/components/ThemeProvider';
 import AppDate from '@/components/AppDate';
 import styles from './journal.module.css';
@@ -55,6 +55,30 @@ export default function JournalPage() {
     } catch (error) {
       console.error(error);
       setEntries(entries.map(e => e.id === entry.id ? { ...e, isVault: entry.isVault } : e));
+    }
+  };
+
+  const handleToggleVisibility = async (entry) => {
+    const newVisibility = entry.visibility === 'staff' ? 'private' : 'staff';
+    setEntries(entries.map(e => e.id === entry.id ? { ...e, visibility: newVisibility } : e));
+    
+    try {
+      const res = await fetch('/api/journal/visibility', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entryId: entry.id, visibility: newVisibility })
+      });
+      
+      if (!res.ok) {
+        setEntries(entries.map(e => e.id === entry.id ? { ...e, visibility: entry.visibility } : e));
+        toast.show('שגיאה בעדכון הרשאות הצפייה', 'error');
+      } else {
+        toast.show(newVisibility === 'staff' ? 'שיתוף עם הצוות הופעל' : 'השיתוף בוטל, הרשומה פרטית', 'success');
+      }
+    } catch (error) {
+      console.error(error);
+      setEntries(entries.map(e => e.id === entry.id ? { ...e, visibility: entry.visibility } : e));
+      toast.show('שגיאה בעדכון הרשאות הצפייה', 'error');
     }
   };
 
@@ -159,25 +183,37 @@ export default function JournalPage() {
                   <div className={styles.pageDate}>
                     <AppDate date={entry.createdAt} />
                   </div>
-                  <div className={styles.pageActions}>
-                    {isEditable && !isMood && (
-                      <>
-                        <button onClick={() => router.push(`/home?edit=${entry.id}`)} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="ערוך">
-                          <Edit2 size={18} />
-                        </button>
+                  <div className={styles.pageActions} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {isEditable && !isMood && (
+                        <>
+                          <button onClick={() => router.push(`/home?edit=${entry.id}`)} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="ערוך">
+                            <Edit2 size={18} />
+                          </button>
+                          <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">
+                            <Trash2 size={18} />
+                          </button>
+                        </>
+                      )}
+                      {isEditable && isMood && (
                         <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">
                           <Trash2 size={18} />
                         </button>
-                      </>
-                    )}
-                    {isEditable && isMood && (
-                      <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">
-                        <Trash2 size={18} />
+                      )}
+                      <button onClick={() => handleSaveToVault(entry)} className={entry.isVault ? styles.starBtnActive : styles.starBtn} title="שמור במועדפים">
+                        <Star size={18} fill={entry.isVault ? '#f59e0b' : 'none'} />
                       </button>
-                    )}
-                    <button onClick={() => handleSaveToVault(entry)} className={entry.isVault ? styles.starBtnActive : styles.starBtn}>
-                      <Star size={18} fill={entry.isVault ? '#f59e0b' : 'none'} />
-                    </button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => handleToggleVisibility(entry)} 
+                        className={styles.deleteBtn} 
+                        style={{ color: entry.visibility === 'staff' ? '#10b981' : '#94a3b8' }}
+                        title={entry.visibility === 'staff' ? 'משותף עם הצוות' : 'פרטי'}
+                      >
+                        {entry.visibility === 'staff' ? <Eye size={18} /> : <EyeOff size={18} />}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 

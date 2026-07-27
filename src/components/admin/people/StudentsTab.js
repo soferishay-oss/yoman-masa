@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { GraduationCap, Plus, Upload, Trash2, Edit2, X, Star } from 'lucide-react';
+import { GraduationCap, Plus, Upload, Trash2, Edit2, X, Star, Contact } from 'lucide-react';
+import Link from 'next/link';
 import ExcelImportModal from './ExcelImportModal';
 import StudentEditModal from './StudentEditModal';
 import styles from '@/app/page.module.css';
@@ -240,6 +241,9 @@ export default function StudentsTab() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '50%' }}><GraduationCap size={16} /></div>
                     <span style={{ fontWeight: 'bold', color: '#1e293b' }}>{student.fullName}</span>
+                    <Link href={`/staff/student/${student.id}`} title="פתח כרטיס אישי" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                      <Contact size={20} />
+                    </Link>
                   </div>
                 </td>
                 <td style={{ padding: '15px' }}>

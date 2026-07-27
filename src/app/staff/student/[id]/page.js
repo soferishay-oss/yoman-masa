@@ -3,7 +3,7 @@ import { verifyToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Activity, BellPlus, ChevronRight, User, Target } from 'lucide-react';
+import { Activity, BellPlus, ChevronRight, User, Target, BookOpen } from 'lucide-react';
 import StudentProfileClient from './StudentProfileClient';
 import StudentMoodChart from '@/components/staff/StudentMoodChart';
 import StudentGoalChart from '@/components/StudentGoalChart';
@@ -35,6 +35,14 @@ export default async function StudentProfilePage({ params }) {
             orderBy: { createdAt: 'desc' }
           }
         },
+        orderBy: { createdAt: 'desc' }
+      },
+      contentEntries: {
+        where: { visibility: 'staff' },
+        orderBy: { createdAt: 'desc' }
+      },
+      taskAssignments: {
+        include: { task: true },
         orderBy: { createdAt: 'desc' }
       }
     }
@@ -93,6 +101,55 @@ export default async function StudentProfilePage({ params }) {
               <div key={goal.id} style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '18px' }}>{goal.title}</h3>
                 <StudentGoalChart goal={goal} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Shared Journal Entries */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginTop: '20px' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+          <BookOpen color="#3b82f6" /> יומן מסע (משותף עם הצוות)
+        </h2>
+        
+        {!student.contentEntries || student.contentEntries.length === 0 ? (
+          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>אין רשומות משותפות.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {student.contentEntries.map(entry => (
+              <div key={entry.id} style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#64748b', fontSize: '14px' }}>
+                  <span>{new Date(entry.createdAt).toLocaleDateString('he-IL')}</span>
+                  {entry.category === 'mood' && <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>מצב רוח</span>}
+                </div>
+                <p style={{ margin: 0, color: '#1e293b' }}>{entry.bodyText}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Task Assignments */}
+      <div style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginTop: '20px' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+          <Activity color="#10b981" /> משימות
+        </h2>
+        
+        {!student.taskAssignments || student.taskAssignments.length === 0 ? (
+          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>לא הוקצו משימות.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {student.taskAssignments.map(assignment => (
+              <div key={assignment.id} style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 'bold', color: '#1e293b' }}>{assignment.task.title}</span>
+                <span style={{ 
+                  background: assignment.status === 'completed' ? '#dcfce7' : '#fef3c7', 
+                  color: assignment.status === 'completed' ? '#16a34a' : '#d97706',
+                  padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold'
+                }}>
+                  {assignment.status === 'completed' ? 'הושלם' : (assignment.status === 'opened' ? 'בביצוע' : 'הוקצה')}
+                </span>
               </div>
             ))}
           </div>

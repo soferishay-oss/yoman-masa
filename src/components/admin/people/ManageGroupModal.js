@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { X, Search, Shield, UserMinus, Plus } from 'lucide-react';
+import { X, Search, Shield, UserMinus, Plus, Contact } from 'lucide-react';
+import Link from 'next/link';
 import styles from '@/app/page.module.css';
 
 export default function ManageGroupModal({ groupId, groupName, groupType, onClose }) {
@@ -234,6 +235,9 @@ export default function ManageGroupModal({ groupId, groupName, groupType, onClos
                   <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '8px', background: member.isDutyStudent ? '#fef3c7' : '#f8fafc' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ fontWeight: 'bold', color: '#1e293b' }}>{member.fullName}</div>
+                      <Link href={`/staff/student/${member.id}`} title="פתח כרטיס אישי" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                        <Contact size={20} />
+                      </Link>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
