@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, User, Home, Heart, BookOpen, Calendar, Shield, Activity, LogOut, Star } from 'lucide-react';
 import styles from './HamburgerMenu.module.css';
 
-export default function HamburgerMenu({ isDutyStudent }) {
+export default function HamburgerMenu({ isDutyStudent, academicYears = [], currentYear = null }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const pathname = usePathname();
@@ -68,11 +68,42 @@ export default function HamburgerMenu({ isDutyStudent }) {
 
       {/* Drawer */}
       <div ref={menuRef} className={`${styles.drawer} ${isOpen ? styles.open : ''}`}>
-        <div className={styles.drawerHeader}>
-          <h2>תפריט</h2>
-          <button onClick={() => setIsOpen(false)} className={styles.closeBtn}>
-            <X size={24} color="#64748b" />
-          </button>
+        <div className={styles.drawerHeader} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '15px' }}>
+          {academicYears && academicYears.length > 0 && (
+            <div style={{ width: '100%' }}>
+              <select 
+                defaultValue={currentYear?.id || ''}
+                onChange={(e) => {
+                  document.cookie = `selected_academic_year=${e.target.value}; path=/; max-age=31536000`;
+                  window.location.reload();
+                }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px 12px', 
+                  borderRadius: '8px', 
+                  border: '1px solid #cbd5e1',
+                  background: 'var(--primary-light)',
+                  color: 'var(--primary-color)',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {academicYears.map(year => (
+                  <option key={year.id} value={year.id}>
+                    {year.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <h2>תפריט</h2>
+            <button onClick={() => setIsOpen(false)} className={styles.closeBtn}>
+              <X size={24} color="#64748b" />
+            </button>
+          </div>
         </div>
         
         <nav className={styles.drawerNav}>

@@ -117,11 +117,6 @@ function HomeContent() {
           <div style={{ flex: 1, textAlign: 'center', padding: '0 10px' }}>
             <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--primary-color)', fontWeight: 'bold' }}>{theme.schoolName}</h2>
             {theme.slogan && <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>{theme.slogan}</p>}
-            <div style={{ marginTop: '5px' }}>
-              <span style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
-                {academicYear}
-              </span>
-            </div>
           </div>
 
           {/* Left: Empty space for Hamburger menu */}

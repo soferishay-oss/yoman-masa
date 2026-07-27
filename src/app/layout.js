@@ -37,10 +37,19 @@ export default async function RootLayout({ children }) {
   const isDutyStudent = headersList.get('x-is-duty-student') === 'true';
 
   // If user is authenticated, check their status in the database
+  let user = null;
   if (userId) {
-    const user = await prisma.user.findUnique({
+    user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { status: true }
+      select: { 
+        status: true,
+        tenant: {
+          select: {
+            academicYears: { orderBy: { startDate: 'desc' } },
+            currentAcademicYear: true
+          }
+        }
+      }
     });
     if (!user || user.status === 'deleted' || user.status === 'suspended') {
       redirect('/login?error=suspended');
@@ -66,12 +75,14 @@ export default async function RootLayout({ children }) {
             {children}
           </main>
         
-        {/* Bottom Navigation for Mobile-First App Shell */}
         {userId && (
           isStudent ? (
             <>
-              <HamburgerMenu isDutyStudent={isDutyStudent} />
-              
+              <HamburgerMenu 
+                isDutyStudent={isDutyStudent} 
+                academicYears={user?.tenant?.academicYears || []}
+                currentYear={user?.tenant?.currentAcademicYear || null}
+              />
               <nav className={styles.bottomNav}>
                 <Link href="/home" className={styles.navItem}>
                   <div className={styles.icon}><Home size={24} /></div>
