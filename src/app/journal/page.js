@@ -18,6 +18,7 @@ export default function JournalPage() {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isComposing, setIsComposing] = useState(false);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchEntries();
@@ -133,14 +134,30 @@ export default function JournalPage() {
         </div>
       )}
 
+      {/* Journal Filter */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '10px' }}>
+        <button onClick={() => setFilter('all')} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #e2e8f0', background: filter === 'all' ? 'var(--primary-color)' : 'white', color: filter === 'all' ? 'white' : '#64748b', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>הכל</button>
+        <button onClick={() => setFilter('regular')} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #e2e8f0', background: filter === 'regular' ? 'var(--primary-color)' : 'white', color: filter === 'regular' ? 'white' : '#64748b', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>פוסטים רגילים</button>
+        <button onClick={() => setFilter('mood')} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #e2e8f0', background: filter === 'mood' ? '#38bdf8' : 'white', color: filter === 'mood' ? 'white' : '#64748b', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>מצבי רוח</button>
+        <button onClick={() => setFilter('goal')} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #e2e8f0', background: filter === 'goal' ? '#fb923c' : 'white', color: filter === 'goal' ? 'white' : '#64748b', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>יעדים</button>
+      </div>
+
       {/* Journal Pages Feed */}
       <div className={styles.pagesFeed}>
         {isLoading ? (
           <p style={{ textAlign: 'center' }}>מדפדף ביומן...</p>
-        ) : entries.length === 0 ? (
-          <div className={styles.emptyJournal}>אין עדיין רשומות. זה הזמן לכתוב!</div>
+        ) : entries.filter(e => {
+            if (filter === 'all') return true;
+            if (filter === 'regular') return !e.category || (e.category !== 'mood' && e.category !== 'goal');
+            return e.category === filter;
+        }).length === 0 ? (
+          <div className={styles.emptyJournal}>אין רשומות התואמות לסינון.</div>
         ) : (
-          entries.map(entry => {
+          entries.filter(e => {
+            if (filter === 'all') return true;
+            if (filter === 'regular') return !e.category || (e.category !== 'mood' && e.category !== 'goal');
+            return e.category === filter;
+          }).map(entry => {
             const timeRef = entry.updatedAt ? new Date(entry.updatedAt) : new Date(entry.createdAt);
             const isEditable = (new Date() - timeRef) / (1000 * 60) <= 30;
             const isMood = entry.category === 'mood';
@@ -161,7 +178,7 @@ export default function JournalPage() {
             return (
               <div 
                 key={entry.id} 
-                className={styles.journalPage} 
+                className={`${styles.journalPage} ${isMood ? styles.journalPageMood : isGoal ? styles.journalPageGoal : ''}`} 
                 style={hasSideTitle ? { 
                   paddingTop: '20px', 
                   paddingBottom: '20px' 
