@@ -85,7 +85,7 @@ function HomeContent() {
       const res = await fetch('/api/student/mood', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ratingValue: selectedMood, explanation: moodText || 'דיווח מהיר ממסך הבית' })
+        body: JSON.stringify({ ratingValue: selectedMood, explanation: moodText.trim() })
       });
       if (res.ok) {
         toast.show('תודה על השיתוף!', 'success');

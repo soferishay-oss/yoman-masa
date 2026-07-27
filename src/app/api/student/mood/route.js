@@ -39,17 +39,19 @@ export async function POST(request) {
       }
     });
 
-    // Also add it to the user's journal
-    await prisma.contentEntry.create({
-      data: {
-        tenantId,
-        ownerUserId: userId,
-        type: 'journal',
-        category: 'mood',
-        bodyText: explanation || '',
-        tags: ["mood", ratingValue.toString()]
-      }
-    });
+    // Also add it to the user's journal ONLY IF they wrote an explanation
+    if (explanation && explanation.trim().length > 0) {
+      await prisma.contentEntry.create({
+        data: {
+          tenantId,
+          ownerUserId: userId,
+          type: 'journal',
+          category: 'mood',
+          bodyText: explanation.trim(),
+          tags: ["mood", ratingValue.toString()]
+        }
+      });
+    }
 
     // Clear forceMoodSurvey flag if it exists
     const user = await prisma.user.findUnique({ where: { id: userId } });
