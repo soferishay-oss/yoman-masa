@@ -13,6 +13,7 @@ export default function GoalsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGoal, setNewGoal] = useState({ title: '', targetDateType: 'weekly', reminderFrequency: 'weekly', isPrivate: false });
   const [updatingGoal, setUpdatingGoal] = useState(null);
+  const [editingGoal, setEditingGoal] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -59,25 +60,50 @@ export default function GoalsPage() {
     }
   };
 
-  const handleEditGoal = async (goal) => {
-    const newTitle = window.prompt('ערוך את שם היעד:', goal.title);
-    if (!newTitle || newTitle.trim() === '' || newTitle.trim() === goal.title) return;
-    
+  const handleTogglePrivacy = async (goal) => {
     try {
       const res = await fetch(`/api/student/goals/${goal.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle.trim() })
+        body: JSON.stringify({ isPrivate: !goal.isPrivate })
       });
       if (res.ok) {
-        toast.show('שם היעד עודכן בהצלחה', 'success');
+        toast.show('הגדרות פרטיות עודכנו', 'success');
         fetchGoals();
       } else {
-        toast.show('שגיאה בעדכון שם היעד', 'error');
+        toast.show('שגיאה בעדכון פרטיות', 'error');
       }
     } catch (e) {
       console.error(e);
-      toast.show('שגיאה בעדכון שם היעד', 'error');
+      toast.show('שגיאה בעדכון פרטיות', 'error');
+    }
+  };
+
+  const handleUpdateGoalInfo = async () => {
+    if (!editingGoal.title.trim()) {
+      toast.show('יש להזין שם יעד', 'error');
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/student/goals/${editingGoal.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: editingGoal.title.trim(),
+          reminderFrequency: editingGoal.reminderFrequency
+        })
+      });
+      if (res.ok) {
+        toast.show('היעד עודכן בהצלחה', 'success');
+        setEditingGoal(null);
+        fetchGoals();
+      } else {
+        toast.show('שגיאה בעדכון היעד', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.show('שגיאה בעדכון היעד', 'error');
     }
   };
 
@@ -124,17 +150,22 @@ export default function GoalsPage() {
           goals.map(goal => (
             <div key={goal.id} className={styles.goalCard}>
               <div className={styles.goalHeader}>
+                <h3 className={styles.goalTitle}>{goal.title}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <h3 className={styles.goalTitle}>{goal.title}</h3>
                   <button 
-                    onClick={() => handleEditGoal(goal)} 
-                    style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 8px', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    onClick={() => setEditingGoal(goal)} 
+                    style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     title="ערוך שם יעד"
                   >
-                    <Edit2 size={14} />
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleTogglePrivacy(goal)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
+                  >
+                    {goal.isPrivate ? <EyeOff size={20} color="#64748b" title="פרטי - רק אתה יכול לראות יעד זה (לחץ לשינוי)" /> : <Eye size={20} color="#16a34a" title="גלוי - משותף עם הצוות (לחץ לשינוי)" />}
                   </button>
                 </div>
-                {goal.isPrivate ? <EyeOff size={20} color="#64748b" title="פרטי - רק אתה יכול לראות יעד זה" /> : <Eye size={20} color="#16a34a" title="גלוי - משותף עם הצוות" />}
               </div>
               <div className={styles.goalMeta}>
                 <span className={styles.metaBadge}><CheckCircle size={14} /> {frequencyOptions.find(o => o.value === goal.reminderFrequency)?.label}</span>
@@ -165,15 +196,48 @@ export default function GoalsPage() {
               
               <button 
                 onClick={() => setUpdatingGoal(goal)}
-                style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#f97316', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                style={{ width: '100%', marginTop: '15px', padding: '12px', background: '#f8fafc', color: '#3b82f6', border: '1px solid #bfdbfe', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s' }}
               >
-                <Activity size={18} /> איך הולך?
+                <Activity size={18} /> איך הולך עם זה?
               </button>
             </div>
           ))
         )}
       </div>
 
+      {/* Edit Goal Modal */}
+      {editingGoal && (
+        <div className={styles.modalOverlay} onClick={() => setEditingGoal(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h2 style={{ marginTop: 0, color: 'var(--primary-color)' }}>עריכת יעד</h2>
+            
+            <label className={styles.label}>
+              במה אני רוצה להתפתח? (הגדרת היעד)
+              <input 
+                type="text" 
+                className={styles.input} 
+                value={editingGoal.title} 
+                onChange={e => setEditingGoal({...editingGoal, title: e.target.value})} 
+                placeholder="לדוגמה: ללמוד גיטרה 3 פעמים בשבוע..."
+              />
+            </label>
+
+            <label className={styles.label}>
+              כל כמה זמן להזכיר לי לשאול את עצמי "איך הולך עם זה?"
+              <select className={styles.select} value={editingGoal.reminderFrequency} onChange={e => setEditingGoal({...editingGoal, reminderFrequency: e.target.value})}>
+                {frequencyOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+            </label>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
+              <button className={styles.submitBtn} onClick={handleUpdateGoalInfo}>שמור שינויים</button>
+              <button className={styles.cancelBtn} onClick={() => setEditingGoal(null)}>ביטול</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Goal Modal */}
       {showAddModal && (
         <div className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>

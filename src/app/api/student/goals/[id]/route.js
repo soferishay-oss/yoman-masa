@@ -17,11 +17,7 @@ export async function PUT(request, { params }) {
     }
 
     const data = await request.json();
-    const { title } = data;
-
-    if (!title || !title.trim()) {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
-    }
+    const { title, isPrivate, reminderFrequency } = data;
 
     const goal = await prisma.goal.findUnique({
       where: { id }
@@ -31,37 +27,42 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
     }
 
-    const oldTitle = goal.title;
+    const updates = {};
+    if (title && title.trim()) updates.title = title.trim();
+    if (typeof isPrivate === 'boolean') updates.isPrivate = isPrivate;
+    if (reminderFrequency) updates.reminderFrequency = reminderFrequency;
     
     // Update goal
     const updatedGoal = await prisma.goal.update({
       where: { id },
-      data: { title: title.trim() }
+      data: updates
     });
 
-    // Create a GoalUpdate saying it was renamed
-    const reflectionText = `שם היעד עודכן מ-"${oldTitle}" ל-"${title.trim()}"`;
-    
-    await prisma.goalUpdate.create({
-      data: {
-        goalId: goal.id,
-        rating: 2, // Neutral
-        reflection: reflectionText
-      }
-    });
+    // Create a GoalUpdate saying it was renamed if title changed
+    if (updates.title && updates.title !== goal.title) {
+        const reflectionText = `שם היעד עודכן מ-"${goal.title}" ל-"${updates.title}"`;
+        
+        await prisma.goalUpdate.create({
+          data: {
+            goalId: goal.id,
+            rating: 2, // Neutral
+            reflection: reflectionText
+          }
+        });
 
-    // Create ContentEntry for the journal
-    await prisma.contentEntry.create({
-      data: {
-        tenantId,
-        ownerUserId: userId,
-        category: 'goal',
-        type: 'journal',
-        title: title.trim(),
-        bodyText: reflectionText,
-        visibility: goal.isPrivate ? 'private' : 'staff'
-      }
-    });
+        // Create ContentEntry for the journal
+        await prisma.contentEntry.create({
+          data: {
+            tenantId,
+            ownerUserId: userId,
+            category: 'goal',
+            type: 'journal',
+            title: updates.title,
+            bodyText: reflectionText,
+            visibility: updatedGoal.isPrivate ? 'private' : 'staff'
+          }
+        });
+    }
 
     return NextResponse.json(updatedGoal, { status: 200 });
   } catch (error) {
