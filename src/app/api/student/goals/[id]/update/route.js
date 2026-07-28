@@ -25,7 +25,7 @@ export async function POST(request, context) {
       return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
     }
 
-    const { rating, reflection, isVault } = await request.json();
+    const { rating, reflection, saveToJournal } = await request.json();
 
     if (!rating || rating < 1 || rating > 5) {
       return NextResponse.json({ error: 'Invalid rating' }, { status: 400 });
@@ -45,8 +45,15 @@ export async function POST(request, context) {
       data: { updatedAt: new Date() }
     });
 
-    // Only save to Journal (and Vault) if user explicitly requested it via the star toggle
-    if (isVault && reflection && reflection.trim().length > 0) {
+    const emojiMap = {
+      1: '😢',
+      2: '😐',
+      3: '😃'
+    };
+    const emoji = emojiMap[rating] || '';
+
+    // Only save to Journal if user explicitly requested it via the journal toggle
+    if (saveToJournal && reflection && reflection.trim().length > 0) {
       await prisma.contentEntry.create({
         data: {
           tenantId,
@@ -54,10 +61,10 @@ export async function POST(request, context) {
           category: 'goal',
           type: 'journal',
           title: goal.title,
-          bodyText: reflection,
+          bodyText: `${emoji} ${reflection}`,
           visibility: goal.isPrivate ? 'private' : 'staff',
           parentEntryId: goalId,
-          isVault: true
+          isVault: false
         }
       });
     }
