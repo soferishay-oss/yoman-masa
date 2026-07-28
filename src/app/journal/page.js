@@ -218,7 +218,10 @@ export default function JournalPage() {
                       )}
                       {isEditable && isGoal && (
                         <>
-                          <button onClick={() => router.push('/student/goals')} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="עבור למסך יעדים">
+                          <button onClick={() => {
+                            const goalIdParam = entry.parentEntryId ? `?editGoal=${entry.parentEntryId}` : '';
+                            router.push(`/student/goals${goalIdParam}`);
+                          }} className={styles.deleteBtn} style={{ color: '#3b82f6' }} title="עבור למסך יעדים">
                             <Edit2 size={18} />
                           </button>
                           <button onClick={() => handleDeleteEntry(entry.id)} className={styles.deleteBtn} title="מחק">

@@ -54,7 +54,8 @@ export async function POST(request, context) {
           type: 'journal',
           title: goal.title,
           bodyText: reflection,
-          visibility: goal.isPrivate ? 'private' : 'staff'
+          visibility: goal.isPrivate ? 'private' : 'staff',
+          parentEntryId: goalId
         }
       });
     }

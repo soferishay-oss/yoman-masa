@@ -60,7 +60,8 @@ export async function PUT(request, { params }) {
             type: 'journal',
             title: updates.title,
             bodyText: reflectionText,
-            visibility: updatedGoal.isPrivate ? 'private' : 'staff'
+            visibility: updatedGoal.isPrivate ? 'private' : 'staff',
+            parentEntryId: goal.id
           }
         });
     }

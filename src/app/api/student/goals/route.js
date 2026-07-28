@@ -87,7 +87,8 @@ export async function POST(request) {
         title: 'הצבתי לעצמי יעד חדש:',
         bodyText: `**${title}**\n\n(${frequencyMap[reminderFrequency] || reminderFrequency})`,
         visibility: isPrivate ? 'private' : 'staff',
-        isVault: isVault || false
+        isVault: isVault || false,
+        parentEntryId: newGoal.id
       }
     });
 

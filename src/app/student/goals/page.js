@@ -26,6 +26,17 @@ export default function GoalsPage() {
       if (res.ok) {
         const data = await res.json();
         setGoals(data);
+        
+        // Check if we came from Journal with intent to edit
+        const params = new URLSearchParams(window.location.search);
+        const editGoalId = params.get('editGoal');
+        if (editGoalId) {
+          const goalToEdit = data.find(g => g.id === editGoalId);
+          if (goalToEdit) {
+            setEditingGoal(goalToEdit);
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }
       }
     } catch (e) {
       console.error(e);
