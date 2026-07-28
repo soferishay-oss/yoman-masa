@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, Plus, CheckCircle, Calendar, Eye, EyeOff, Activity, MessageSquare, Frown, Meh, Smile, Edit2 } from 'lucide-react';
+import { Target, Plus, CheckCircle, Calendar, Eye, EyeOff, Activity, MessageSquare, Frown, Meh, Smile, Edit2, Star } from 'lucide-react';
 import styles from './goals.module.css';
 import { useToast } from '@/components/ToastProvider';
 import AppDate from '@/components/AppDate';
@@ -11,7 +11,7 @@ export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newGoal, setNewGoal] = useState({ title: '', targetDateType: 'weekly', reminderFrequency: 'weekly', isPrivate: false });
+  const [newGoal, setNewGoal] = useState({ title: '', targetDateType: 'weekly', reminderFrequency: 'weekly', isPrivate: false, isVault: false });
   const [updatingGoal, setUpdatingGoal] = useState(null);
   const [editingGoal, setEditingGoal] = useState(null);
   const toast = useToast();
@@ -49,7 +49,7 @@ export default function GoalsPage() {
       if (res.ok) {
         toast.show('היעד נוצר בהצלחה!', 'success');
         setShowAddModal(false);
-        setNewGoal({ title: '', targetDateType: 'weekly', reminderFrequency: 'weekly', isPrivate: false });
+        setNewGoal({ title: '', targetDateType: 'weekly', reminderFrequency: 'weekly', isPrivate: false, isVault: false });
         fetchGoals();
       } else {
         toast.show('שגיאה ביצירת היעד', 'error');
@@ -76,6 +76,25 @@ export default function GoalsPage() {
     } catch (e) {
       console.error(e);
       toast.show('שגיאה בעדכון פרטיות', 'error');
+    }
+  };
+
+  const handleToggleVault = async (goal) => {
+    try {
+      const res = await fetch(`/api/student/goals/${goal.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isVault: !goal.isVault })
+      });
+      if (res.ok) {
+        toast.show(!goal.isVault ? 'נשמר בכספת' : 'הוסר מהכספת', 'success');
+        fetchGoals();
+      } else {
+        toast.show('שגיאה בעדכון כספת', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.show('שגיאה בעדכון כספת', 'error');
     }
   };
 
@@ -158,6 +177,12 @@ export default function GoalsPage() {
                     title="ערוך שם יעד"
                   >
                     <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleToggleVault(goal)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
+                  >
+                    <Star size={20} fill={goal.isVault ? '#f59e0b' : 'none'} color={goal.isVault ? '#f59e0b' : '#94a3b8'} title="שמור בכספת (דברים שרציתי לשמור)" />
                   </button>
                   <button
                     onClick={() => handleTogglePrivacy(goal)}
@@ -276,6 +301,22 @@ export default function GoalsPage() {
                   <span style={{ fontSize: '11px', color: '#3b82f6', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', marginRight: '8px' }}>לחץ כדי לשנות</span>
                 </div>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>{newGoal.isPrivate ? 'רק אני אראה את היעד והעדכונים, לא יוצג לאנשי הצוות.' : 'היעד ישותף עם הצוות כדי שיוכלו לעזור לי בדרך.'}</div>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => setNewGoal({...newGoal, isVault: !newGoal.isVault})}
+              style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '10px', cursor: 'pointer', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+            >
+              <div style={{ padding: '10px', borderRadius: '50%', background: newGoal.isVault ? '#fef3c7' : '#f1f5f9', color: newGoal.isVault ? '#f59e0b' : '#94a3b8', transition: 'all 0.2s' }}>
+                <Star size={36} fill={newGoal.isVault ? '#f59e0b' : 'none'} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', color: '#334155' }}>
+                  {newGoal.isVault ? 'שמור בכספת' : 'לא שמור בכספת'}
+                  <span style={{ fontSize: '11px', color: '#3b82f6', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', marginRight: '8px' }}>לחץ כדי לשנות</span>
+                </div>
+                <div style={{ fontSize: '13px', color: '#64748b' }}>{newGoal.isVault ? 'היעד יופיע בתיקיית "דברים שרציתי לשמור".' : 'לחץ אם תרצה לשמור את היעד הזה בתיקייה המיוחדת שלך.'}</div>
               </div>
             </div>
 

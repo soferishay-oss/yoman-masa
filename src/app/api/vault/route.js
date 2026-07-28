@@ -47,7 +47,25 @@ export async function GET(request) {
       isVault: letter.isVault
     }));
 
-    const vaultItems = [...journalItems, ...formattedLetters]
+    const goalItems = await prisma.goal.findMany({
+      where: {
+        tenantId,
+        userId,
+        isVault: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const formattedGoals = goalItems.map(goal => ({
+      id: goal.id,
+      title: `יעד: ${goal.title}`,
+      bodyText: `תזמון יעד: ${goal.targetDateType}, תזכורת: ${goal.reminderFrequency}`,
+      type: 'goal',
+      createdAt: goal.createdAt,
+      isVault: goal.isVault
+    }));
+
+    const vaultItems = [...journalItems, ...formattedLetters, ...formattedGoals]
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return NextResponse.json(vaultItems);
@@ -78,6 +96,15 @@ export async function PUT(request) {
         where: { 
           id: entryId,
           recipientId: userId
+        },
+        data: { isVault }
+      });
+      return NextResponse.json(updatedEntry);
+    } else if (type === 'goal') {
+      const updatedEntry = await prisma.goal.update({
+        where: { 
+          id: entryId,
+          userId: userId
         },
         data: { isVault }
       });

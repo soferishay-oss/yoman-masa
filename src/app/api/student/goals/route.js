@@ -44,7 +44,7 @@ export async function POST(request) {
 
     if (!userId || !tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { title, targetDateType, reminderFrequency, isPrivate } = await request.json();
+    const { title, targetDateType, reminderFrequency, isPrivate, isVault } = await request.json();
 
     if (!title || !targetDateType || !reminderFrequency) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -57,7 +57,8 @@ export async function POST(request) {
         title,
         targetDateType,
         reminderFrequency,
-        isPrivate: isPrivate || false
+        isPrivate: isPrivate || false,
+        isVault: isVault || false
       }
     });
 
@@ -85,7 +86,8 @@ export async function POST(request) {
         type: 'journal',
         title: title,
         bodyText: `הצבתי לעצמי יעד חדש: ${title}\n(תזמון יעד: ${targetMap[targetDateType] || targetDateType}, ${frequencyMap[reminderFrequency] || reminderFrequency})`,
-        visibility: isPrivate ? 'private' : 'staff'
+        visibility: isPrivate ? 'private' : 'staff',
+        isVault: isVault || false
       }
     });
 

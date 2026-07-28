@@ -17,7 +17,7 @@ export async function PUT(request, { params }) {
     }
 
     const data = await request.json();
-    const { title, isPrivate, reminderFrequency } = data;
+    const { title, isPrivate, reminderFrequency, isVault } = data;
 
     const goal = await prisma.goal.findUnique({
       where: { id }
@@ -30,6 +30,7 @@ export async function PUT(request, { params }) {
     const updates = {};
     if (title && title.trim()) updates.title = title.trim();
     if (typeof isPrivate === 'boolean') updates.isPrivate = isPrivate;
+    if (typeof isVault === 'boolean') updates.isVault = isVault;
     if (reminderFrequency) updates.reminderFrequency = reminderFrequency;
     
     // Update goal

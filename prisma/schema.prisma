@@ -327,6 +327,7 @@ model Goal {
   targetDateType   String   // "weekly", "monthly", "trimester", "semester", "yearly", "two_years", "lifetime"
   reminderFrequency String  // "weekly", "monthly", "custom"
   isPrivate        Boolean  @default(false)
+  isVault          Boolean  @default(false)
   
   status           String   @default("active") // active, completed, archived
   createdAt        DateTime @default(now())
