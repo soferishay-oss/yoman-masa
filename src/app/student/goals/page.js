@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Target, Plus, CheckCircle, Calendar, Eye, EyeOff, Activity, MessageSquare, Frown, Meh, Smile } from 'lucide-react';
+import { Target, Plus, CheckCircle, Calendar, Eye, EyeOff, Activity, MessageSquare, Frown, Meh, Smile, Edit2 } from 'lucide-react';
 import styles from './goals.module.css';
 import { useToast } from '@/components/ToastProvider';
 import AppDate from '@/components/AppDate';
@@ -59,6 +59,28 @@ export default function GoalsPage() {
     }
   };
 
+  const handleEditGoal = async (goal) => {
+    const newTitle = window.prompt('ערוך את שם היעד:', goal.title);
+    if (!newTitle || newTitle.trim() === '' || newTitle.trim() === goal.title) return;
+    
+    try {
+      const res = await fetch(`/api/student/goals/${goal.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle.trim() })
+      });
+      if (res.ok) {
+        toast.show('שם היעד עודכן בהצלחה', 'success');
+        fetchGoals();
+      } else {
+        toast.show('שגיאה בעדכון שם היעד', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.show('שגיאה בעדכון שם היעד', 'error');
+    }
+  };
+
   const targetDateOptions = [
     { value: 'weekly', label: 'שבועי' },
     { value: 'monthly', label: 'חודשי' },
@@ -102,11 +124,19 @@ export default function GoalsPage() {
           goals.map(goal => (
             <div key={goal.id} className={styles.goalCard}>
               <div className={styles.goalHeader}>
-                <h3 className={styles.goalTitle}>{goal.title}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 className={styles.goalTitle}>{goal.title}</h3>
+                  <button 
+                    onClick={() => handleEditGoal(goal)} 
+                    style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '4px 8px', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    title="ערוך שם יעד"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                </div>
                 {goal.isPrivate ? <EyeOff size={20} color="#64748b" title="פרטי - רק אתה יכול לראות יעד זה" /> : <Eye size={20} color="#16a34a" title="גלוי - משותף עם הצוות" />}
               </div>
               <div className={styles.goalMeta}>
-                <span className={styles.metaBadge}><Calendar size={14} /> {targetDateOptions.find(o => o.value === goal.targetDateType)?.label}</span>
                 <span className={styles.metaBadge}><CheckCircle size={14} /> {frequencyOptions.find(o => o.value === goal.reminderFrequency)?.label}</span>
               </div>
               
@@ -160,12 +190,7 @@ export default function GoalsPage() {
               />
             </label>
 
-            <label className={styles.label}>
-              למתי היעד הזה?
-              <select className={styles.select} value={newGoal.targetDateType} onChange={e => setNewGoal({...newGoal, targetDateType: e.target.value})}>
-                {targetDateOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
-            </label>
+
 
             <label className={styles.label}>
               כל כמה זמן להזכיר לי לשאול את עצמי "איך הולך?"
@@ -178,11 +203,14 @@ export default function GoalsPage() {
               onClick={() => setNewGoal({...newGoal, isPrivate: !newGoal.isPrivate})}
               style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '20px', cursor: 'pointer', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
             >
-              <div style={{ padding: '10px', borderRadius: '50%', background: newGoal.isPrivate ? '#f1f5f9' : '#dcfce7', color: newGoal.isPrivate ? '#64748b' : '#16a34a' }}>
+              <div style={{ padding: '10px', borderRadius: '50%', background: newGoal.isPrivate ? '#f1f5f9' : '#dcfce7', color: newGoal.isPrivate ? '#64748b' : '#16a34a', transition: 'all 0.2s' }}>
                 {newGoal.isPrivate ? <EyeOff size={36} /> : <Eye size={36} />}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 'bold', color: '#334155' }}>{newGoal.isPrivate ? 'יעד פרטי' : 'יעד גלוי לצפייה'}</div>
+                <div style={{ fontWeight: 'bold', color: '#334155' }}>
+                  {newGoal.isPrivate ? 'יעד פרטי' : 'יעד גלוי לצפייה'}
+                  <span style={{ fontSize: '11px', color: '#3b82f6', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', marginRight: '8px' }}>לחץ כדי לשנות</span>
+                </div>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>{newGoal.isPrivate ? 'רק אני אראה את היעד והעדכונים, לא יוצג לאנשי הצוות.' : 'היעד ישותף עם הצוות כדי שיוכלו לעזור לי בדרך.'}</div>
               </div>
             </div>
