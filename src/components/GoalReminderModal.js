@@ -11,6 +11,7 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
   
   const [rating, setRating] = useState(0);
   const [reflection, setReflection] = useState('');
+  const [isVault, setIsVault] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const toast = useToast();
@@ -50,7 +51,7 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
       const res = await fetch(`/api/student/goals/${currentGoal.id}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating, reflection })
+        body: JSON.stringify({ rating, reflection, isVault })
       });
 
       if (res.ok) {
@@ -61,6 +62,7 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
           setCurrentGoalIndex(currentGoalIndex + 1);
           setRating(0);
           setReflection('');
+          setIsVault(false);
         } else {
           setIsOpen(false);
           if (onClose) onClose();
@@ -168,6 +170,26 @@ export default function GoalReminderModal({ manualGoal, onClose }) {
                 resize: 'none', fontFamily: 'inherit'
               }}
             />
+          </div>
+
+          {/* Vault Toggle */}
+          <div 
+            onClick={() => setIsVault(!isVault)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', 
+              background: '#f8fafc', padding: '10px 15px', borderRadius: '8px', 
+              border: '1px solid #e2e8f0', marginTop: '-10px'
+            }}
+          >
+            <div style={{ color: isVault ? '#f59e0b' : '#94a3b8', transition: 'all 0.2s' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={isVault ? "#f59e0b" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#334155' }}>שמור התקדמות בכספת וביומן</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>לחיצה על הכוכבית תתעד את העדכון הזה ב'דברים שרציתי לשמור' וביומן</div>
+            </div>
           </div>
 
           {/* Submit */}
