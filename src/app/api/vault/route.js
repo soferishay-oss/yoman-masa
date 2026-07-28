@@ -56,10 +56,16 @@ export async function GET(request) {
       orderBy: { createdAt: 'desc' }
     });
 
+    const frequencyMap = {
+      'daily': 'תזכורת יומית',
+      'weekly': 'תזכורת שבועית',
+      'monthly': 'תזכורת חודשית'
+    };
+
     const formattedGoals = goalItems.map(goal => ({
       id: goal.id,
       title: `יעד: ${goal.title}`,
-      bodyText: `תזמון יעד: ${goal.targetDateType}, תזכורת: ${goal.reminderFrequency}`,
+      bodyText: `${frequencyMap[goal.reminderFrequency] || goal.reminderFrequency}`,
       type: 'goal',
       createdAt: goal.createdAt,
       isVault: goal.isVault
