@@ -65,7 +65,7 @@ export default async function RootLayout({ children }) {
           <div style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             width: '80%', maxWidth: '400px', height: '80%', opacity: 0.05,
-            backgroundImage: 'url(/app-logo.png)', backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/newlogo.jpeg)', backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center', backgroundSize: 'contain', pointerEvents: 'none', zIndex: -1
           }}></div>
 
@@ -92,7 +92,7 @@ export default async function RootLayout({ children }) {
                 <Link href="/journal" className={styles.fabWrapper}>
                   <div className={styles.fabButton}>
                     <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: '50%' }}>
-                      <img src="/app-logo.png" alt="היומן שלי" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.08)' }} />
+                      <img src="/newlogo.jpeg" alt="לוגו" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.08)' }} />
                     </div>
                   </div>
                   <span>היומן שלי</span>
