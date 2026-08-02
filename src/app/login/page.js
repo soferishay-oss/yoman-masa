@@ -156,7 +156,7 @@ export default function LoginPage() {
         
         {/* App Logo & Title - Dominant at the top */}
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <img src="/newlogo.jpeg" alt="לוגו" style={{ width: '100px', height: '100px', objectFit: 'contain', marginBottom: '10px' }} />
+          <img src="/newlogo.jpeg" alt="לוגו" style={{ width: '160px', height: '160px', objectFit: 'cover', transform: 'scale(1.3)', mixBlendMode: 'multiply', marginBottom: '-10px' }} />
           <h1 style={{ fontSize: '28px', color: '#16a34a', margin: '0 0 5px 0', fontWeight: '800' }}>יומן מסע</h1>
           <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>התחברות למערכת</p>
         </div>
