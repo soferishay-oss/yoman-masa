@@ -43,6 +43,7 @@ export default async function RootLayout({ children }) {
       where: { id: userId },
       select: { 
         status: true,
+        agreedToTerms: true,
         tenant: {
           select: {
             academicYears: { orderBy: { startDate: 'desc' } },
@@ -53,6 +54,11 @@ export default async function RootLayout({ children }) {
     });
     if (!user || user.status === 'deleted' || user.status === 'suspended') {
       redirect('/login?error=suspended');
+    }
+    
+    const currentPath = headersList.get('x-pathname') || '';
+    if (!user.agreedToTerms && currentPath !== '/consent' && !currentPath.startsWith('/api/')) {
+      redirect('/consent');
     }
   }
 

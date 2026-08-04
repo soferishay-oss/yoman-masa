@@ -38,6 +38,7 @@ export async function middleware(request) {
     requestHeaders.set('x-user-id', payload.userId);
     requestHeaders.set('x-tenant-id', payload.tenantId);
     requestHeaders.set('x-user-role', payload.role);
+    requestHeaders.set('x-pathname', pathname);
     if (payload.groupId) requestHeaders.set('x-group-id', payload.groupId);
     if (payload.isDutyStudent) requestHeaders.set('x-is-duty-student', 'true');
 

@@ -64,6 +64,7 @@ model User {
   status           String   @default("active")
   avatarUrl        String?
   preferences      Json?    // e.g. { dominantDateMode: "hebrew" }
+  agreedToTerms    Boolean  @default(false)
   createdAt        DateTime @default(now())
   lastLoginAt      DateTime?
 
