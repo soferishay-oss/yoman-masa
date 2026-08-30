@@ -13,7 +13,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, description, isOpen, order, questions } = await request.json();
+    const { title, description, isOpen, order, questions, unlockAt } = await request.json();
 
     // Verify tenant ownership via the journey
     const station = await prisma.journeyStation.findUnique({
@@ -32,7 +32,8 @@ export async function PUT(request, { params }) {
         description: description !== undefined ? description : station.description,
         isOpen: isOpen !== undefined ? isOpen : station.isOpen,
         order: order !== undefined ? order : station.order,
-        questions: questions !== undefined ? questions : station.questions
+        questions: questions !== undefined ? questions : station.questions,
+        unlockAt: unlockAt !== undefined ? unlockAt : station.unlockAt
       }
     });
 

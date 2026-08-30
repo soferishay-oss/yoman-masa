@@ -46,6 +46,51 @@ export async function POST(request, { params }) {
       }
     });
 
+    // Cross-pollination (Side Effects)
+    if (answers) {
+      // 1. Mood
+      const moodKeys = ['mood', 'summary_mood', 'מצב רוח'];
+      const moodKey = Object.keys(answers).find(k => moodKeys.includes(k));
+      if (moodKey && answers[moodKey]) {
+        const val = answers[moodKey];
+        let rating = 3;
+        if (val.includes('מצוין') || val.includes('מצויין')) rating = 5;
+        else if (val.includes('על הפנים') || val.includes('רע')) rating = 1;
+        else if (val.includes('טוב') || val.includes('סביר')) rating = 3;
+
+        await prisma.moodCheck.create({
+          data: {
+            tenantId: auth.tenantId,
+            userId: auth.userId,
+            frequency: 'daily',
+            ratingType: '1to5',
+            ratingValue: rating,
+            trendStatus: rating > 3 ? 'up' : rating < 3 ? 'down' : 'stable',
+            explanation: 'מתוך משו"ב מסע: ' + station.title
+          }
+        });
+      }
+
+      // 2. Goals
+      const goalKeys = ['goal_1', 'goal_2', 'goal_3', 'יעד_1'];
+      for (const key of goalKeys) {
+        if (answers[key] && answers[key].trim().length > 0) {
+          await prisma.goal.create({
+            data: {
+              tenantId: auth.tenantId,
+              userId: auth.userId,
+              title: answers[key].trim(),
+              targetDateType: 'yearly',
+              reminderFrequency: 'monthly',
+              isPrivate: false,
+              isVault: false,
+              status: 'active'
+            }
+          });
+        }
+      }
+    }
+
     return NextResponse.json(response);
   } catch (err) {
     console.error(err);

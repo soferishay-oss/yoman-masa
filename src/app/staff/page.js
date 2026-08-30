@@ -350,7 +350,7 @@ export default function StaffDashboard() {
           onClick={() => window.location.href = '/staff/journeys'} 
           style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
         >
-          <Compass size={18} /> מסעות מתגלגלים
+          <Compass size={18} /> משו"ב מסעות
         </button>
         <button 
           onClick={() => setActiveTab('events')} 

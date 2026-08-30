@@ -18,7 +18,9 @@ export async function middleware(request) {
     pathname.startsWith('/newlogo.jpeg') ||
     pathname.endsWith('.png') ||
     pathname.endsWith('.svg') ||
-    pathname.endsWith('.jpg')
+    pathname.endsWith('.jpg') ||
+    pathname === '/manifest.json' ||
+    pathname === '/sw.js'
   ) {
     return NextResponse.next();
   }

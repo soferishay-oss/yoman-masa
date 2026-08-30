@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/components/ToastProvider';
-import { Map, Plus, Trash2, Edit2, Check, Lock, Unlock, ArrowRight, Save, LayoutDashboard } from 'lucide-react';
+import { Map, Plus, Trash2, Edit2, Check, Lock, Unlock, ArrowRight, Save, LayoutDashboard, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminJourneyEditorPage() {
@@ -18,6 +18,9 @@ export default function AdminJourneyEditorPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newStationTitle, setNewStationTitle] = useState('');
   const [newStationDesc, setNewStationDesc] = useState('');
+
+  // Editing station state
+  const [editingStation, setEditingStation] = useState(null);
 
   useEffect(() => {
     fetchJourney();
@@ -66,6 +69,28 @@ export default function AdminJourneyEditorPage() {
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (!editingStation || !editingStation.title.trim()) return;
+    try {
+      const res = await fetch(`/api/staff/journeys/stations/${editingStation.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: editingStation.title,
+          description: editingStation.description,
+          questions: editingStation.questions
+        })
+      });
+      if (res.ok) {
+        toast.show('נשמר בהצלחה');
+        setEditingStation(null);
+        fetchJourney();
+      }
+    } catch (e) {
+      toast.show('שגיאת רשת', 'error');
+    }
+  };
+
   const toggleStationStatus = async (station) => {
     try {
       const res = await fetch(`/api/staff/journeys/stations/${station.id}`, {
@@ -89,6 +114,24 @@ export default function AdminJourneyEditorPage() {
         toast.show('התחנה נמחקה');
       }
     } catch (e) {}
+  };
+
+  const updateEditingQuestion = (index, field, value) => {
+    const updatedQs = [...(editingStation.questions || [])];
+    updatedQs[index] = { ...updatedQs[index], [field]: value };
+    setEditingStation({ ...editingStation, questions: updatedQs });
+  };
+
+  const addQuestion = () => {
+    const updatedQs = [...(editingStation.questions || [])];
+    updatedQs.push({ id: 'q_' + Date.now(), type: 'open', label: 'שאלה חדשה' });
+    setEditingStation({ ...editingStation, questions: updatedQs });
+  };
+
+  const removeQuestion = (index) => {
+    const updatedQs = [...(editingStation.questions || [])];
+    updatedQs.splice(index, 1);
+    setEditingStation({ ...editingStation, questions: updatedQs });
   };
 
   if (isLoading) return <div style={{ padding: '20px' }}>טוען...</div>;
@@ -146,10 +189,16 @@ export default function AdminJourneyEditorPage() {
                   <h3 style={{ margin: '0 0 5px 0' }}>{s.title}</h3>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button 
+                      onClick={() => setEditingStation(JSON.parse(JSON.stringify(s)))}
+                      style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#3b82f6', cursor: 'pointer', padding: '6px 12px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: 'bold' }}
+                    >
+                      <Edit2 size={14} /> ערוך
+                    </button>
+                    <button 
                       onClick={() => toggleStationStatus(s)}
                       style={{ background: s.isOpen ? '#fef2f2' : '#ecfdf5', color: s.isOpen ? '#ef4444' : '#10b981', border: `1px solid ${s.isOpen ? '#fca5a5' : '#6ee7b7'}`, padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: 'bold' }}
                     >
-                      {s.isOpen ? <><Lock size={14} /> נעל תחנה</> : <><Unlock size={14} /> שחרר תחנה</>}
+                      {s.isOpen ? <><Lock size={14} /> נעל תחנה</> : <><Unlock size={14} /> שחרר או תזמן</>}
                     </button>
                     <button 
                       onClick={() => deleteStation(s.id)}
@@ -216,6 +265,107 @@ export default function AdminJourneyEditorPage() {
                 style={{ padding: '10px 15px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', opacity: !newStationTitle.trim() ? 0.5 : 1 }}
               >
                 שמור תחנה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingStation && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+          <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>עריכת תחנה</h2>
+              <button onClick={() => setEditingStation(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="#64748b" /></button>
+            </div>
+            
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>שם התחנה</label>
+              <input 
+                type="text" 
+                value={editingStation.title || ''} 
+                onChange={e => setEditingStation({...editingStation, title: e.target.value})}
+                style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>הנחיות לתלמיד (אופציונלי)</label>
+              <textarea 
+                value={editingStation.description || ''} 
+                onChange={e => setEditingStation({...editingStation, description: e.target.value})}
+                style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', minHeight: '60px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ margin: 0 }}>שאלות משו"ב</h3>
+                <button 
+                  onClick={addQuestion}
+                  style={{ background: 'white', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px' }}
+                >
+                  <Plus size={14} /> הוסף שאלה
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {(editingStation.questions || []).map((q, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', background: 'white', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ flex: 1 }}>
+                      <input 
+                        type="text" 
+                        value={q.label || ''} 
+                        onChange={e => updateEditingQuestion(idx, 'label', e.target.value)}
+                        placeholder="נוסח השאלה..."
+                        style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '5px' }}
+                      />
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <select 
+                          value={q.type || 'open'} 
+                          onChange={e => updateEditingQuestion(idx, 'type', e.target.value)}
+                          style={{ padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px' }}
+                        >
+                          <option value="open">שאלה פתוחה (טקסט)</option>
+                          <option value="rating">דירוג (1-5)</option>
+                        </select>
+                        <input 
+                          type="text" 
+                          value={q.id || ''} 
+                          onChange={e => updateEditingQuestion(idx, 'id', e.target.value)}
+                          placeholder="מזהה פנימי (למשל mood)"
+                          style={{ padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', width: '150px' }}
+                          title="מזהה למערכת (באנגלית). למשל 'mood' ישפיע על מצב הרוח, 'goal_1' ישפיע על יעדים."
+                        />
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => removeQuestion(idx)}
+                      style={{ background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                {(!editingStation.questions || editingStation.questions.length === 0) && (
+                  <p style={{ margin: 0, color: '#64748b', fontSize: '14px', textAlign: 'center' }}>אין שאלות. התלמיד יראה רק את ההנחיות.</p>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: 'auto' }}>
+              <button 
+                onClick={() => setEditingStation(null)}
+                style={{ padding: '12px 20px', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                ביטול
+              </button>
+              <button 
+                onClick={handleSaveEdit}
+                disabled={!editingStation.title.trim()}
+                style={{ padding: '12px 20px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Save size={18} /> שמור שינויים
               </button>
             </div>
           </div>

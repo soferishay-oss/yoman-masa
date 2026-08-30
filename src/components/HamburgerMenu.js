@@ -45,7 +45,7 @@ export default function HamburgerMenu({ isDutyStudent, academicYears = [], curre
   const navItems = [
     { href: '/profile', icon: User, label: 'פרופיל אישי' },
     { href: '/home', icon: Home, label: 'בית' },
-    { href: '/journeys', icon: Compass, label: 'מסעות מתגלגלים' },
+    { href: '/journeys', icon: Compass, label: 'משו"ב מסעות' },
     { href: '/letters', icon: Heart, label: 'מכתבים בלב' },
     { href: '/journal', icon: BookOpen, label: 'יומן מסע אישי' },
     { href: '/calendar', icon: Calendar, label: 'לוח שנה' },
