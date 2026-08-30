@@ -90,8 +90,10 @@ export async function PUT(request) {
     if (email !== undefined) dataToUpdate.email = email;
     
     if (password) {
+      // If updating password, hash it and also clear forcePasswordChange if set
       const bcrypt = require('bcryptjs');
       dataToUpdate.passwordHash = await bcrypt.hash(password, 10);
+      dataToUpdate.forcePasswordChange = false;
     }
 
     const updatedUser = await prisma.user.update({

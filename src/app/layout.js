@@ -44,6 +44,7 @@ export default async function RootLayout({ children }) {
       select: { 
         status: true,
         agreedToTerms: true,
+        forcePasswordChange: true,
         tenant: {
           select: {
             academicYears: { orderBy: { startDate: 'desc' } },
@@ -57,7 +58,11 @@ export default async function RootLayout({ children }) {
     }
     
     const currentPath = headersList.get('x-pathname') || '';
-    if (!user.agreedToTerms && currentPath !== '/consent' && !currentPath.startsWith('/api/')) {
+    if (user.forcePasswordChange && currentPath !== '/force-password-change' && !currentPath.startsWith('/api/')) {
+      redirect('/force-password-change');
+    }
+    
+    if (!user.agreedToTerms && currentPath !== '/consent' && currentPath !== '/force-password-change' && !currentPath.startsWith('/api/')) {
       redirect('/consent');
     }
   }

@@ -65,6 +65,7 @@ model User {
   avatarUrl        String?
   preferences      Json?    // e.g. { dominantDateMode: "hebrew" }
   agreedToTerms    Boolean  @default(false)
+  forcePasswordChange Boolean @default(true)
   createdAt        DateTime @default(now())
   lastLoginAt      DateTime?
 
