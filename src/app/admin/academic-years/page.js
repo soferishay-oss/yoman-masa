@@ -5,6 +5,7 @@ import styles from './archive.module.css';
 import { Archive, ChevronDown, ChevronUp, Users, Presentation } from 'lucide-react';
 import YearTransitionWizard from '@/components/admin/YearTransitionWizard';
 import { useRouter } from 'next/navigation';
+import { formatAppDateString } from '@/components/AppDate';
 
 export default function AcademicYearsArchive() {
   const router = useRouter();
