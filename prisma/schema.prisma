@@ -40,6 +40,7 @@ model Tenant {
   staffAlerts      StaffAlert[]
   academicYears    AcademicYear[]
   goals            Goal[]
+  journeys         Journey[]
 }
 
 model User {
@@ -78,6 +79,7 @@ model User {
   authoredLetters  Letter[] @relation("AuthoredLetters")
   receivedLetters  Letter[] @relation("ReceivedLetters")
   goals            Goal[]
+  journeyResponses JourneyResponse[]
 }
 
 model Group {
@@ -347,4 +349,43 @@ model GoalUpdate {
   reflection       String?  
   
   createdAt        DateTime @default(now())
+}
+
+model Journey {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  title       String
+  description String?
+  stations    JourneyStation[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JourneyStation {
+  id          String   @id @default(cuid())
+  journeyId   String
+  journey     Journey  @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  order       Int      @default(0)
+  isOpen      Boolean  @default(false)
+  questions   Json?    // Optional JSON structure for specific questions
+  responses   JourneyResponse[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JourneyResponse {
+  id          String   @id @default(cuid())
+  stationId   String
+  station     JourneyStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers     Json?    // JSON object with answers to questions
+  mediaUrls   Json?    // array of file URLs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([stationId, userId])
 }

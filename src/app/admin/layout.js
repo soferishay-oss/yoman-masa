@@ -42,6 +42,10 @@ export default async function AdminLayout({ children }) {
             <Map size={20} />
             <span>מסלול ליווי חינוכי</span>
           </Link>
+          <Link href="/admin/journeys" className={styles.navLink}>
+            <Map size={20} />
+            <span>מסעות מתגלגלים</span>
+          </Link>
           <Link href="/admin/people" className={styles.navLink}>
             <Users size={20} />
             <span>קהילה (כיתות, קבוצות, אנשים)</span>

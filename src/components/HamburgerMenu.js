@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, User, Home, Heart, BookOpen, Calendar, Shield, Activity, LogOut, Star } from 'lucide-react';
+import { Menu, X, User, Home, Heart, BookOpen, Calendar, Shield, Activity, LogOut, Star, Map } from 'lucide-react';
 import styles from './HamburgerMenu.module.css';
 
 export default function HamburgerMenu({ isDutyStudent, academicYears = [], currentYear = null }) {
@@ -45,12 +45,13 @@ export default function HamburgerMenu({ isDutyStudent, academicYears = [], curre
   const navItems = [
     { href: '/profile', icon: User, label: 'פרופיל אישי' },
     { href: '/home', icon: Home, label: 'בית' },
-    { href: '/letters', icon: Heart, label: 'מה כתבו לי' },
-    { href: '/journal', icon: BookOpen, label: 'היומן שלי' },
+    { href: '/journeys', icon: Map, label: 'מסעות מתגלגלים' },
+    { href: '/letters', icon: Heart, label: 'מכתבים בלב' },
+    { href: '/journal', icon: BookOpen, label: 'יומן מסע אישי' },
     { href: '/calendar', icon: Calendar, label: 'לוח שנה' },
-    ...(isDutyStudent ? [{ href: '/duty', icon: Shield, label: 'תורן' }] : []),
+    ...(isDutyStudent ? [{ href: '/duty', icon: Shield, label: 'תורנויות' }] : []),
     { href: '/student/charts', icon: Activity, label: 'גרפים' },
-    { href: '/vault', icon: Star, label: 'דברים שרציתי לשמור' },
+    { href: '/vault', icon: Star, label: 'הדברים הטובים שעשיתי' },
   ];
 
   return (
