@@ -112,11 +112,16 @@ export default function AdminJourneyDashboardPage() {
 
               {/* Render answers */}
               <div style={{ marginBottom: '15px' }}>
-                {Object.entries(r.answers || {}).map(([key, val]) => (
-                  <div key={key} style={{ marginBottom: '10px' }}>
-                    <div style={{ whiteSpace: 'pre-wrap', color: '#334155' }}>{val || 'לא השיב'}</div>
-                  </div>
-                ))}
+                {Object.entries(r.answers || {}).map(([key, val]) => {
+                  const question = (r.station.questions || []).find(q => q.id === key);
+                  const label = question ? question.label : (key === 'q1' ? 'תשובה' : key);
+                  return (
+                    <div key={key} style={{ marginBottom: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#475569', marginBottom: '5px' }}>{label}</div>
+                      <div style={{ whiteSpace: 'pre-wrap', color: '#1e293b' }}>{val || 'לא השיב'}</div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Render Media */}

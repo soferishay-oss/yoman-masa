@@ -160,10 +160,14 @@ export default function AdminJourneyEditorPage() {
                   </div>
                 </div>
                 
-                <p style={{ margin: '0 0 15px 0', color: '#64748b', fontSize: '14px' }}>{s.description || 'ללא תיאור'}</p>
+                {s.description && (
+                  <div style={{ margin: '0 0 15px 0', color: '#64748b', fontSize: '14px' }}>
+                    {s.description}
+                  </div>
+                )}
                 
                 <div style={{ display: 'flex', gap: '15px', fontSize: '13px', color: '#475569', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
-                  <div><strong>מספר שאלות:</strong> {s.questions?.length || 0}</div>
+                  <div><strong>מספר שאלות:</strong> {s.questions ? (Array.isArray(s.questions) ? s.questions.length : 0) : 0}</div>
                   <div><strong>תשובות שהוגשו:</strong> {s._count?.responses || 0}</div>
                 </div>
               </div>

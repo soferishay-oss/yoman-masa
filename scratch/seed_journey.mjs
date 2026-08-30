@@ -2,13 +2,12 @@ import prisma from '../src/lib/prisma.js';
 
 async function seedJourney() {
   const tenant = await prisma.tenant.findFirst();
-  
-  if (!tenant) {
-    console.error("No tenant found!");
-    return;
-  }
+  if (!tenant) return;
 
-  console.log("Creating journey for tenant:", tenant.name);
+  // Delete previous journeys to avoid duplicates
+  await prisma.journey.deleteMany({
+    where: { tenantId: tenant.id }
+  });
 
   const journey = await prisma.journey.create({
     data: {
@@ -21,51 +20,56 @@ async function seedJourney() {
             title: 'חלק א\' - כוחות וסיכום היום',
             order: 1,
             isOpen: true,
-            description: `
-              <p><strong>איך אתה?</strong> (שתף איך אתה מרגיש עכשיו)</p>
-              <p><strong>מה הכוחות שאתה מביא איתך? מה החוזקות שלך?</strong></p>
-              <p><strong>מה החולשות שלך? איפה תצטרך חיזוק?</strong></p>
-              <p><strong>מה לקחת מהיום הראשון של המסע?</strong></p>
-              <p><em>* תוכל גם להקליט את עצמך או לצרף תמונה!</em></p>
-            `
+            description: 'סיכום היום הראשון של המסע',
+            questions: [
+              { id: 'mood', type: 'rating', label: 'איך אתה?', options: ['על הפנים', 'הכל טוב', 'מצוין!'] },
+              { id: 'strengths', type: 'open', label: 'מה הכוחות שאתה מביא איתך? מה החוזקות שלך?' },
+              { id: 'weaknesses', type: 'open', label: 'מה החולשות שלך? איפה תצטרך חיזוק?' },
+              { id: 'takeaway', type: 'open', label: 'מה לקחת מהיום?' }
+            ]
           },
           {
-            title: 'חלק ב\' - חזון אישי ויעדים',
+            title: 'חלק ב\' - חזון אישי',
             order: 2,
             isOpen: false,
-            description: `
-              <p><strong>איפה אני ביחס לחזון? התייחס לנקודות הבאות מתוך חזון המכינה:</strong></p>
-              <ul>
-                <li>איש משפחה</li>
-                <li>בעל מקצוע</li>
-                <li>נאמן למסורת ישראל</li>
-                <li>מחובר לעמו ולארצו</li>
-                <li>בעל יכולות אישיות גבוהות </li>
-                <li>תורם בדרך משמעותית</li>
-                <li>מגלה אכפתיות לקהילה ולחברה הסובבת אותו</li>
-              </ul>
-              <br/>
-              <p><strong>יעדים לעצמי:</strong> בוא ושתף מהם 3 היעדים שאתה מציב לעצמך השנה.</p>
-            `
+            description: 'איפה אני ביחס לחזון המכינה?',
+            questions: [
+              { id: 'vision_family', type: 'rating', label: 'איש משפחה', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] },
+              { id: 'vision_prof', type: 'rating', label: 'בעל מקצוע', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] },
+              { id: 'vision_tradition', type: 'rating', label: 'נאמן למסורת ישראל', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] },
+              { id: 'vision_nation', type: 'rating', label: 'מחובר לעמו ולארצו', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] },
+              { id: 'vision_skills', type: 'rating', label: 'בעל יכולות אישיות גבוהות', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] },
+              { id: 'vision_contribute', type: 'rating', label: 'תורם בדרך משמעותית', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] },
+              { id: 'vision_community', type: 'rating', label: 'מגלה אכפתיות לקהילה', options: ['טעון שיפור', 'בסדר', 'טוב', 'מצוין'] }
+            ]
           },
           {
-            title: 'חלק ג\' - סיכום המסע',
+            title: 'חלק ג\' - יעדים לעצמי',
             order: 3,
             isOpen: false,
-            description: `
-              <p><strong>איך אתה? איך היה המסע?</strong></p>
-              <p><strong>מה הדבר המרכזי, החוויה או הזכרון שאתה לוקח איתך מהמסע?</strong></p>
-              <p><strong>האם יש עוד משהו שחשוב לך לשתף את הצוות?</strong> (לא חובה)</p>
-            `
+            description: 'בוא ושתף מהם היעדים שאתה מציב לעצמך השנה',
+            questions: [
+              { id: 'goal_1', type: 'open', label: 'יעד ראשון' },
+              { id: 'goal_2', type: 'open', label: 'יעד שני' },
+              { id: 'goal_3', type: 'open', label: 'יעד שלישי' }
+            ]
+          },
+          {
+            title: 'חלק ד\' - סיכום המסע',
+            order: 4,
+            isOpen: false,
+            description: 'סיכום המסע והחוויות',
+            questions: [
+              { id: 'summary_mood', type: 'rating', label: 'איך אתה? איך היה המסע?', options: ['על הפנים', 'היה סביר', 'מצויין!'] },
+              { id: 'summary_memory', type: 'open', label: 'מה הדבר המרכזי, החוויה או הזכרון שאתה לוקח איתך מהמסע?' },
+              { id: 'summary_free', type: 'open', label: 'האם יש עוד משהו שחשוב לך לשתף את הצוות? (לא חובה)' }
+            ]
           }
         ]
       }
     }
   });
-
-  console.log("Journey created with ID:", journey.id);
+  console.log("Re-seeded journey with 4 parts and structured questions.");
 }
 
-seedJourney()
-  .catch(console.error)
-  .finally(() => process.exit(0));
+seedJourney().catch(console.error).finally(() => process.exit(0));

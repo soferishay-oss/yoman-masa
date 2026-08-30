@@ -120,23 +120,32 @@ export default function StationSubmissionPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '30px' }}>
         {(station.questions || []).map((q, idx) => (
           <div key={q.id || idx} style={{ background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px', color: '#1e293b' }}>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '15px', color: '#1e293b', fontSize: '16px' }}>
               {q.label}
             </label>
             
-            {q.type === 'textarea' ? (
+            {q.type === 'rating' && q.options ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {q.options.map((opt, oIdx) => (
+                  <label key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: answers[q.id] === opt ? 'rgba(59, 130, 246, 0.1)' : '#f8fafc', border: `1px solid ${answers[q.id] === opt ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <input 
+                      type="radio" 
+                      name={`q_${q.id}`} 
+                      value={opt}
+                      checked={answers[q.id] === opt}
+                      onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+                      style={{ accentColor: '#3b82f6', width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontWeight: answers[q.id] === opt ? 'bold' : 'normal', color: answers[q.id] === opt ? '#1e3a8a' : '#334155' }}>{opt}</span>
+                  </label>
+                ))}
+              </div>
+            ) : q.type === 'textarea' || q.type === 'open' ? (
               <textarea 
                 value={answers[q.id] || ''}
                 onChange={e => setAnswers({ ...answers, [q.id]: e.target.value })}
                 placeholder="כתוב כאן את תשובתך..."
                 style={{ width: '100%', minHeight: '100px', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical', fontFamily: 'inherit' }}
-              />
-            ) : q.type === 'text' ? (
-              <input 
-                type="text"
-                value={answers[q.id] || ''}
-                onChange={e => setAnswers({ ...answers, [q.id]: e.target.value })}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontFamily: 'inherit' }}
               />
             ) : (
               <input 
