@@ -101,6 +101,9 @@ export default function EventDetailsModal({ event, onClose }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {event.isJourney ? tasks.map(station => {
                 const isCompleted = station.responses && station.responses.length > 0;
+                const responseDate = isCompleted ? new Date(station.responses[0].createdAt) : null;
+                const isEditable = !isCompleted || (responseDate && responseDate.toDateString() === new Date().toDateString());
+                
                 return (
                   <div key={station.id} style={{ 
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
@@ -118,14 +121,14 @@ export default function EventDetailsModal({ event, onClose }) {
                         </div>
                       )}
                     </div>
-                    {isCompleted ? (
+                    {isCompleted && !isEditable ? (
                       <div style={{ color: '#10b981', fontSize: '13px', fontWeight: 'bold' }}>הושלם</div>
                     ) : (
                       <button 
                         onClick={() => window.location.href = `/journeys/${station.id}`}
-                        style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                        style={{ background: isCompleted ? '#f0fdf4' : '#3b82f6', color: isCompleted ? '#16a34a' : 'white', border: isCompleted ? '1px solid #bbf7d0' : 'none', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
                       >
-                        כנס למשימה
+                        {isCompleted ? 'ערוך תשובה' : 'כנס למשימה'}
                       </button>
                     )}
                   </div>

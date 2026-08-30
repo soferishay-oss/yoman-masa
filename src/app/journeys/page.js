@@ -57,11 +57,16 @@ export default function StudentJourneysPage() {
                 <div style={{ display: 'grid', gap: '10px' }}>
                   {j.stations.map((s, idx) => {
                     const hasAnswered = s.responses && s.responses.length > 0;
+                    const responseDate = hasAnswered ? new Date(s.responses[0].createdAt) : null;
+                    const isEditable = !hasAnswered || (responseDate && responseDate.toDateString() === new Date().toDateString());
+                    
                     return (
                       <div 
                         key={s.id}
-                        onClick={() => router.push(`/journeys/${s.id}`)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: hasAnswered ? '#f0fdf4' : '#f8fafc', padding: '15px', borderRadius: '12px', cursor: 'pointer', border: `1px solid ${hasAnswered ? '#bbf7d0' : '#e2e8f0'}` }}
+                        onClick={() => {
+                          if (isEditable) router.push(`/journeys/${s.id}`);
+                        }}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: hasAnswered ? '#f0fdf4' : '#f8fafc', padding: '15px', borderRadius: '12px', cursor: isEditable ? 'pointer' : 'default', border: `1px solid ${hasAnswered ? '#bbf7d0' : '#e2e8f0'}`, opacity: isEditable ? 1 : 0.7 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                           <div style={{ background: hasAnswered ? '#22c55e' : 'var(--primary-color)', color: 'white', width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
@@ -69,10 +74,14 @@ export default function StudentJourneysPage() {
                           </div>
                           <div>
                             <h4 style={{ margin: 0, color: '#334155' }}>{s.title}</h4>
-                            {hasAnswered && <span style={{ fontSize: '12px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}><CheckCircle2 size={12} /> הושלם בהצלחה</span>}
+                            {hasAnswered && (
+                              <span style={{ fontSize: '12px', color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
+                                <CheckCircle2 size={12} /> הושלם {isEditable ? '(ניתן לעריכה היום)' : 'בהצלחה'}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <ArrowRight color={hasAnswered ? '#22c55e' : '#cbd5e1'} size={20} />
+                        {isEditable && <ArrowRight color={hasAnswered ? '#22c55e' : '#cbd5e1'} size={20} />}
                       </div>
                     );
                   })}

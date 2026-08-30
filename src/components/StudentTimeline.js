@@ -1,11 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, MapPin, Flag } from 'lucide-react';
 import styles from '@/app/page.module.css';
 import EventDetailsModal from './EventDetailsModal';
+import { ThemeContext } from '@/components/ThemeProvider';
+import { HDate, Locale, gematriya } from '@hebcal/core';
 
 export default function StudentTimeline() {
+  const theme = useContext(ThemeContext);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -53,9 +56,21 @@ export default function StudentTimeline() {
         const isActive = today >= evStart && today <= evEnd;
         const isHighlighted = isPast || isActive;
         
-        let dateStr = eventDate.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
-        if (endDate && evStart.getTime() !== endDate.setHours(0,0,0,0)) {
-          dateStr += ' - ' + new Date(ev.endDate).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+        let dateStr = '';
+        if (theme?.defaultDateMode === 'hebrew') {
+          const hStart = new HDate(evStart);
+          const monthStrStart = Locale.gettext(hStart.getMonthName(), 'he').replace(/[\u0591-\u05C7]/g, '');
+          dateStr = `${gematriya(hStart.getDate())} ב${monthStrStart}`;
+          if (endDate && evStart.getTime() !== endDate.setHours(0,0,0,0)) {
+            const hEnd = new HDate(evEnd);
+            const monthStrEnd = Locale.gettext(hEnd.getMonthName(), 'he').replace(/[\u0591-\u05C7]/g, '');
+            dateStr += ` - ${gematriya(hEnd.getDate())} ב${monthStrEnd}`;
+          }
+        } else {
+          dateStr = eventDate.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+          if (endDate && evStart.getTime() !== endDate.setHours(0,0,0,0)) {
+            dateStr += ' - ' + new Date(ev.endDate).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+          }
         }
         
         return (

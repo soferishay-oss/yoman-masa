@@ -26,27 +26,18 @@ export default function StationSubmissionPage() {
 
   const fetchStation = async () => {
     try {
-      const res = await fetch('/api/student/journeys');
+      const res = await fetch(`/api/student/journeys/station/${params.stationId}`);
       if (res.ok) {
-        const journeys = await res.json();
-        // Find the station in the journeys
-        let foundStation = null;
-        for (const j of journeys) {
-          const s = j.stations.find(st => st.id === params.stationId);
-          if (s) {
-            foundStation = { ...s, journeyTitle: j.title };
-            break;
-          }
-        }
+        const foundStation = await res.json();
+        setStation({ ...foundStation, journeyTitle: foundStation.journey?.title });
         
-        if (foundStation) {
-          setStation(foundStation);
-          // Pre-fill answers if we already have a response...
-          // Wait, the API doesn't return the answers to the student right now, only the `createdAt` to show it's completed.
-          // Let's assume they can resubmit and it overrides. 
-        } else {
-          router.push('/journeys');
+        if (foundStation.responses && foundStation.responses.length > 0) {
+          const resp = foundStation.responses[0];
+          setAnswers(resp.answers || {});
+          setMediaUrls(resp.mediaUrls || []);
         }
+      } else {
+        router.push('/journeys');
       }
     } catch (e) {
       console.error(e);

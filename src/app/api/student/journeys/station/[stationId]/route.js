@@ -97,3 +97,33 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function GET(request, { params }) {
+  try {
+    const { stationId } = await params;
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    const auth = token ? await verifyToken(token) : null;
+    if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const station = await prisma.journeyStation.findUnique({
+      where: { id: stationId },
+      include: { 
+        journey: true,
+        responses: {
+          where: { userId: auth.userId },
+          take: 1
+        }
+      }
+    });
+
+    if (!station || station.journey.tenantId !== auth.tenantId) {
+      return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+    }
+
+    return NextResponse.json(station);
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
