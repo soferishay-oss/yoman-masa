@@ -12,6 +12,7 @@ export async function middleware(request) {
     pathname.startsWith('/api/tenant') ||
     pathname.startsWith('/api/tenants/public') ||
     pathname.startsWith('/login') ||
+    pathname.startsWith('/pwa-start') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/newlogo.jpeg') ||
