@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import styles from './archive.module.css';
 import { Archive, ChevronDown, ChevronUp, Users, Presentation } from 'lucide-react';
 import YearTransitionWizard from '@/components/admin/YearTransitionWizard';
-import { formatAppDateString } from '@/components/AppDate';
+import { useRouter } from 'next/navigation';
 
 export default function AcademicYearsArchive() {
+  const router = useRouter();
   const [years, setYears] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedYear, setExpandedYear] = useState(null);
@@ -57,6 +58,7 @@ export default function AcademicYearsArchive() {
           <YearTransitionWizard onComplete={() => {
             setShowWizard(false);
             fetchYears(); // Refresh list after transition
+            router.refresh(); // Invalidate layout cache to update the sidebar year
           }} />
         </div>
       )}
