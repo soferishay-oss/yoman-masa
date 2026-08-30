@@ -138,7 +138,7 @@ Message to check: "${content}"`;
               metadata: {
                 senderName: sender?.fullName || 'לא ידוע',
                 recipientName: recipient?.fullName || 'לא ידוע',
-                messageContent: content,
+                messageContent: '[התוכן נמחק מטעמי צנעת הפרט]',
                 reason: result.reason
               }
             }

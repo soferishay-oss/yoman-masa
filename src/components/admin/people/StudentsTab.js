@@ -81,14 +81,14 @@ export default function StudentsTab() {
     );
   };
 
-  const handleBulkDelete = async () => {
-    if (!await confirm(`האם אתה בטוח שברצונך למחוק ${selectedIds.length} תלמידים?`)) return;
+  const handleBulkDelete = async (isHard = false) => {
+    if (!await confirm(`האם אתה בטוח שברצונך למחוק ${isHard ? 'לצמיתות (לא ניתן לשחזור)' : 'מחיקה רכה (ניתן לשחזור)'} ${selectedIds.length} תלמידים?`)) return;
     setIsBulkLoading(true);
     try {
       const res = await fetch('/api/admin/users/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', userIds: selectedIds })
+        body: JSON.stringify({ action: isHard ? 'hard_delete' : 'delete', userIds: selectedIds })
       });
       if (res.ok) {
         show(`נמחקו ${selectedIds.length} תלמידים בהצלחה!`);
@@ -97,8 +97,8 @@ export default function StudentsTab() {
       } else {
         show('שגיאה במחיקה', 'error');
       }
-    } catch (err) {
-      show('שגיאה בתקשורת', 'error');
+    } catch (error) {
+      show('שגיאת רשת', 'error');
     } finally {
       setIsBulkLoading(false);
     }
@@ -204,7 +204,8 @@ export default function StudentsTab() {
           <div style={{ fontWeight: 'bold', color: '#0284c7' }}>{selectedIds.length} תלמידים נבחרו</div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button onClick={() => setShowBulkClassModal(true)} disabled={isBulkLoading} style={{ background: '#38bdf8', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>העבר כיתה</button>
-            <button onClick={handleBulkDelete} disabled={isBulkLoading} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>מחק נבחרים</button>
+            <button onClick={() => handleBulkDelete(false)} disabled={isBulkLoading} style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>מחיקה רכה</button>
+            <button onClick={() => handleBulkDelete(true)} disabled={isBulkLoading} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>מחיקה לצמיתות</button>
           </div>
         </div>
       )}

@@ -29,7 +29,17 @@ export async function POST(request) {
         },
         data: { status: 'deleted' }
       });
-      return NextResponse.json({ message: 'Users deleted successfully' });
+      return NextResponse.json({ message: 'Users deleted successfully (soft)' });
+    }
+
+    if (action === 'hard_delete') {
+      await prisma.user.deleteMany({
+        where: {
+          id: { in: userIds },
+          tenantId
+        }
+      });
+      return NextResponse.json({ message: 'Users deleted successfully (hard)' });
     }
 
     if (action === 'change_class') {

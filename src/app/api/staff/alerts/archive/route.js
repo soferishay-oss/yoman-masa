@@ -13,8 +13,29 @@ export async function GET(request) {
 
     if (!userId || !tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      include: { currentAcademicYear: true }
+    });
+
+    const currentYear = tenant?.currentAcademicYear;
+    
+    let dateFilter = {};
+    if (currentYear) {
+      dateFilter = {
+        createdAt: {
+          gte: currentYear.startDate,
+          lte: currentYear.endDate
+        }
+      };
+    }
+
     const alerts = await prisma.staffAlert.findMany({
-      where: { tenantId, isArchived: true },
+      where: { 
+        tenantId, 
+        isArchived: true,
+        ...dateFilter
+      },
       orderBy: { createdAt: 'desc' },
       take: 100
     });

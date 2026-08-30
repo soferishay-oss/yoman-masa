@@ -112,7 +112,7 @@ model ContentEntry {
   tenantId         String
   tenant           Tenant   @relation(fields: [tenantId], references: [id])
   ownerUserId      String
-  ownerUser        User     @relation(fields: [ownerUserId], references: [id])
+  ownerUser        User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   title            String?
   bodyText         String?
   type             String   // e.g. "journal", "note"
@@ -138,7 +138,7 @@ model Task {
   tenantId         String
   tenant           Tenant   @relation(fields: [tenantId], references: [id])
   creatorUserId    String
-  creatorUser      User     @relation(fields: [creatorUserId], references: [id])
+  creatorUser      User     @relation(fields: [creatorUserId], references: [id], onDelete: Cascade)
   
   title            String
   type             String   // e.g. "short_message", "long_message", "checklist"
@@ -199,7 +199,7 @@ model MoodCheck {
   tenantId         String
   tenant           Tenant   @relation(fields: [tenantId], references: [id])
   userId           String
-  user             User     @relation(fields: [userId], references: [id])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   frequency        String
   ratingType       String
   ratingValue      Int
@@ -213,7 +213,7 @@ model Event {
   tenantId         String
   tenant           Tenant      @relation(fields: [tenantId], references: [id])
   creatorId        String
-  creator          User        @relation(fields: [creatorId], references: [id])
+  creator          User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   title            String
   description      String?
   type             String?     // e.g., "שבת", "מסע", "יום חזון", "סיור סליחות", "אחר"
@@ -235,7 +235,7 @@ model EventRSVP {
   eventId          String
   event            Event    @relation(fields: [eventId], references: [id])
   userId           String
-  user             User     @relation(fields: [userId], references: [id])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   status           String   @default("pending") // pending, attending, declined, present
   attendedAt       DateTime?
   createdAt        DateTime @default(now())
@@ -245,9 +245,9 @@ model Letter {
   id               String   @id @default(uuid())
   tenantId         String
   authorId         String
-  author           User     @relation("AuthoredLetters", fields: [authorId], references: [id])
+  author           User     @relation("AuthoredLetters", fields: [authorId], references: [id], onDelete: Cascade)
   recipientId      String
-  recipient        User     @relation("ReceivedLetters", fields: [recipientId], references: [id])
+  recipient        User     @relation("ReceivedLetters", fields: [recipientId], references: [id], onDelete: Cascade)
   content          String
   mediaUrls        Json?
   aiTranscription  String?
