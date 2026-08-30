@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, Users, Settings, BarChart2, Shield, Archive, Map } from 'lucide-react';
+import { Home, Users, Settings, BarChart2, Shield, Archive, Map, Compass } from 'lucide-react';
 import styles from './layout.module.css';
 import prisma from '@/lib/prisma';
 import { cookies } from 'next/headers';
@@ -42,8 +42,8 @@ export default async function AdminLayout({ children }) {
             <Map size={20} />
             <span>מסלול ליווי חינוכי</span>
           </Link>
-          <Link href="/admin/journeys" className={styles.navLink}>
-            <Map size={20} />
+          <Link href="/admin/journeys" className={styles.navLink} title="מסעות מתגלגלים">
+            <Compass size={20} />
             <span>מסעות מתגלגלים</span>
           </Link>
           <Link href="/admin/people" className={styles.navLink}>
