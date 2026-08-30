@@ -13,6 +13,8 @@ export default function AdminJourneysPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newStartDate, setNewStartDate] = useState('');
+  const [newEndDate, setNewEndDate] = useState('');
 
   useEffect(() => {
     fetchJourneys();
@@ -37,7 +39,12 @@ export default function AdminJourneysPage() {
       const res = await fetch('/api/staff/journeys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle, description: newDesc })
+        body: JSON.stringify({ 
+          title: newTitle, 
+          description: newDesc,
+          startDate: newStartDate || null,
+          endDate: newEndDate || null
+        })
       });
       if (res.ok) {
         const created = await res.json();
@@ -141,6 +148,27 @@ export default function AdminJourneysPage() {
                 onChange={e => setNewDesc(e.target.value)}
                 style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', minHeight: '80px' }}
               />
+            </div>
+
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>תאריך התחלה (אופציונלי)</label>
+                <input 
+                  type="date" 
+                  value={newStartDate} 
+                  onChange={e => setNewStartDate(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>תאריך סיום (אופציונלי)</label>
+                <input 
+                  type="date" 
+                  value={newEndDate} 
+                  onChange={e => setNewEndDate(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>

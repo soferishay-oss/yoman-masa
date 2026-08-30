@@ -36,7 +36,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, description } = await request.json();
+    const { title, description, startDate, endDate } = await request.json();
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
@@ -45,7 +45,9 @@ export async function POST(request) {
       data: {
         tenantId: auth.tenantId,
         title,
-        description
+        description,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null
       }
     });
 

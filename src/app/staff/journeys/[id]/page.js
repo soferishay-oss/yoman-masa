@@ -78,7 +78,8 @@ export default function AdminJourneyEditorPage() {
         body: JSON.stringify({ 
           title: editingStation.title,
           description: editingStation.description,
-          questions: editingStation.questions
+          questions: editingStation.questions,
+          unlockAt: editingStation.unlockAt
         })
       });
       if (res.ok) {
@@ -198,7 +199,7 @@ export default function AdminJourneyEditorPage() {
                       onClick={() => toggleStationStatus(s)}
                       style={{ background: s.isOpen ? '#fef2f2' : '#ecfdf5', color: s.isOpen ? '#ef4444' : '#10b981', border: `1px solid ${s.isOpen ? '#fca5a5' : '#6ee7b7'}`, padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: 'bold' }}
                     >
-                      {s.isOpen ? <><Lock size={14} /> נעל תחנה</> : <><Unlock size={14} /> שחרר או תזמן</>}
+                      {s.isOpen ? <><Lock size={14} /> נעל תחנה</> : <><Unlock size={14} /> שחרר לתלמידים</>}
                     </button>
                     <button 
                       onClick={() => deleteStation(s.id)}
@@ -218,6 +219,7 @@ export default function AdminJourneyEditorPage() {
                 <div style={{ display: 'flex', gap: '15px', fontSize: '13px', color: '#475569', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
                   <div><strong>מספר שאלות:</strong> {s.questions ? (Array.isArray(s.questions) ? s.questions.length : 0) : 0}</div>
                   <div><strong>תשובות שהוגשו:</strong> {s._count?.responses || 0}</div>
+                  {s.unlockAt && !s.isOpen && <div><strong>מתוזמן ל:</strong> {new Date(s.unlockAt).toLocaleString('he-IL')}</div>}
                 </div>
               </div>
 
@@ -287,6 +289,17 @@ export default function AdminJourneyEditorPage() {
                 onChange={e => setEditingStation({...editingStation, title: e.target.value})}
                 style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
               />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>תזמון שחרור אוטומטי (אופציונלי)</label>
+              <input 
+                type="datetime-local" 
+                value={editingStation.unlockAt ? new Date(new Date(editingStation.unlockAt).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''} 
+                onChange={e => setEditingStation({...editingStation, unlockAt: e.target.value ? new Date(e.target.value).toISOString() : null})}
+                style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', fontFamily: 'inherit' }}
+              />
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '5px 0 0 0' }}>אם תגדיר תאריך ושעה, התחנה תיפתח אוטומטית בזמן הזה ולא תצטרך ללחוץ על 'שחרר'.</p>
             </div>
             
             <div style={{ marginBottom: '20px' }}>

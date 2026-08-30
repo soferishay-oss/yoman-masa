@@ -27,6 +27,7 @@ function HomeContent() {
   const [guidanceTrack, setGuidanceTrack] = useState('documentation_only');
   const [selectedMood, setSelectedMood] = useState(null);
   const [moodText, setMoodText] = useState('');
+  const [activeJourneyStation, setActiveJourneyStation] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -49,8 +50,28 @@ function HomeContent() {
         if (data.tenant?.guidanceTrack) setGuidanceTrack(data.tenant.guidanceTrack);
       }
     }
+    async function fetchJourneys() {
+      try {
+        const res = await fetch('/api/student/journeys');
+        if (res.ok) {
+          const data = await res.json();
+          let nextStation = null;
+          for (const journey of data) {
+            for (const station of journey.stations) {
+              if (station.isOpen && (!station.responses || station.responses.length === 0)) {
+                nextStation = station;
+                break;
+              }
+            }
+            if (nextStation) break;
+          }
+          setActiveJourneyStation(nextStation);
+        }
+      } catch (e) {}
+    }
     fetchTasks();
     fetchProfile();
+    fetchJourneys();
   }, []);
 
   useEffect(() => {
@@ -141,6 +162,29 @@ function HomeContent() {
         
         {/* Journal Composer */}
         <JournalComposer initialData={initialEditData} />
+
+        {/* Active Journey Banner */}
+        {activeJourneyStation && (
+          <div style={{
+            background: 'linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%)',
+            borderRadius: '16px', padding: '20px', color: 'white',
+            boxShadow: '0 4px 15px rgba(37, 99, 235, 0.3)', marginBottom: '30px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
+          }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Star size={20} fill="white" /> משו"ב מסע פתוח
+            </h3>
+            <p style={{ margin: '0 0 15px 0', fontSize: '14px', opacity: 0.9 }}>
+              התחנה <strong>{activeJourneyStation.title}</strong> נפתחה כעת למענה!
+            </p>
+            <button 
+              onClick={() => router.push(`/journeys/${activeJourneyStation.id}`)}
+              style={{ background: 'white', color: 'var(--primary-color)', border: 'none', padding: '10px 20px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+            >
+              הכנס למילוי המשו"ב
+            </button>
+          </div>
+        )}
 
         {/* Static Mood Survey */}
         <div style={{

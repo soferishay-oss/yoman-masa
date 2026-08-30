@@ -51,7 +51,7 @@ export default function HamburgerMenu({ isDutyStudent, academicYears = [], curre
     { href: '/calendar', icon: Calendar, label: 'לוח שנה' },
     ...(isDutyStudent ? [{ href: '/duty', icon: Shield, label: 'תורנויות' }] : []),
     { href: '/student/charts', icon: Activity, label: 'גרפים' },
-    { href: '/vault', icon: Star, label: 'הדברים הטובים שעשיתי' },
+    { href: '/vault', icon: Star, label: 'דברים שרציתי לשמור' },
   ];
 
   return (

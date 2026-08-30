@@ -1,4 +1,4 @@
-import prisma from '../src/lib/prisma.js';
+﻿import prisma from '../src/lib/prisma.js';
 
 async function seedJourney() {
   const tenant = await prisma.tenant.findFirst();
@@ -22,7 +22,7 @@ async function seedJourney() {
             isOpen: true,
             description: 'סיכום היום הראשון של המסע',
             questions: [
-              { id: 'mood', type: 'rating', label: 'איך אתה?', options: ['על הפנים', 'הכל טוב', 'מצוין!'] },
+              { id: 'mood', type: 'rating', label: 'איך אתה?', options: \[\'על הפנים\', \'רע\', \'סביר\', \'טוב\', \'מצוין\'\] },
               { id: 'strengths', type: 'open', label: 'מה הכוחות שאתה מביא איתך? מה החוזקות שלך?' },
               { id: 'weaknesses', type: 'open', label: 'מה החולשות שלך? איפה תצטרך חיזוק?' },
               { id: 'takeaway', type: 'open', label: 'מה לקחת מהיום?' }
