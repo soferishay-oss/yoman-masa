@@ -22,11 +22,12 @@ export async function POST(request) {
     }
 
     if (action === 'delete') {
-      await prisma.user.deleteMany({
+      await prisma.user.updateMany({
         where: {
           id: { in: userIds },
           tenantId
-        }
+        },
+        data: { status: 'deleted' }
       });
       return NextResponse.json({ message: 'Users deleted successfully' });
     }
