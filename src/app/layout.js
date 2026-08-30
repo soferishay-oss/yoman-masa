@@ -12,6 +12,10 @@ import PwaServiceWorker from '@/components/PwaServiceWorker';
 export const metadata = {
   title: 'יומן מסע',
   description: 'המסע האישי שלך',
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -86,7 +90,7 @@ export default async function RootLayout({ children }) {
             {children}
           </main>
         
-        {userId && (
+        {userId && currentPath !== '/force-password-change' && currentPath !== '/consent' && (
           isStudent ? (
             <>
               <HamburgerMenu 

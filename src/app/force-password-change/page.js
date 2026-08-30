@@ -37,8 +37,7 @@ export default function ForcePasswordChangePage() {
 
       if (res.ok) {
         toast.show('הסיסמה עודכנה בהצלחה!', 'success');
-        router.push('/'); // Redirect home
-        router.refresh();
+        window.location.href = '/';
       } else {
         const error = await res.json();
         toast.show(error.error || 'אירעה שגיאה בעדכון הסיסמה.', 'error');
