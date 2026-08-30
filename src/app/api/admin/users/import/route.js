@@ -36,47 +36,58 @@ export async function POST(request) {
 
     for (const rawUser of users) {
       try {
-        // Find expected keys (heb or eng)
-      const rawNationalId = rawUser['תז'] || rawUser['ת.ז.'] || rawUser['nationalId'];
-      const rawFirstName = rawUser['שם פרטי'] || rawUser['firstName'];
-      const rawLastName = rawUser['שם משפחה'] || rawUser['lastName'];
-      const rawFullName = rawUser['שם מלא'] || rawUser['שם מורה'] || rawUser['שם'] || rawUser['fullName'] || rawUser['name'];
-      const rawPhone = rawUser['טלפון נייד'] || rawUser['טלפון'] || rawUser['פלאפון'] || rawUser['phoneNumber'] || rawUser['phone'];
-      const rawEmail = rawUser['מייל'] || rawUser['אימייל'] || rawUser['דוא"ל'] || rawUser['email'];
-      const rawClass = rawUser['כיתה'] || rawUser['class'] || rawUser['שכבה'];
-      const rawParallel = rawUser['מקבילה'];
-
-      // Build full name if separate parts provided
-      let finalFirstName = rawFirstName || null;
-      let finalLastName = rawLastName || null;
-      let finalFullName = rawFullName || null;
-
-      if (rawFirstName && rawLastName) {
-        finalFullName = nameFormat === 'first_last' 
-          ? `${rawFirstName} ${rawLastName}`
-          : `${rawLastName} ${rawFirstName}`;
-      } else if (rawFullName) {
-        const parts = rawFullName.split(' ');
-        if (parts.length > 1) {
-          if (nameFormat === 'first_last') {
-            finalFirstName = parts[0];
-            finalLastName = parts.slice(1).join(' ');
-          } else {
-            finalLastName = parts[0];
-            finalFirstName = parts.slice(1).join(' ');
-          }
-        } else {
-          finalFirstName = rawFullName;
+        // Normalize keys (trim whitespace) to avoid matching issues
+        const user = {};
+        for (const [key, value] of Object.entries(rawUser)) {
+          user[key.trim()] = value;
         }
-      }
 
-      if (!finalFullName && (rawFirstName || rawLastName)) {
-        finalFullName = [rawFirstName, rawLastName].filter(Boolean).join(' ');
-      }
+        // Find expected keys (heb or eng)
+        const rawNationalId = user['תז'] || user['ת.ז.'] || user['nationalId'];
+        const rawFirstName = user['שם פרטי'] || user['firstName'];
+        const rawLastName = user['שם משפחה'] || user['lastName'];
+        const rawFullName = user['שם מלא'] || user['שם מורה'] || user['שם'] || user['fullName'] || user['name'];
+        const rawPhone = user['טלפון נייד'] || user['טלפון'] || user['פלאפון'] || user['phoneNumber'] || user['phone'];
+        const rawEmail = user['מייל'] || user['אימייל'] || user['דוא"ל'] || user['email'];
+        const rawClass = user['כיתה'] || user['class'] || user['שכבה'];
+        const rawParallel = user['מקבילה'];
 
-      if (!finalFullName || (!rawPhone && !rawNationalId)) {
-        continue; // Skip invalid rows
-      }
+        // Build full name if separate parts provided
+        let finalFirstName = rawFirstName || null;
+        let finalLastName = rawLastName || null;
+        let finalFullName = rawFullName || null;
+
+        if (rawFirstName && rawLastName) {
+          finalFullName = nameFormat === 'first_last' 
+            ? `${rawFirstName} ${rawLastName}`
+            : `${rawLastName} ${rawFirstName}`;
+        } else if (rawFullName) {
+          const parts = rawFullName.split(' ');
+          if (parts.length > 1) {
+            if (nameFormat === 'first_last') {
+              finalFirstName = parts[0];
+              finalLastName = parts.slice(1).join(' ');
+            } else {
+              finalLastName = parts[0];
+              finalFirstName = parts.slice(1).join(' ');
+            }
+          } else {
+            finalFirstName = rawFullName;
+          }
+        }
+
+        if (!finalFullName && (rawFirstName || rawLastName)) {
+          finalFullName = [rawFirstName, rawLastName].filter(Boolean).join(' ');
+        }
+
+        if (!finalFullName) {
+          errors.push(`שורה חסרה שם (פרטי/משפחה/מלא): ${JSON.stringify(user)}`);
+          continue;
+        }
+        if (!rawPhone && !rawNationalId) {
+          errors.push(`חובה להזין טלפון או תעודת זהות עבור: ${finalFullName}`);
+          continue; 
+        }
 
       let cleanPhone = null;
       if (rawPhone) {
