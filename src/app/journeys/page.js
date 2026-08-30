@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Map, ArrowRight, CheckCircle2 } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
+
 
 export default function StudentJourneysPage() {
   const router = useRouter();
@@ -83,7 +83,6 @@ export default function StudentJourneysPage() {
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 }
