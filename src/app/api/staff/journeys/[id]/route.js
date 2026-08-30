@@ -43,11 +43,16 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, description } = await request.json();
+    const { title, description, startDate, endDate } = await request.json();
 
     const journey = await prisma.journey.updateMany({
       where: { id, tenantId: auth.tenantId },
-      data: { title, description }
+      data: { 
+        title, 
+        description,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null
+      }
     });
 
     if (journey.count === 0) return NextResponse.json({ error: 'Not Found' }, { status: 404 });

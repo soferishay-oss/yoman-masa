@@ -22,6 +22,13 @@ export default function AdminJourneyEditorPage() {
   // Editing station state
   const [editingStation, setEditingStation] = useState(null);
 
+  // Editing journey state
+  const [showEditJourneyModal, setShowEditJourneyModal] = useState(false);
+  const [editJourneyTitle, setEditJourneyTitle] = useState('');
+  const [editJourneyDesc, setEditJourneyDesc] = useState('');
+  const [editJourneyStart, setEditJourneyStart] = useState('');
+  const [editJourneyEnd, setEditJourneyEnd] = useState('');
+
   useEffect(() => {
     fetchJourney();
   }, [params.id]);
@@ -92,6 +99,29 @@ export default function AdminJourneyEditorPage() {
     }
   };
 
+  const handleSaveJourney = async () => {
+    if (!editJourneyTitle.trim()) return;
+    try {
+      const res = await fetch(`/api/staff/journeys/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: editJourneyTitle,
+          description: editJourneyDesc,
+          startDate: editJourneyStart || null,
+          endDate: editJourneyEnd || null
+        })
+      });
+      if (res.ok) {
+        toast.show('המסע עודכן בהצלחה');
+        setShowEditJourneyModal(false);
+        fetchJourney();
+      }
+    } catch (e) {
+      toast.show('שגיאת רשת', 'error');
+    }
+  };
+
   const toggleStationStatus = async (station) => {
     try {
       const res = await fetch(`/api/staff/journeys/stations/${station.id}`, {
@@ -149,8 +179,26 @@ export default function AdminJourneyEditorPage() {
           <div>
             <h1 style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Map color="var(--primary-color)" /> {journey.title}
+              <button 
+                onClick={() => {
+                  setEditJourneyTitle(journey.title);
+                  setEditJourneyDesc(journey.description || '');
+                  setEditJourneyStart(journey.startDate ? new Date(new Date(journey.startDate).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) : '');
+                  setEditJourneyEnd(journey.endDate ? new Date(new Date(journey.endDate).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) : '');
+                  setShowEditJourneyModal(true);
+                }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '5px' }}
+                title="ערוך פרטי מסע"
+              >
+                <Edit2 size={20} />
+              </button>
             </h1>
             <p style={{ margin: 0, color: '#475569' }}>{journey.description}</p>
+            {(journey.startDate || journey.endDate) && (
+              <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '13px' }}>
+                תאריכים: {journey.startDate ? new Date(journey.startDate).toLocaleDateString('he-IL') : 'לא צוין'} - {journey.endDate ? new Date(journey.endDate).toLocaleDateString('he-IL') : 'לא צוין'}
+              </p>
+            )}
           </div>
           
           <button 
@@ -379,6 +427,69 @@ export default function AdminJourneyEditorPage() {
                 style={{ padding: '12px 20px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 <Save size={18} /> שמור שינויים
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showEditJourneyModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: 'white', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px' }}>
+            <h2 style={{ marginTop: 0 }}>עריכת פרטי המסע</h2>
+            
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>שם המסע</label>
+              <input 
+                type="text" 
+                value={editJourneyTitle} 
+                onChange={e => setEditJourneyTitle(e.target.value)}
+                style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>תיאור (אופציונלי)</label>
+              <textarea 
+                value={editJourneyDesc} 
+                onChange={e => setEditJourneyDesc(e.target.value)}
+                style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', minHeight: '80px' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>תאריך התחלה (אופציונלי)</label>
+                <input 
+                  type="date" 
+                  value={editJourneyStart} 
+                  onChange={e => setEditJourneyStart(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>תאריך סיום (אופציונלי)</label>
+                <input 
+                  type="date" 
+                  value={editJourneyEnd} 
+                  onChange={e => setEditJourneyEnd(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                onClick={() => setShowEditJourneyModal(false)}
+                style={{ padding: '10px 15px', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                ביטול
+              </button>
+              <button 
+                onClick={handleSaveJourney}
+                disabled={!editJourneyTitle.trim()}
+                style={{ padding: '10px 15px', background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', opacity: !editJourneyTitle.trim() ? 0.5 : 1 }}
+              >
+                שמור שינויים
               </button>
             </div>
           </div>

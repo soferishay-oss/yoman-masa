@@ -27,6 +27,7 @@ export async function GET(request) {
       title: j.title,
       subtitle: j.description || 'מסע',
       scheduledDate: j.startDate,
+      endDate: j.endDate, // Add this
       type: 'journey',
       color: '#3b82f6', // Blue color for journeys
       isJourney: true
