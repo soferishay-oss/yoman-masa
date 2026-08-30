@@ -41,6 +41,8 @@ export default async function RootLayout({ children }) {
   const isStudent = userRole === 'student';
   const isDutyStudent = headersList.get('x-is-duty-student') === 'true';
 
+  const currentPath = headersList.get('x-pathname') || '';
+  
   // If user is authenticated, check their status in the database
   let user = null;
   if (userId) {
@@ -62,7 +64,6 @@ export default async function RootLayout({ children }) {
       redirect('/login?error=suspended');
     }
     
-    const currentPath = headersList.get('x-pathname') || '';
     if (user.forcePasswordChange && currentPath !== '/force-password-change' && !currentPath.startsWith('/api/')) {
       redirect('/force-password-change');
     }
