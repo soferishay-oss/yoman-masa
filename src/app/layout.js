@@ -12,6 +12,7 @@ import PwaServiceWorker from '@/components/PwaServiceWorker';
 export const metadata = {
   title: 'יומן מסע',
   description: 'המסע האישי שלך',
+  manifest: '/manifest.json',
   icons: {
     icon: '/icon-192.png',
     apple: '/icon-192.png',
