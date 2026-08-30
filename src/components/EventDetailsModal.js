@@ -11,19 +11,30 @@ export default function EventDetailsModal({ event, onClose }) {
 
   useEffect(() => {
     if (!event) return;
-    const fetchTasks = async () => {
+    const fetchTasksOrStations = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch(`/api/student/events/${event.id}/tasks`);
-        if (res.ok) {
-          setTasks(await res.json());
+        if (event.isJourney) {
+          const journeyId = event.id.replace('journey_', '');
+          const res = await fetch('/api/student/journeys');
+          if (res.ok) {
+            const allJourneys = await res.json();
+            const journey = allJourneys.find(j => j.id === journeyId);
+            setTasks(journey?.stations || []);
+          }
+        } else {
+          const res = await fetch(`/api/student/events/${event.id}/tasks`);
+          if (res.ok) {
+            setTasks(await res.json());
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch event tasks:', err);
+        console.error('Failed to fetch event details:', err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchTasks();
+    fetchTasksOrStations();
   }, [event]);
 
   if (!event) return null;
@@ -81,14 +92,45 @@ export default function EventDetailsModal({ event, onClose }) {
           )}
 
           <h3 style={{ fontSize: '18px', color: '#1e293b', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px' }}>
-            משימות הקשורות לאירוע
+            {event.isJourney ? 'תחנות המשו"ב הפתוחות' : 'משימות הקשורות לאירוע'}
           </h3>
 
           {isLoading ? (
-            <p style={{ textAlign: 'center', color: '#64748b' }}>טוען משימות...</p>
+            <p style={{ textAlign: 'center', color: '#64748b' }}>טוען...</p>
           ) : tasks.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {tasks.map(assignment => {
+              {event.isJourney ? tasks.map(station => {
+                const isCompleted = station.responses && station.responses.length > 0;
+                return (
+                  <div key={station.id} style={{ 
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                    padding: '15px', background: isCompleted ? '#ecfdf5' : 'white', 
+                    border: `1px solid ${isCompleted ? '#a7f3d0' : '#e2e8f0'}`, 
+                    borderRadius: '12px' 
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: isCompleted ? '#065f46' : '#1e293b' }}>
+                        {station.title}
+                      </div>
+                      {station.description && (
+                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '3px' }}>
+                          {station.description}
+                        </div>
+                      )}
+                    </div>
+                    {isCompleted ? (
+                      <div style={{ color: '#10b981', fontSize: '13px', fontWeight: 'bold' }}>הושלם</div>
+                    ) : (
+                      <button 
+                        onClick={() => window.location.href = `/journeys/${station.id}`}
+                        style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                      >
+                        כנס למשימה
+                      </button>
+                    )}
+                  </div>
+                );
+              }) : tasks.map(assignment => {
                 const relativeDays = assignment.task.relativeDaysToEvent;
                 let timingText = '';
                 if (relativeDays !== null && relativeDays !== undefined) {
@@ -107,27 +149,28 @@ export default function EventDetailsModal({ event, onClose }) {
                     <TaskItem 
                       assignment={assignment} 
                       onComplete={async (assignmentId, checklistState) => {
-                    const res = await fetch('/api/student/tasks', {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
-                    });
-                    if(res.ok) {
-                      if (toast?.show) toast.show('כל הכבוד! המשימה הושלמה.', 'success');
-                      setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status: 'completed', checklistState } : t));
-                    }
-                  }}
-                  onProgress={async (assignmentId, checklistState, status) => {
-                    await fetch('/api/student/tasks', {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ assignmentId, status, checklistState })
-                    });
-                    setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
-                  }}
-                />
-              </div>
-              )})}
+                        const res = await fetch('/api/student/tasks', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ assignmentId, status: 'completed', checklistState })
+                        });
+                        if(res.ok) {
+                          if (toast?.show) toast.show('כל הכבוד! המשימה הושלמה.', 'success');
+                          setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status: 'completed', checklistState } : t));
+                        }
+                      }}
+                      onProgress={async (assignmentId, checklistState, status) => {
+                        await fetch('/api/student/tasks', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ assignmentId, status, checklistState })
+                        });
+                        setTasks(tasks.map(t => t.id === assignmentId ? { ...t, status, checklistState } : t));
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', textAlign: 'center', color: '#64748b' }}>

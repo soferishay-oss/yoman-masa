@@ -39,36 +39,51 @@ export default function StudentTimeline() {
     <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', padding: '10px 0', scrollbarWidth: 'none' }}>
       {sortedEvents.map(ev => {
         const eventDate = new Date(ev.scheduledDate);
-        const isPast = eventDate < now && eventDate.toDateString() !== now.toDateString();
+        const endDate = ev.endDate ? new Date(ev.endDate) : null;
         
-        const dateStr = eventDate.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+        // Normalize 'now' to midnight for accurate day comparisons
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const evStart = new Date(eventDate);
+        evStart.setHours(0, 0, 0, 0);
+        const evEnd = endDate ? new Date(endDate) : new Date(eventDate);
+        evEnd.setHours(23, 59, 59, 999);
+
+        const isPast = evEnd < today;
+        const isActive = today >= evStart && today <= evEnd;
+        const isHighlighted = isPast || isActive;
+        
+        let dateStr = eventDate.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+        if (endDate && evStart.getTime() !== endDate.setHours(0,0,0,0)) {
+          dateStr += ' - ' + new Date(ev.endDate).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+        }
         
         return (
           <div 
             key={ev.id}
             onClick={() => {
-              if (isPast || eventDate.toDateString() === now.toDateString()) {
+              if (isHighlighted) {
                 setSelectedEvent(ev);
               }
             }}
             style={{ 
               minWidth: '140px', 
-              background: isPast ? (ev.color || 'var(--primary-color)') : '#f1f5f9',
-              color: isPast ? 'white' : '#64748b',
+              background: isHighlighted ? (ev.color || 'var(--primary-color)') : '#f1f5f9',
+              color: isHighlighted ? 'white' : '#64748b',
               padding: '15px', 
               borderRadius: '12px', 
-              cursor: isPast || eventDate.toDateString() === now.toDateString() ? 'pointer' : 'default',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              cursor: isHighlighted ? 'pointer' : 'default',
+              boxShadow: isActive ? '0 0 10px rgba(59, 130, 246, 0.5)' : '0 2px 4px rgba(0,0,0,0.05)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
-              opacity: isPast ? 1 : 0.7,
-              border: `2px solid ${isPast ? 'transparent' : '#cbd5e1'}`
+              opacity: isHighlighted ? 1 : 0.7,
+              border: isActive ? '2px solid white' : `2px solid ${isPast ? 'transparent' : '#cbd5e1'}`
             }}
           >
-            <div style={{ background: isPast ? 'rgba(255,255,255,0.2)' : 'white', borderRadius: '50%', padding: '10px', marginBottom: '10px' }}>
-              <Flag size={20} color={isPast ? 'white' : '#94a3b8'} />
+            <div style={{ background: isHighlighted ? 'rgba(255,255,255,0.2)' : 'white', borderRadius: '50%', padding: '10px', marginBottom: '10px' }}>
+              <Flag size={20} color={isHighlighted ? 'white' : '#94a3b8'} />
             </div>
             <h4 style={{ margin: '0 0 5px 0', fontSize: '14px' }}>{ev.title}</h4>
             <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>{dateStr}</p>
