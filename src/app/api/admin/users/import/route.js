@@ -43,9 +43,9 @@ export async function POST(request) {
         }
 
         // Find expected keys (heb or eng)
-        const rawNationalId = user['תז'] || user['ת.ז.'] || user['nationalId'];
-        const rawFirstName = user['שם פרטי'] || user['firstName'];
-        const rawLastName = user['שם משפחה'] || user['lastName'];
+        const rawNationalId = user['תז'] || user['ת.ז.'] || user['ת"ז'] || user['nationalId'];
+        const rawFirstName = user['שם פרטי'] || user['פרטי'] || user['firstName'];
+        const rawLastName = user['שם משפחה'] || user['משפחה'] || user['lastName'];
         const rawFullName = user['שם מלא'] || user['שם מורה'] || user['שם'] || user['fullName'] || user['name'];
         const rawPhone = user['טלפון נייד'] || user['טלפון'] || user['פלאפון'] || user['phoneNumber'] || user['phone'];
         const rawEmail = user['מייל'] || user['אימייל'] || user['דוא"ל'] || user['email'];
