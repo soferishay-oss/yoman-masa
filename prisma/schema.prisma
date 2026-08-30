@@ -370,6 +370,7 @@ model JourneyStation {
   description String?
   order       Int      @default(0)
   isOpen      Boolean  @default(false)
+  unlockAt    DateTime?
   questions   Json?    // Optional JSON structure for specific questions
   responses   JourneyResponse[]
   createdAt   DateTime @default(now())

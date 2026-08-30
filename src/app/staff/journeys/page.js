@@ -20,7 +20,7 @@ export default function AdminJourneysPage() {
 
   const fetchJourneys = async () => {
     try {
-      const res = await fetch('/api/admin/journeys');
+      const res = await fetch('/api/staff/journeys');
       if (res.ok) {
         setJourneys(await res.json());
       }
@@ -34,7 +34,7 @@ export default function AdminJourneysPage() {
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
     try {
-      const res = await fetch('/api/admin/journeys', {
+      const res = await fetch('/api/staff/journeys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newTitle, description: newDesc })
@@ -45,7 +45,7 @@ export default function AdminJourneysPage() {
         setShowCreateModal(false);
         setNewTitle('');
         setNewDesc('');
-        router.push(`/admin/journeys/${created.id}`);
+        router.push(`/staff/journeys/${created.id}`);
       } else {
         toast.show('שגיאה ביצירת מסע', 'error');
       }
@@ -58,7 +58,7 @@ export default function AdminJourneysPage() {
     e.stopPropagation();
     if (!window.confirm('האם אתה בטוח? כל התחנות והתשובות יימחקו!')) return;
     try {
-      const res = await fetch(`/api/admin/journeys/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/staff/journeys/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setJourneys(journeys.filter(j => j.id !== id));
         toast.show('נמחק בהצלחה');
@@ -92,7 +92,7 @@ export default function AdminJourneysPage() {
           {journeys.map(j => (
             <div 
               key={j.id} 
-              onClick={() => router.push(`/admin/journeys/${j.id}`)}
+              onClick={() => router.push(`/staff/journeys/${j.id}`)}
               style={{ background: 'white', border: '1px solid #e2e8f0', padding: '20px', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
             >
               <div>

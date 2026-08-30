@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle, Mail, Archive, Contact } from 'lucide-react';
+import { Users, Activity, MessageCircle, User, CheckSquare, BarChart, Bell, AlertTriangle, Mail, Archive, Contact, Compass } from 'lucide-react';
 import AppDate from '@/components/AppDate';
 import styles from './staff.module.css';
 import TaskBuilder from '@/components/TaskBuilder';
@@ -346,6 +346,12 @@ export default function StaffDashboard() {
             </button>
           </>
         )}
+        <button 
+          onClick={() => window.location.href = '/staff/journeys'} 
+          style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+        >
+          <Compass size={18} /> מסעות מתגלגלים
+        </button>
         <button 
           onClick={() => setActiveTab('events')} 
           style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'events' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'events' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}

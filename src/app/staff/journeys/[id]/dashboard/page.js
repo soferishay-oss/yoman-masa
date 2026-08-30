@@ -21,15 +21,15 @@ export default function AdminJourneyDashboardPage() {
   const fetchData = async () => {
     try {
       const [jRes, rRes] = await Promise.all([
-        fetch(`/api/admin/journeys/${params.id}`),
-        fetch(`/api/admin/journeys/${params.id}/responses`)
+        fetch(`/api/staff/journeys/${params.id}`),
+        fetch(`/api/staff/journeys/${params.id}/responses`)
       ]);
       
       if (jRes.ok && rRes.ok) {
         setJourney(await jRes.json());
         setResponses(await rRes.json());
       } else {
-        router.push('/admin/journeys');
+        router.push('/staff/journeys');
       }
     } catch (e) {
       console.error(e);
@@ -50,7 +50,7 @@ export default function AdminJourneyDashboardPage() {
   return (
     <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', paddingBottom: '100px' }}>
       <header style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', cursor: 'pointer', marginBottom: '15px' }} onClick={() => router.push(`/admin/journeys/${journey.id}`)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', cursor: 'pointer', marginBottom: '15px' }} onClick={() => router.push(`/staff/journeys/${journey.id}`)}>
           <ArrowRight size={16} /> חזרה לעריכת מסע
         </div>
         

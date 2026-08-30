@@ -25,13 +25,13 @@ export default function AdminJourneyEditorPage() {
 
   const fetchJourney = async () => {
     try {
-      const res = await fetch(`/api/admin/journeys/${params.id}`);
+      const res = await fetch(`/api/staff/journeys/${params.id}`);
       if (res.ok) {
         const data = await res.json();
         setJourney(data);
         setStations(data.stations || []);
       } else {
-        router.push('/admin/journeys');
+        router.push('/staff/journeys');
       }
     } catch (e) {
       console.error(e);
@@ -43,7 +43,7 @@ export default function AdminJourneyEditorPage() {
   const handleCreateStation = async () => {
     if (!newStationTitle.trim()) return;
     try {
-      const res = await fetch(`/api/admin/journeys/${params.id}/stations`, {
+      const res = await fetch(`/api/staff/journeys/${params.id}/stations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -68,7 +68,7 @@ export default function AdminJourneyEditorPage() {
 
   const toggleStationStatus = async (station) => {
     try {
-      const res = await fetch(`/api/admin/journeys/stations/${station.id}`, {
+      const res = await fetch(`/api/staff/journeys/stations/${station.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isOpen: !station.isOpen })
@@ -83,7 +83,7 @@ export default function AdminJourneyEditorPage() {
   const deleteStation = async (id) => {
     if (!window.confirm('האם אתה בטוח? כל תשובות התלמידים לתחנה זו יימחקו!')) return;
     try {
-      const res = await fetch(`/api/admin/journeys/stations/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/staff/journeys/stations/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setStations(stations.filter(s => s.id !== id));
         toast.show('התחנה נמחקה');
@@ -97,7 +97,7 @@ export default function AdminJourneyEditorPage() {
   return (
     <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', paddingBottom: '100px' }}>
       <header style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', cursor: 'pointer', marginBottom: '15px' }} onClick={() => router.push('/admin/journeys')}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', cursor: 'pointer', marginBottom: '15px' }} onClick={() => router.push('/staff/journeys')}>
           <ArrowRight size={16} /> חזרה לכל המסעות
         </div>
         
@@ -110,7 +110,7 @@ export default function AdminJourneyEditorPage() {
           </div>
           
           <button 
-            onClick={() => router.push(`/admin/journeys/${journey.id}/dashboard`)}
+            onClick={() => router.push(`/staff/journeys/${journey.id}/dashboard`)}
             style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}
           >
             <LayoutDashboard size={18} /> דשבורד תשובות
