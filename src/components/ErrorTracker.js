@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function ErrorTracker() {
+export default function ErrorTracker({ isAdmin }) {
   const [logs, setLogs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -61,7 +61,7 @@ export default function ErrorTracker() {
     navigator.clipboard.writeText(text).then(() => alert('הלוגים הועתקו! הדבק אותם לרובוט.'));
   };
 
-  if (logs.length === 0) return null;
+  if (logs.length === 0 || !isAdmin) return null;
 
   return (
     <>

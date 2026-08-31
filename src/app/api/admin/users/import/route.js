@@ -28,7 +28,7 @@ export async function POST(request) {
     }
 
     let importedCount = 0;
-    const defaultPasswordHash = await bcrypt.hash('1234', 10);
+    const defaultPasswordHash = await bcrypt.hash('123456', 10);
 
     // Cache classes by name to avoid duplicate DB queries/creations
     const classCache = new Map();

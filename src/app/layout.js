@@ -88,7 +88,7 @@ export default async function RootLayout({ children }) {
 
           <main className={styles.mainContent}>
             <PwaServiceWorker />
-            <ErrorTracker />
+            <ErrorTracker isAdmin={userRole === 'admin' || userRole === 'staff' || userRole === 'owner'} />
             {children}
           </main>
         
