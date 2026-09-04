@@ -83,6 +83,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Account is deactivated' }, { status: 403 });
     }
 
+    // Update lastLoginAt and increment loginCount
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        lastLoginAt: new Date(),
+        loginCount: { increment: 1 }
+      }
+    });
+
     // Generate real JWT
     const isDutyStudent = user.groupMemberships?.some(m => m.isDutyStudent) || false;
     

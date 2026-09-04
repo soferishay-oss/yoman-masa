@@ -69,6 +69,7 @@ model User {
   forcePasswordChange Boolean @default(true)
   createdAt        DateTime @default(now())
   lastLoginAt      DateTime?
+  loginCount       Int      @default(0)
 
   contentEntries   ContentEntry[]
   moodChecks       MoodCheck[]

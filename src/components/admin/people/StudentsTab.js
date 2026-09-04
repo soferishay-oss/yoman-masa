@@ -228,6 +228,7 @@ export default function StudentsTab() {
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>
               <th style={{ padding: '15px', width: '40px' }}><input type="checkbox" checked={selectedIds.length === students.length && students.length > 0} onChange={handleSelectAll} /></th>
               <th style={{ padding: '15px' }}>שם מלא</th>
+              <th style={{ padding: '15px' }}>כניסות</th>
               <th style={{ padding: '15px' }}>כיתת אם</th>
               <th style={{ padding: '15px' }}>קבוצות ותורנויות</th>
               <th style={{ padding: '15px' }}>התקשרות</th>
@@ -246,6 +247,9 @@ export default function StudentsTab() {
                       <Contact size={20} />
                     </Link>
                   </div>
+                </td>
+                <td style={{ padding: '15px', color: '#64748b', fontWeight: 'bold' }}>
+                  {student.loginCount || 0}
                 </td>
                 <td style={{ padding: '15px' }}>
                   {student.class ? (

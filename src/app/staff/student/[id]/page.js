@@ -77,6 +77,9 @@ export default async function StudentProfilePage({ params }) {
         <div>
           <h1 style={{ margin: '0 0 5px 0', color: '#1e293b' }}>{student.fullName}</h1>
           <p style={{ margin: 0, color: '#64748b' }}>כיתה/קבוצה: {student.class?.name || 'לא משויך'}</p>
+          <p style={{ margin: '5px 0 0 0', color: '#64748b', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <strong>כניסות למערכת:</strong> {student.loginCount || 0}
+          </p>
         </div>
       </div>
 
