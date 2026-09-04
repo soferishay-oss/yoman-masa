@@ -115,9 +115,9 @@ export default function StationSubmissionPage() {
               {q.label}
             </label>
             
-            {q.type === 'rating' && q.options ? (
+            {q.type === 'rating' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((opt, oIdx) => (
+                {(q.options || ['1 (נמוך / רע)', '2', '3', '4', '5 (גבוה / מעולה)']).map((opt, oIdx) => (
                   <label key={oIdx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: answers[q.id] === opt ? 'rgba(59, 130, 246, 0.1)' : '#f8fafc', border: `1px solid ${answers[q.id] === opt ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
                     <input 
                       type="radio" 

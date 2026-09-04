@@ -149,7 +149,16 @@ export default function AdminJourneyEditorPage() {
 
   const updateEditingQuestion = (index, field, value) => {
     const updatedQs = [...(editingStation.questions || [])];
-    updatedQs[index] = { ...updatedQs[index], [field]: value };
+    const updatedQ = { ...updatedQs[index], [field]: value };
+    
+    // Automatically inject scale options when changing to rating
+    if (field === 'type' && value === 'rating') {
+      updatedQ.options = ['1 (נמוך / רע)', '2', '3', '4', '5 (גבוה / מעולה)'];
+    } else if (field === 'type' && value !== 'rating') {
+      delete updatedQ.options;
+    }
+    
+    updatedQs[index] = updatedQ;
     setEditingStation({ ...editingStation, questions: updatedQs });
   };
 
