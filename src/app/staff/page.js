@@ -353,6 +353,12 @@ export default function StaffDashboard() {
           <Compass size={18} /> משו"ב מסעות
         </button>
         <button 
+          onClick={() => window.location.href = '/letters'} 
+          style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: '#e2e8f0', color: '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+        >
+          <Mail size={18} /> מכתבים
+        </button>
+        <button 
           onClick={() => setActiveTab('events')} 
           style={{ flex: 1, minWidth: '120px', padding: '12px', borderRadius: '8px', border: 'none', background: activeTab === 'events' ? 'var(--primary-color)' : '#e2e8f0', color: activeTab === 'events' ? 'white' : '#475569', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
         >
