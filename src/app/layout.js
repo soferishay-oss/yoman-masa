@@ -8,6 +8,7 @@ import ErrorTracker from '@/components/ErrorTracker';
 import { ToastProvider } from '@/components/ToastProvider';
 import HamburgerMenu from '@/components/HamburgerMenu';
 import PwaServiceWorker from '@/components/PwaServiceWorker';
+import UnreadBadge from '@/components/UnreadBadge';
 
 export const metadata = {
   title: 'יומן מסע',
@@ -52,6 +53,7 @@ export default async function RootLayout({ children }) {
         status: true,
         agreedToTerms: true,
         forcePasswordChange: true,
+        lastLoginAt: true,
         tenant: {
           select: {
             academicYears: { orderBy: { startDate: 'desc' } },
@@ -60,6 +62,24 @@ export default async function RootLayout({ children }) {
         }
       }
     });
+    
+    if (user) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+      if (lastLogin) lastLogin.setHours(0, 0, 0, 0);
+      
+      if (!lastLogin || lastLogin.getTime() < today.getTime()) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            lastLoginAt: new Date(),
+            loginCount: { increment: 1 }
+          }
+        });
+      }
+    }
+
     if (!user || user.status === 'deleted' || user.status === 'suspended') {
       redirect('/login?error=suspended');
     }
@@ -123,6 +143,11 @@ export default async function RootLayout({ children }) {
             </>
           ) : (
             <nav className={styles.bottomNav}>
+              <Link href="/letters" className={styles.navItem} style={{ position: 'relative' }}>
+                <div className={styles.icon}><Heart size={24} /></div>
+                <span>מכתבים</span>
+                <UnreadBadge />
+              </Link>
               <Link href="/profile" className={styles.navItem}>
                 <div className={styles.icon}><User size={24} /></div>
                 <span>פרופיל</span>
@@ -133,7 +158,7 @@ export default async function RootLayout({ children }) {
               </Link>
               <Link href={userRole === 'admin' ? '/admin' : '/staff'} className={`${styles.navItem} ${styles.active}`}>
                 <div className={styles.icon}><Home size={24} /></div>
-                <span>{userRole === 'admin' ? 'פאנל ניהול' : 'אזור צוות'}</span>
+                <span>{userRole === 'admin' ? 'ניהול קהילה' : 'לוח בקרה'}</span>
               </Link>
             </nav>
           )

@@ -60,6 +60,12 @@ export async function GET(request) {
       }
     });
 
+    // Mark as read in the background
+    prisma.letter.updateMany({
+      where: { recipientId: userId, isRead: false },
+      data: { isRead: true }
+    }).catch(err => console.error('Failed to mark letters as read', err));
+
     return NextResponse.json({ received, sent });
   } catch (error) {
     console.error('Failed to fetch letters:', error);
@@ -80,10 +86,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { content, recipientId, mediaUrls, parentId } = await request.json();
+    const { content, recipientId, recipientIds, mediaUrls, parentId } = await request.json();
 
     if (!content && !(mediaUrls && mediaUrls.length > 0)) {
       return NextResponse.json({ error: 'Missing content or media' }, { status: 400 });
+    }
+
+    const targets = recipientIds && recipientIds.length > 0 ? recipientIds : (recipientId ? [recipientId] : []);
+    if (targets.length === 0) {
+      return NextResponse.json({ error: 'Missing recipient' }, { status: 400 });
     }
 
     if (content && process.env.GEMINI_API_KEY) {
@@ -95,9 +106,9 @@ export async function POST(request) {
         switch(modLevel) {
           case 1: modRules = "If it contains extreme violence or explicitly illegal content, reject it. Otherwise, approve it. Slang, cursing, and insults are allowed."; break;
           case 2: modRules = "If it contains severe cursing, direct threats, or severe bullying, reject it. Otherwise, approve it. Routine slang and mild teasing are allowed."; break;
-          case 3: modRules = "If it contains violence, severe cursing, sexual harassment, bullying, or highly toxic speech, reject it. Otherwise, approve it. Positive or routine slang (like 'מטורף') is allowed."; break;
+          case 3: modRules = "If it contains violence, severe cursing, sexual harassment, bullying, or highly toxic speech, reject it. Otherwise, approve it. Positive or routine slang (like 'אחי היקר') is allowed."; break;
           case 4: modRules = "If it contains any bad words, insults, crude language, or offensive slang, reject it. Otherwise, approve it. Slang that could be interpreted negatively should be rejected."; break;
-          case 5: modRules = "Zero tolerance. If it contains any negative word, hint of violence, impolite language, or any slang with a negative origin (even used positively like 'מטורף' or 'פצצה'), reject it. Must be completely clean and polite."; break;
+          case 5: modRules = "Zero tolerance. If it contains any negative word, hint of violence, impolite language, or any slang with a negative origin (even used positively like 'אחי היקר' or 'מטורף'), reject it. Must be completely clean and polite."; break;
           default: modRules = "If it contains violence, severe cursing, sexual harassment, bullying, or highly toxic speech, reject it.";
         }
 
@@ -126,25 +137,23 @@ Message to check: "${content}"`;
         const result = JSON.parse(rawText);
 
         if (!result.isApproved) {
-          // Find sender and recipient names for the alert
           const sender = await prisma.user.findUnique({ where: { id: userId } });
-          const recipient = await prisma.user.findUnique({ where: { id: recipientId } });
           
           await prisma.staffAlert.create({
             data: {
               tenantId,
               type: 'message_rejected',
-              content: 'נחסמה הודעה פוגענית',
+              content: 'נחסמה הודעה במכתבים',
               metadata: {
-                senderName: sender?.fullName || 'לא ידוע',
-                recipientName: recipient?.fullName || 'לא ידוע',
-                messageContent: '[התוכן נמחק מטעמי צנעת הפרט]',
+                senderName: sender?.fullName || 'משתמש לא ידוע',
+                recipientName: 'מספר נמענים או נמען יחיד',
+                messageContent: '[התוכן צונזר מחשש לפגיעה]',
                 reason: result.reason
               }
             }
           });
           
-          const customModMsg = tenant?.themeConfig?.moderationMessage || 'ההודעה נפסלה לשליחה, מפני שאיננה עומדת בכללי האתיקה שלנו';
+          const customModMsg = tenant?.themeConfig?.moderationMessage || 'מערכת הסינון זיהתה תוכן שאינו תואם לרוח המוסד. אנא נסח את הודעתך שוב בצורה נאותה.';
           
           return NextResponse.json({ 
             error: customModMsg, 
@@ -153,40 +162,42 @@ Message to check: "${content}"`;
         }
       } catch (aiError) {
         console.error('AI Moderation error:', aiError);
-        // If AI fails, we might want to either block or allow. Let's allow but log.
       }
     }
 
-    const recipientUser = await prisma.user.findUnique({ where: { id: recipientId } });
-    
-    const newLetter = await prisma.letter.create({
-      data: {
-        content: content || '',
-        authorId: userId,
-        recipientId,
-        tenantId,
-        parentId: parentId || null,
-        mediaUrls: mediaUrls || []
-      }
-    });
-
-    if (recipientUser && ['admin', 'staff', 'teacher', 'owner'].includes(recipientUser.role)) {
-      const senderUser = await prisma.user.findUnique({ where: { id: userId } });
-      await prisma.staffAlert.create({
+    const createdLetters = [];
+    for (const rid of targets) {
+      const newLetter = await prisma.letter.create({
         data: {
+          content: content || '',
+          authorId: userId,
+          recipientId: rid,
           tenantId,
-          type: 'letter',
-          content: `מכתב חדש התקבל מ${senderUser?.fullName}`,
-          metadata: {
-            letterId: newLetter.id,
-            senderName: senderUser?.fullName || 'לא ידוע',
-            recipientId: recipientUser.id
-          }
+          parentId: parentId || null,
+          mediaUrls: mediaUrls || []
         }
       });
+      createdLetters.push(newLetter);
+
+      const recipientUser = await prisma.user.findUnique({ where: { id: rid } });
+      if (recipientUser && ['admin', 'staff', 'teacher', 'owner'].includes(recipientUser.role)) {
+        const senderUser = await prisma.user.findUnique({ where: { id: userId } });
+        await prisma.staffAlert.create({
+          data: {
+            tenantId,
+            type: 'letter',
+            content: `מכתב חדש התקבל מ${senderUser?.fullName}`,
+            metadata: {
+              letterId: newLetter.id,
+              senderName: senderUser?.fullName || 'משתמש לא ידוע',
+              recipientId: recipientUser.id
+            }
+          }
+        });
+      }
     }
 
-    return NextResponse.json(newLetter, { status: 201 });
+    return NextResponse.json(createdLetters[0], { status: 201 });
   } catch (error) {
     console.error('Failed to create letter:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

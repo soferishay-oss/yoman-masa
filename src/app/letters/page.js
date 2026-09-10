@@ -74,20 +74,28 @@ export default function LettersPage() {
     let finalMedia = mediaUrls;
 
     if (isVoiceOnly) {
-      finalContent = ''; // clear text
-      // keep audio and images in mediaUrls
+      finalContent = ''; 
     } else {
       // standard text send - remove audio from mediaUrls to save space since it was transcribed
       finalMedia = mediaUrls.filter(m => m.type !== 'audio');
       if (!finalContent && finalMedia.length === 0) return;
     }
 
+    // Determine recipients
+    let recipientsPayload = {};
+    if (selectedUser === 'ALL') {
+      recipientsPayload = { recipientIds: filteredUsers.map(u => u.id) };
+    } else {
+      recipientsPayload = { recipientId: selectedUser };
+    }
+
     try {
+      setIsComposing(true);
       const res = await fetch('/api/letters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          recipientId: selectedUser, 
+          ...recipientsPayload,
           content: finalContent,
           mediaUrls: finalMedia,
           parentId: replyParentId
@@ -444,6 +452,14 @@ export default function LettersPage() {
                 />
                 
                 <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white' }}>
+                  {filteredUsers.length > 0 && (
+                    <div 
+                      onClick={() => setSelectedUser('ALL')}
+                      style={{ padding: '10px 15px', borderBottom: '2px solid #e2e8f0', cursor: 'pointer', fontWeight: 'bold', color: '#3b82f6', background: '#eff6ff' }}
+                    >
+                      שלח לכל הרשימה המוצגת ({filteredUsers.length} נמענים)
+                    </div>
+                  )}
                   {filteredUsers.length > 0 ? filteredUsers.map(u => (
                     <div 
                       key={u.id} 
@@ -458,11 +474,11 @@ export default function LettersPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', padding: '12px 15px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
-                <span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>
-                  {users.find(u => u.id === selectedUser)?.fullName || 'טוען נמען...'}
-                </span>
-                {!replyParentId && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#eff6ff', padding: '12px 15px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
+                  <span style={{ fontWeight: 'bold', color: '#1e3a8a' }}>
+                    {selectedUser === 'ALL' ? 'כל הרשימה המוצגת' : (users.find(u => u.id === selectedUser)?.fullName || 'נמען לא ידוע...')}
+                  </span>
+                  {!replyParentId && (
                   <button type="button" onClick={() => setSelectedUser('')} style={{ background: 'none', border: 'none', color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer' }}>שנה נמען</button>
                 )}
               </div>

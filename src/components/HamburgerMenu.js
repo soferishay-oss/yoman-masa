@@ -8,8 +8,23 @@ import styles from './HamburgerMenu.module.css';
 
 export default function HamburgerMenu({ isDutyStudent, academicYears = [], currentYear = null }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Fetch unread count when pathname changes (e.g. they navigate)
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/letters/unread');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.count || 0);
+        }
+      } catch (e) {}
+    };
+    fetchUnread();
+  }, [pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,10 +74,53 @@ export default function HamburgerMenu({ isDutyStudent, academicYears = [], curre
       <button 
         onClick={toggleMenu} 
         className={styles.hamburgerBtn}
-        aria-label="פתח תפריט"
+        aria-label="תפריט"
       >
         <Menu size={28} color="#1e293b" />
       </button>
+
+      {unreadCount > 0 && (
+        <Link href="/letters">
+          <button 
+            style={{
+              position: 'fixed',
+              top: '25px',
+              left: '70px',
+              zIndex: 1000,
+              background: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              width: '45px',
+              height: '45px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              cursor: 'pointer'
+            }}
+            aria-label="מכתבים שלא נקראו"
+          >
+            <Heart size={24} color="#ef4444" />
+            <div style={{
+              position: 'absolute',
+              top: '-5px',
+              right: '-5px',
+              background: '#ef4444',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              borderRadius: '50%',
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {unreadCount}
+            </div>
+          </button>
+        </Link>
+      )}
 
       {/* Overlay */}
       {isOpen && <div className={styles.overlay} onClick={() => setIsOpen(false)} />}

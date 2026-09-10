@@ -257,6 +257,7 @@ model Letter {
   aiThought        String?
   reactions        Json?
   isVault          Boolean  @default(false)
+  isRead           Boolean  @default(false)
   
   parentId         String?
   parent           Letter?  @relation("LetterReplies", fields: [parentId], references: [id])
